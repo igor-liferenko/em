@@ -1,7 +1,7 @@
 CC      = cc
 CFLAGS += -O -std=c11 -Wall -pedantic
 #CFLAGS  = -O -Wall
-LIBS    = -lncurses
+LIBS    = -lncursesw
 LD      = cc
 CP      = cp
 MV      = mv

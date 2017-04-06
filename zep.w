@@ -3,6 +3,7 @@
    Derived from: Anthony's Editor January 93
 */
 
+#include <locale.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <assert.h>
@@ -446,9 +447,9 @@ void display()
 				j += *p == '\t' ? 8-(j&7) : 1;
 				addch(*p);
 			} else {
-				const char *ctrl = unctrl(*p);
-				j += (int) strlen(ctrl);
-				addstr(ctrl);
+				//const char *ctrl = unctrl(*p);
+				j += (int) strlen(p);
+				addstr(p);
 			}
 		}
 		if (*p == '\n' || COLS <= j) {
@@ -725,7 +726,7 @@ keymap_t keymap[] = {
 int main(int argc, char **argv)
 {
 	if (argc != 2) fatal("usage: " E_NAME " filename\n");
-
+        setlocale(LC_CTYPE, "C.UTF-8");
 	initscr();	
 	raw();
 	noecho();
