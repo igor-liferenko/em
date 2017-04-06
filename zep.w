@@ -1,3 +1,6 @@
+\let\lheader\rheader
+\datethis
+
 @ @c
 /* zep.c,  Zep Emacs, Public Domain, Hugh Barney, 2017
    Derived from: Anthony's Editor January 93
