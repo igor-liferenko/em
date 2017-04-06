@@ -1,4 +1,7 @@
-/* zep.c,  Zep Emacs, Public Domain, Hugh Barney, 2017, Derived from: Anthony's Editor January 93 */
+@ @c
+/* zep.c,  Zep Emacs, Public Domain, Hugh Barney, 2017
+   Derived from: Anthony's Editor January 93
+*/
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -56,10 +59,10 @@ typedef struct buffer_t
 } buffer_t;
 
 /*
- * Some compilers define size_t as a unsigned 16 bit number while
- * point_t and off_t might be defined as a signed 32 bit number.  
- * malloc(), realloc(), fread(), and fwrite() take size_t parameters,
- * which means there will be some size limits because size_t is too
+ * Some compilers define |size_t| as a unsigned 16 bit number while
+ * |point_t| and |off_t| might be defined as a signed 32 bit number.
+ * malloc(), realloc(), fread(), and fwrite() take |size_t| parameters,
+ * which means there will be some size limits because |size_t| is too
  * small of a type.
  */
 #define MAX_SIZE_T      ((unsigned long) (size_t) ~0)
@@ -403,7 +406,7 @@ void display()
 	buffer_t *bp = curbp;
 	
 	/* find start of screen, handle scroll up off page or top of file  */
-	/* point is always within b_page and b_epage */
+	/* point is always within |b_page| and |b_epage| */
 	if (bp->b_point < bp->b_page)
 		bp->b_page = segstart(bp, lnstart(bp,bp->b_point), bp->b_point);
 
@@ -592,7 +595,9 @@ void cut() { copy_cut(TRUE); }
 void killtoeol()
 {
 	/* point = start of empty line or last char in file */
-	if (*(ptr(curbp, curbp->b_point)) == 0xa || (curbp->b_point + 1 == ((curbp->b_ebuf - curbp->b_buf) - (curbp->b_egap - curbp->b_gap))) ) {
+	if (*(ptr(curbp, curbp->b_point)) == 0xa ||
+          (curbp->b_point + 1 ==
+          ((curbp->b_ebuf - curbp->b_buf) - (curbp->b_egap - curbp->b_gap))) ) {
 		delete();
 	} else {
 		curbp->b_mark = curbp->b_point;
@@ -696,7 +701,7 @@ keymap_t keymap[] = {
 	{"C-w kill-region          ", "\x17", cut},
 	{"C-y yank                 ", "\x19", paste},
 	{"C-space set-mark         ", "\x00", set_mark },
-	{"esc @ set-mark           ", "\x1B\x40", set_mark },
+	{"esc @@ set-mark           ", "\x1B\x40", set_mark },
 	{"esc k kill-region        ", "\x1B\x6B", cut },
 	{"esc v                    ", "\x1B\x76", pgup },
 	{"esc w copy-region        ", "\x1B\x77", copy},
