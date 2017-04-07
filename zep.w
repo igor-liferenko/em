@@ -1,11 +1,10 @@
 \let\lheader\rheader
 \datethis
-
+@s delete normal
+@s new normal
 @* Zep Emacs.
    Derived from: Anthony's Editor January 93 and Hugh Barney 2017
 
-@d E_NAME          "zep"
-@d E_VERSION       "v1.2"
 @d MAX_FNAME       256
 @d MSGLINE         (LINES-1)
 
@@ -70,7 +69,7 @@ typedef long point_t;
 
 typedef struct keymap_t {
 	char *key_desc;                 /* name of bound function */
-	char *key_bytes;		/* the string of bytes when this key is pressed */
+	wchar_t *key_bytes;		/* the string of bytes when this key is pressed */
 	void (*func)(void);
 } keymap_t;
 
@@ -80,10 +79,10 @@ typedef struct buffer_t
 	point_t b_point;          /* the point */
 	point_t b_page;           /* start of page */
 	point_t b_epage;          /* end of page */
-	char_t *b_buf;            /* start of buffer */
-	char_t *b_ebuf;           /* end of buffer */
-	char_t *b_gap;            /* start of gap */
-	char_t *b_egap;           /* end of gap */
+	wchar_t *b_buf;            /* start of buffer */
+	wchar_t *b_ebuf;           /* end of buffer */
+	wchar_t *b_gap;            /* start of gap */
+	wchar_t *b_egap;           /* end of gap */
 	char w_top;	          /* Origin 0 top row of window */
 	char w_rows;              /* no. of rows of text in window */
 	int b_row;                /* cursor row */
@@ -94,16 +93,14 @@ typedef struct buffer_t
 
 @ @<Global variables@>=
 int done;
-char_t *input;
+wchar_t *input;
 int msgflag;
-char msgline[TEMPBUF];
-char temp[TEMPBUF];
 keymap_t *key_return;
 keymap_t *key_map;
 buffer_t *curbp;
 point_t nscrap = 0;
 char_t *scrap = NULL;
-char searchtext[STRBUF_M];
+wchar_t searchtext[STRBUF_M];
 
 @ Some compilers define |size_t| as a unsigned 16 bit number while
 |point_t| and |off_t| might be defined as a signed 32 bit number.
@@ -116,7 +113,7 @@ small of a type.
 @ @<Procedures@>=
 buffer_t* new_buffer()
 {
-	buffer_t *bp = (buffer_t *)malloc(sizeof(buffer_t));
+	buffer_t *bp = malloc(sizeof(buffer_t));
 	assert(bp != NULL);
 
 	bp->b_point = 0;
@@ -133,38 +130,46 @@ buffer_t* new_buffer()
 	return bp;
 }
 
-@ @<Procedures@>=
-void fatal(char *msg)
+@ @d E_NAME          L"zep"
+@d E_VERSION       L"v1.2"
+
+@<Procedures@>=
+void fatal(wchar_t *msg)
 {
 	move(LINES-1, 0);
 	refresh();
 	endwin();
 	noraw();
-	printf("\n" E_NAME " " E_VERSION ": %s\n", msg);
-	exit(1);
+	wprintf(L"\n" E_NAME L" " E_VERSION L": %ls\n", msg);
+	exit(EXIT_FAILURE);
 }
 
+@ @<Global variables@>=
+wchar_t msgline[TEMPBUF];
+
 @ @<Procedures@>=
-void msg(char *msg, ...)
+void msg(wchar_t *msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
-	(void)vsprintf(msgline, msg, args);
+	vswprintf(msgline, sizeof(msgline), msg, args);
 	va_end(args);
 	msgflag = TRUE;
 }
 
-@ @<Procedures@>=
-/* Given a buffer offset, convert it to a pointer into the buffer */
-char_t * ptr(buffer_t *bp, register point_t offset)
+@ Given a buffer offset, convert it to a pointer into the buffer.
+
+@<Procedures@>=
+wchar_t * ptr(buffer_t *bp, register point_t offset)
 {
 	if (offset < 0) return (bp->b_buf);
 	return (bp->b_buf+offset + (bp->b_buf + offset < bp->b_gap ? 0 : bp->b_egap-bp->b_gap));
 }
 
-@ @<Procedures@>=
-/* Given a pointer into the buffer, convert it to a buffer offset */
-point_t pos(buffer_t *bp, register char_t *cp)
+@ Given a pointer into the buffer, convert it to a buffer offset.
+
+@<Procedures@>=
+point_t pos(buffer_t *bp, register wchar_t *cp)
 {
 	assert(bp->b_buf <= cp && cp <= bp->b_ebuf);
 	return (cp - bp->b_buf - (cp < bp->b_egap ? 0 : bp->b_egap - bp->b_gap));
@@ -174,7 +179,7 @@ point_t pos(buffer_t *bp, register char_t *cp)
 /* Enlarge gap by n chars, position of gap cannot change */
 int growgap(buffer_t *bp, point_t n)
 {
-	char_t *new;
+	wchar_t *new;
 	point_t buflen, newlen, xgap, xegap;
 		
 	assert(bp->b_buf <= bp->b_gap);
@@ -187,20 +192,20 @@ int growgap(buffer_t *bp, point_t n)
     
 	/* reduce number of reallocs by growing by a minimum amount */
 	n = (n < MIN_GAP_EXPAND ? MIN_GAP_EXPAND : n);
-	newlen = buflen + n * (point_t) sizeof(char_t);
+	newlen = buflen + n;
 
 	if (buflen == 0) {
-		if (newlen < 0 || MAX_SIZE_T < newlen) fatal("Failed to allocate required memory.\n");
-		new = (char_t*) malloc((size_t) newlen);
-		if (new == NULL) fatal("Failed to allocate required memory.\n");
+		if (newlen < 0 || MAX_SIZE_T < newlen) fatal(L"Failed to allocate required memory.\n");
+		new = malloc((size_t) newlen);
+		if (new == NULL) fatal(L"Failed to allocate required memory.\n");
 	} else {
 		if (newlen < 0 || MAX_SIZE_T < newlen) {
-			msg("Failed to allocate required memory");
+			msg(L"Failed to allocate required memory");
 			return (FALSE);
 		}
-		new = (char_t*) realloc(bp->b_buf, (size_t) newlen);
+		new = realloc(bp->b_buf, (size_t) newlen);
 		if (new == NULL) {
-			msg("Failed to allocate required memory");    /* Report non-fatal error. */
+			msg(L"Failed to allocate required memory");    /* Report non-fatal error. */
 			return (FALSE);
 		}
 	}
@@ -226,7 +231,7 @@ int growgap(buffer_t *bp, point_t n)
 @ @<Procedures@>=
 point_t movegap(buffer_t *bp, point_t offset)
 {
-	char_t *p = ptr(bp, offset);
+	wchar_t *p = ptr(bp, offset);
 	while (p < bp->b_gap)
 		*--bp->b_egap = *--bp->b_gap;
 	while (bp->b_egap < p)
@@ -247,15 +252,16 @@ void save(void)
 	if (fp == NULL) msg("Failed to open file \"%s\".", curbp->b_fname);
 	(void) movegap(curbp, (point_t) 0);
 	length = (point_t) (curbp->b_ebuf - curbp->b_egap);
-	if (fwrite(curbp->b_egap, sizeof (char), (size_t) length, fp) != (size_t) length)
-		msg("Failed to write file \"%s\".", curbp->b_fname);
+	if (fputws(curbp->b_egap, fp) < 0)
+		msg(L"Failed to write file \"%s\".", curbp->b_fname);
 	fclose(fp);
 	curbp->b_flags &= ~B_MODIFIED;
-	msg("File \"%s\" %ld bytes saved.", curbp->b_fname, pos(curbp, curbp->b_ebuf));
+	msg(L"File \"%s\" %ld bytes saved.", curbp->b_fname, pos(curbp, curbp->b_ebuf));
 }
 
-@ @<Procedures@>=
-/* reads file into buffer at point */
+@ Reads file into buffer at point.
+
+@<Procedures@>=
 int insert_file(char *fn, int modflag)
 {
 	FILE *fp;
@@ -263,44 +269,57 @@ int insert_file(char *fn, int modflag)
 	struct stat sb;
 
 	if (stat(fn, &sb) < 0) {
-		msg("Failed to find file \"%s\".", fn);
+		msg(L"Failed to find file \"%s\".", fn);
 		return (FALSE);
 	}
 	if (MAX_SIZE_T < sb.st_size) {
-		msg("File \"%s\" is too big to load.", fn);
+		msg(L"File \"%s\" is too big to load.", fn);
 		return (FALSE);
 	}
-	if (curbp->b_egap - curbp->b_gap < sb.st_size * (off_t) sizeof (char_t) &&
+	if (curbp->b_egap - curbp->b_gap < sb.st_size * (off_t) sizeof (wchar_t) &&
           !growgap(curbp, sb.st_size))
 		return (FALSE);
 	if ((fp = fopen(fn, "r")) == NULL) {
-		msg("Failed to open file \"%s\".", fn);
+		msg(L"Failed to open file \"%s\".", fn);
 		return (FALSE);
 	}
 	curbp->b_point = movegap(curbp, curbp->b_point);
-	curbp->b_gap += len = fread(curbp->b_gap, sizeof (char), (size_t) sb.st_size, fp);
+
+        @<Read file@>@;
 
 	if (fclose(fp) != 0) {
-		msg("Failed to close file \"%s\".", fn);
+		msg(L"Failed to close file \"%s\".", fn);
 		return (FALSE);
 	}
 	curbp->b_flags = (char)(curbp->b_flags & (char)(modflag ? B_MODIFIED : ~B_MODIFIED));
-	msg("File \"%s\" %ld bytes read.", fn, len);
+	msg(L"File \"%s\" %ld bytes read.", fn, len);
 	return (TRUE);
 }
 
+@ @<Read file@>=
+        wint_t c;
+        for (len = 0; len < (size_t) sb.st_size; len++) { 
+          if ((c = fgetwc(fp)) == WEOF)
+            break;
+          if (c == L'\0') fatal(L"File contains zero character");
+          *(curbp->b_gap + len) = (wchar_t) c;
+        }
+        if (c==WEOF && !feof(fp)) fatal(L"Error reading file");
+        *(curbp->b_gap + len) = L'\0';
+	curbp->b_gap += len;
+
 @ @<Procedures@>=
-char_t *get_key(keymap_t *keys, keymap_t **key_return)
+wchar_t *get_key(keymap_t *keys, keymap_t **key_return)
 {
 	keymap_t *k;
 	int submatch;
-	static char_t buffer[K_BUFFER_LENGTH];
-	static char_t *record = buffer;
+	static wchar_t buffer[K_BUFFER_LENGTH];
+	static wchar_t *record = buffer;
 
 	*key_return = NULL;
 
 	/* if recorded bytes remain, return next recorded byte. */
-	if (*record != '\0') {
+	if (*record != L'\0') {
 		*key_return = NULL;
 		return record++;
 	}
@@ -310,24 +329,24 @@ char_t *get_key(keymap_t *keys, keymap_t **key_return)
 	do {
 		assert(K_BUFFER_LENGTH > record - buffer);
 		/* read and record one byte. */
-		*record++ = (char_t) getch();
-		*record = '\0';
+		if (get_wch(record)==ERR) fatal(L"Error reading input");
+		*(++record) = L'\0';
 
 		/* if recorded bytes match any multi-byte sequence... */
 		for (k = keys, submatch = 0; k->key_bytes != NULL; ++k) {
-			char_t *p, *q;
+			wchar_t *p, *q;
 
-			for (p = buffer, q = (char_t *)k->key_bytes; *p == *q; ++p, ++q) {
+			for (p = buffer, q = k->key_bytes; *p == *q; ++p, ++q) {
 			        /* an exact match */
-				if (*q == '\0' && *p == '\0') {
+				if (*q == L'\0' && *p == L'\0') {
 	    				record = buffer;
-					*record = '\0';
+					*record = L'\0';
 					*key_return = k;
 					return record; /* empty string */
 				}
 			}
 			/* record bytes match part of a command sequence */
-			if (*p == '\0' && *q != '\0') {
+			if (*p == L'\0' && *q != L'\0') {
 				submatch = 1;
 			}
 		}
@@ -337,8 +356,9 @@ char_t *get_key(keymap_t *keys, keymap_t **key_return)
 	return (record++);
 }
 
-@ @<Procedures@>=
-/* Reverse scan for start of logical line containing offset */
+@ Reverse scan for start of logical line containing offset.
+
+@<Procedures@>=
 point_t lnstart(buffer_t *bp, register point_t off)
 {
 	register char_t *p;
@@ -348,11 +368,12 @@ point_t lnstart(buffer_t *bp, register point_t off)
 	return (bp->b_buf < p ? ++off : 0);
 }
 
-@ @<Procedures@>=
-/* Forward scan for start of logical line segment containing 'finish' */
+@ Forward scan for start of logical line segment containing `finish'.
+
+@<Procedures@>=
 point_t segstart(buffer_t *bp, point_t start, point_t finish)
 {
-	char_t *p;
+	wchar_t *p;
 	int c = 0;
 	point_t scan = start;
 
@@ -424,6 +445,9 @@ point_t lncolumn(buffer_t *bp, point_t offset, int column)
 	return (offset);
 }
 
+@ @<Global variables@>=
+wchar_t temp[TEMPBUF];
+
 @ @d E_LABEL         "Zep:"
 
 @<Procedures@>=
@@ -435,11 +459,11 @@ void modeline(buffer_t *bp)
 	standout();
 	move(bp->w_top + bp->w_rows, 0);
 	mch = ((bp->b_flags & B_MODIFIED) ? '*' : '=');
-	sprintf(temp, "=%c " E_LABEL " == %s ", mch, bp->b_fname);
-	addstr(temp);
+	swprintf(temp, sizeof(temp), "=%c " E_LABEL " == %s ", mch, bp->b_fname);
+	addwstr(temp);
 
-	for (i = (int)(strlen(temp) + 1); i <= COLS; i++)
-		addch('=');
+	for (i = (int)(wcslen(temp) + 1); i <= COLS; i++)
+		add_wch(L'=');
 	standend();
 }
 
@@ -448,7 +472,7 @@ void dispmsg()
 {
 	move(MSGLINE, 0);
 	if (msgflag) {
-		addstr(msgline);
+		addwstr(msgline);
 		msgflag = FALSE;
 	}
 	clrtoeol();
@@ -457,7 +481,7 @@ void dispmsg()
 @ @<Procedures@>=
 void display()
 {
-	char_t *p;
+	wchar_t *p;
 	int i, j, k;
 	buffer_t *bp = curbp;
 	
@@ -497,17 +521,17 @@ void display()
 		p = ptr(bp, bp->b_epage);
 		if (bp->w_top + bp->w_rows <= i || bp->b_ebuf <= p) /* maxline */
 			break;
-		if (*p != '\r') {
-			if (isprint(*p) || *p == '\t' || *p == '\n') {
-				j += *p == '\t' ? 8-(j&7) : 1;
-				addch(*p);
+		if (*p != L'\r') {
+			if (iswprint(*p) || *p == L'\t' || *p == L'\n') {
+				j += *p == L'\t' ? 8-(j&7) : 1;
+				add_wch(*p);
 			} else {
-				const char *ctrl = unctrl(*p);
-				j += (int) strlen(ctrl);
-				addstr(ctrl);
+				const wchar_t *ctrl = wunctrl((cchar_t)p);
+				j += (int) wcslen(ctrl);
+				addwstr(ctrl);
 			}
 		}
-		if (*p == '\n' || COLS <= j) {
+		if (*p == L'\n' || COLS <= j) {
 			j -= COLS;
 			if (j < 0)
 				j = 0;
@@ -571,7 +595,7 @@ void insert()
 	assert(curbp->b_gap <= curbp->b_egap);
 	if (curbp->b_gap == curbp->b_egap && !growgap(curbp, CHUNK)) return;
 	curbp->b_point = movegap(curbp, curbp->b_point);
-	*curbp->b_gap++ = *input == '\r' ? '\n' : *input;
+	*curbp->b_gap++ = *input == L'\r' ? L'\n' : *input;
 	curbp->b_point = pos(curbp, curbp->b_egap);
 	curbp->b_flags |= B_MODIFIED;
 }
@@ -601,13 +625,13 @@ void delete()
 void set_mark()
 {
 	curbp->b_mark = (curbp->b_mark == curbp->b_point ? NOMARK : curbp->b_point);
-	msg("Mark set");
+	msg(L"Mark set");
 }
 
 @ @<Procedures@>=
 void copy_cut(int cut)
 {
-	char_t *p;
+	wchar_t *p;
 	/* if no mark or point == marker, nothing doing */
 	if (curbp->b_mark == NOMARK || curbp->b_point == curbp->b_mark) return;
 	if (scrap != NULL) {
@@ -802,7 +826,7 @@ int main(int argc, char **argv)
 #include <stdlib.h>
 #include <stdarg.h>
 #include <assert.h>
-#include <curses.h>
+#include <ncursesw/curses.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
