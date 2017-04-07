@@ -68,7 +68,7 @@ typedef struct buffer_t
  * which means there will be some size limits because |size_t| is too
  * small of a type.
  */
-#define MAX_SIZE_T      ((unsigned long) (size_t) ~0)
+#define MAX_SIZE_T      ((point_t) (size_t) ~0)
 
 int done;
 char_t *input;
@@ -97,7 +97,7 @@ buffer_t* new_buffer()
 	bp->b_egap = NULL;
 	bp->b_fname[0] = '\0';
 	bp->w_top = 0;	
-	bp->w_rows = LINES - 2;
+	bp->w_rows = (char)(LINES - 2);
 	return bp;
 }
 
@@ -150,7 +150,7 @@ int growgap(buffer_t *bp, point_t n)
     
 	/* reduce number of reallocs by growing by a minimum amount */
 	n = (n < MIN_GAP_EXPAND ? MIN_GAP_EXPAND : n);
-	newlen = buflen + n * sizeof (char_t);
+	newlen = buflen + n * (point_t) sizeof(char_t);
 
 	if (buflen == 0) {
 		if (newlen < 0 || MAX_SIZE_T < newlen) fatal("Failed to allocate required memory.\n");
@@ -208,7 +208,7 @@ void save()
 	if (fp == NULL) msg("Failed to open file \"%s\".", curbp->b_fname);
 	(void) movegap(curbp, (point_t) 0);
 	length = (point_t) (curbp->b_ebuf - curbp->b_egap);
-	if (fwrite(curbp->b_egap, sizeof (char), (size_t) length, fp) != length) 
+	if (fwrite(curbp->b_egap, sizeof (char), (size_t) length, fp) != (size_t) length)
 		msg("Failed to write file \"%s\".", curbp->b_fname);
 	fclose(fp);
 	curbp->b_flags &= ~B_MODIFIED;
@@ -230,7 +230,8 @@ int insert_file(char *fn, int modflag)
 		msg("File \"%s\" is too big to load.", fn);
 		return (FALSE);
 	}
-	if (curbp->b_egap - curbp->b_gap < sb.st_size * sizeof (char_t) && !growgap(curbp, sb.st_size))
+	if (curbp->b_egap - curbp->b_gap < sb.st_size * (off_t) sizeof (char_t) &&
+          !growgap(curbp, sb.st_size))
 		return (FALSE);
 	if ((fp = fopen(fn, "r")) == NULL) {
 		msg("Failed to open file \"%s\".", fn);
@@ -243,7 +244,7 @@ int insert_file(char *fn, int modflag)
 		msg("Failed to close file \"%s\".", fn);
 		return (FALSE);
 	}
-	curbp->b_flags &= (modflag ? B_MODIFIED : ~B_MODIFIED);
+	curbp->b_flags = (char)(curbp->b_flags & (char)(modflag ? B_MODIFIED : ~B_MODIFIED));
 	msg("File \"%s\" %ld bytes read.", fn, len);
 	return (TRUE);
 }
@@ -268,7 +269,7 @@ char_t *get_key(keymap_t *keys, keymap_t **key_return)
 	do {
 		assert(K_BUFFER_LENGTH > record - buffer);
 		/* read and record one byte. */
-		*record++ = (unsigned)getch();
+		*record++ = (char_t) getch();
 		*record = '\0';
 
 		/* if recorded bytes match any multi-byte sequence... */
@@ -387,7 +388,7 @@ void modeline(buffer_t *bp)
 	sprintf(temp, "=%c " E_LABEL " == %s ", mch, bp->b_fname);
 	addstr(temp);
 
-	for (i = strlen(temp) + 1; i <= COLS; i++)
+	for (i = (int)(strlen(temp) + 1); i <= COLS; i++)
 		addch('=');
 	standend();
 }
@@ -563,10 +564,10 @@ void copy_cut(int cut)
 		p = ptr(curbp, curbp->b_mark);
 		nscrap = curbp->b_point - curbp->b_mark;
 	}
-	if ((scrap = (char_t*) malloc(nscrap)) == NULL) {
+	if ((scrap = (char_t *) malloc((size_t) nscrap)) == NULL) {
 		msg("No more memory available.");
 	} else {
-		(void)memcpy(scrap, p, nscrap * sizeof (char_t));
+		(void)memcpy(scrap, p, (size_t) nscrap * sizeof (char_t));
 		if (cut) {
 			curbp->b_egap += nscrap; /* if cut expand gap down */
 			curbp->b_point = pos(curbp, curbp->b_egap); /* set point to after region */
@@ -585,7 +586,7 @@ void paste()
 		msg("Nothing to paste.");
 	} else if (nscrap < curbp->b_egap - curbp->b_gap || growgap(curbp, nscrap)) {
 		curbp->b_point = movegap(curbp, curbp->b_point);
-		memcpy(curbp->b_gap, scrap, nscrap * sizeof (char_t));
+		memcpy(curbp->b_gap, scrap, (size_t) nscrap * sizeof (char_t));
 		curbp->b_gap += nscrap;
 		curbp->b_point = pos(curbp, curbp->b_egap);
 		curbp->b_flags |= B_MODIFIED;
@@ -639,7 +640,7 @@ void search()
 	searchtext[0] = '\0';
 	msg("Search: %s", searchtext);
 	dispmsg();
-	cpos = strlen(searchtext);
+	cpos = (int) strlen(searchtext);
 
 	for (;;) {
 		refresh();
@@ -678,7 +679,7 @@ void search()
 			break;
 		default:	
 			if (cpos < STRBUF_M - 1) {
-				searchtext[cpos++] = c;
+				searchtext[cpos++] = (char) c;
 				searchtext[cpos] = '\0';
 				msg("Search: %s", searchtext);
 				dispmsg();
