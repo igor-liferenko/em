@@ -1,38 +1,69 @@
 \let\lheader\rheader
 \datethis
 
-@ @c
-/* zep.c,  Zep Emacs, Public Domain, Hugh Barney, 2017
-   Derived from: Anthony's Editor January 93
-*/
+@* Zep Emacs.
+   Derived from: Anthony's Editor January 93 and Hugh Barney 2017
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <assert.h>
-#include <curses.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <ctype.h>
-#include <limits.h>
-#include <string.h>
-#include <unistd.h>
-#include <termios.h>
+@d E_NAME          "zep"
+@d E_VERSION       "v1.2"
+@d MAX_FNAME       256
+@d MSGLINE         (LINES-1)
 
-#define E_NAME          "zep"
-#define E_VERSION       "v1.2"
-#define E_LABEL         "Zep:"
+@c
+@<Header files@>@/
 
 #define B_MODIFIED	0x01		/* modified buffer */
-#define MSGLINE         (LINES-1)
 #define CHUNK           8096L
 #define K_BUFFER_LENGTH 256
-#define MAX_FNAME       256
 #define TEMPBUF         512
 #define MIN_GAP_EXPAND  512
 #define NOMARK          -1
 #define STRBUF_M        64
+
+@<Typedef declarations@>@/
+@<Global variables@>@/
+@<Procedures@>@/
+
+/* the key bindings:  desc, keys, func */
+keymap_t keymap[] = {
+	{"C-a beginning-of-line    ", "\x01", lnbegin },
+	{"C-b                      ", "\x02", left },
+	{"C-d forward-delete-char  ", "\x04", delete },
+	{"C-e end-of-line          ", "\x05", lnend },
+	{"C-f                      ", "\x06", right },
+	{"C-n                      ", "\x0E", down },
+	{"C-p                      ", "\x10", up },
+	{"C-h backspace            ", "\x08", backsp },
+	{"C-k kill-to-eol          ", "\x0B", killtoeol },
+	{"C-s search               ", "\x13", search },
+	{"C-v                      ", "\x16", pgdown },
+	{"C-w kill-region          ", "\x17", cut},
+	{"C-y yank                 ", "\x19", paste},
+	{"C-space set-mark         ", "\x00", set_mark },
+	{"esc @@ set-mark           ", "\x1B\x40", set_mark },
+	{"esc k kill-region        ", "\x1B\x6B", cut },
+	{"esc v                    ", "\x1B\x76", pgup },
+	{"esc w copy-region        ", "\x1B\x77", copy},
+	{"esc < beg-of-buf         ", "\x1B\x3C", top },
+	{"esc > end-of-buf         ", "\x1B\x3E", bottom },
+	{"up previous-line         ", "\x1B\x5B\x41", up },
+	{"down next-line           ", "\x1B\x5B\x42", down },
+	{"left backward-character  ", "\x1B\x5B\x44", left },
+	{"right forward-character  ", "\x1B\x5B\x43", right },
+	{"home beginning-of-line   ", "\x1B\x4F\x48", lnbegin },
+	{"end end-of-line          ", "\x1B\x4F\x46", lnend },
+	{"DEL forward-delete-char  ", "\x1B\x5B\x33\x7E", delete },
+	{"backspace delete-left    ", "\x7f", backsp },
+	{"PgUp                     ", "\x1B\x5B\x35\x7E",pgup },
+	{"PgDn                     ", "\x1B\x5B\x36\x7E", pgdown },
+	{"C-x C-s save-buffer      ", "\x18\x13", save },  
+	{"C-x C-c exit             ", "\x18\x03", quit },
+	{"K_ERROR                  ", NULL, NULL }
+};
+
+@<Main program@>
+
+@ @<Typedef declarations@>=
 
 typedef unsigned char char_t;
 typedef long point_t;
@@ -61,15 +92,7 @@ typedef struct buffer_t
 	char b_flags;             /* buffer flags */
 } buffer_t;
 
-/*
- * Some compilers define |size_t| as a unsigned 16 bit number while
- * |point_t| and |off_t| might be defined as a signed 32 bit number.
- * malloc(), realloc(), fread(), and fwrite() take |size_t| parameters,
- * which means there will be some size limits because |size_t| is too
- * small of a type.
- */
-#define MAX_SIZE_T      ((point_t) (size_t) ~0)
-
+@ @<Global variables@>=
 int done;
 char_t *input;
 int msgflag;
@@ -82,6 +105,15 @@ point_t nscrap = 0;
 char_t *scrap = NULL;
 char searchtext[STRBUF_M];
 
+@ Some compilers define |size_t| as a unsigned 16 bit number while
+|point_t| and |off_t| might be defined as a signed 32 bit number.
+malloc(), realloc(), fread(), and fwrite() take |size_t| parameters,
+which means there will be some size limits because |size_t| is too
+small of a type.
+
+@d MAX_SIZE_T      ((point_t) (size_t) ~0)
+
+@ @<Procedures@>=
 buffer_t* new_buffer()
 {
 	buffer_t *bp = (buffer_t *)malloc(sizeof(buffer_t));
@@ -101,6 +133,7 @@ buffer_t* new_buffer()
 	return bp;
 }
 
+@ @<Procedures@>=
 void fatal(char *msg)
 {
 	move(LINES-1, 0);
@@ -111,6 +144,7 @@ void fatal(char *msg)
 	exit(1);
 }
 
+@ @<Procedures@>=
 void msg(char *msg, ...)
 {
 	va_list args;
@@ -120,6 +154,7 @@ void msg(char *msg, ...)
 	msgflag = TRUE;
 }
 
+@ @<Procedures@>=
 /* Given a buffer offset, convert it to a pointer into the buffer */
 char_t * ptr(buffer_t *bp, register point_t offset)
 {
@@ -127,6 +162,7 @@ char_t * ptr(buffer_t *bp, register point_t offset)
 	return (bp->b_buf+offset + (bp->b_buf + offset < bp->b_gap ? 0 : bp->b_egap-bp->b_gap));
 }
 
+@ @<Procedures@>=
 /* Given a pointer into the buffer, convert it to a buffer offset */
 point_t pos(buffer_t *bp, register char_t *cp)
 {
@@ -134,6 +170,7 @@ point_t pos(buffer_t *bp, register char_t *cp)
 	return (cp - bp->b_buf - (cp < bp->b_egap ? 0 : bp->b_egap - bp->b_gap));
 }
 
+@ @<Procedures@>=
 /* Enlarge gap by n chars, position of gap cannot change */
 int growgap(buffer_t *bp, point_t n)
 {
@@ -186,6 +223,7 @@ int growgap(buffer_t *bp, point_t n)
 	return (TRUE);
 }
 
+@ @<Procedures@>=
 point_t movegap(buffer_t *bp, point_t offset)
 {
 	char_t *p = ptr(bp, offset);
@@ -199,7 +237,8 @@ point_t movegap(buffer_t *bp, point_t offset)
 	return (pos(bp, bp->b_egap));
 }
 
-void save()
+@ @<Procedures@>=
+void save(void)
 {
 	FILE *fp;
 	point_t length;
@@ -215,6 +254,7 @@ void save()
 	msg("File \"%s\" %ld bytes saved.", curbp->b_fname, pos(curbp, curbp->b_ebuf));
 }
 
+@ @<Procedures@>=
 /* reads file into buffer at point */
 int insert_file(char *fn, int modflag)
 {
@@ -249,6 +289,7 @@ int insert_file(char *fn, int modflag)
 	return (TRUE);
 }
 
+@ @<Procedures@>=
 char_t *get_key(keymap_t *keys, keymap_t **key_return)
 {
 	keymap_t *k;
@@ -296,6 +337,7 @@ char_t *get_key(keymap_t *keys, keymap_t **key_return)
 	return (record++);
 }
 
+@ @<Procedures@>=
 /* Reverse scan for start of logical line containing offset */
 point_t lnstart(buffer_t *bp, register point_t off)
 {
@@ -306,6 +348,7 @@ point_t lnstart(buffer_t *bp, register point_t off)
 	return (bp->b_buf < p ? ++off : 0);
 }
 
+@ @<Procedures@>=
 /* Forward scan for start of logical line segment containing 'finish' */
 point_t segstart(buffer_t *bp, point_t start, point_t finish)
 {
@@ -328,6 +371,7 @@ point_t segstart(buffer_t *bp, point_t start, point_t finish)
 	return (c < COLS ? start : finish);
 }
 
+@ @<Procedures@>=
 /* Forward scan for start of logical line segment following 'finish' */
 point_t segnext(buffer_t *bp, point_t start, point_t finish)
 {
@@ -347,6 +391,7 @@ point_t segnext(buffer_t *bp, point_t start, point_t finish)
 	return (p < bp->b_ebuf ? scan : pos(bp, bp->b_ebuf));
 }
 
+@ @<Procedures@>=
 /* Move up one screen line */
 point_t upup(buffer_t *bp, point_t off)
 {
@@ -359,12 +404,14 @@ point_t upup(buffer_t *bp, point_t off)
 	return (off);
 }
 
+@ @<Procedures@>=
 /* Move down one screen line */
 point_t dndn(buffer_t *bp, point_t off)
 {
 	return (segnext(bp, lnstart(bp,off), off));
 }
 
+@ @<Procedures@>=
 /* Return the offset of a column on the specified line */
 point_t lncolumn(buffer_t *bp, point_t offset, int column)
 {
@@ -377,6 +424,9 @@ point_t lncolumn(buffer_t *bp, point_t offset, int column)
 	return (offset);
 }
 
+@ @d E_LABEL         "Zep:"
+
+@<Procedures@>=
 void modeline(buffer_t *bp)
 {
 	int i;
@@ -393,6 +443,7 @@ void modeline(buffer_t *bp)
 	standend();
 }
 
+@ @<Procedures@>=
 void dispmsg()
 {
 	move(MSGLINE, 0);
@@ -403,6 +454,7 @@ void dispmsg()
 	clrtoeol();
 }
 
+@ @<Procedures@>=
 void display()
 {
 	char_t *p;
@@ -477,6 +529,7 @@ void display()
 	refresh();
 }
 
+@ @<Procedures@>=
 void top() { curbp->b_point = 0; }
 void bottom() {	curbp->b_epage = curbp->b_point = pos(curbp, curbp->b_ebuf); }
 void left() { if (0 < curbp->b_point) --curbp->b_point; }
@@ -486,12 +539,14 @@ void down() { curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point),curbp
 void lnbegin() { curbp->b_point = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point); }
 void quit() { done = 1; }
 
+@ @<Procedures@>=
 void lnend()
 {
 	curbp->b_point = dndn(curbp, curbp->b_point);
 	left();
 }
 
+@ @<Procedures@>=
 void pgdown()
 {
 	curbp->b_page = curbp->b_point = upup(curbp, curbp->b_epage);
@@ -500,6 +555,7 @@ void pgdown()
 	curbp->b_epage = pos(curbp, curbp->b_ebuf);
 }
 
+@ @<Procedures@>=
 void pgup()
 {
 	int i = curbp->w_rows;
@@ -509,6 +565,7 @@ void pgup()
 	}
 }
 
+@ @<Procedures@>=
 void insert()
 {
 	assert(curbp->b_gap <= curbp->b_egap);
@@ -519,6 +576,7 @@ void insert()
 	curbp->b_flags |= B_MODIFIED;
 }
 
+@ @<Procedures@>=
 void backsp()
 {
 	curbp->b_point = movegap(curbp, curbp->b_point);
@@ -529,6 +587,7 @@ void backsp()
 	curbp->b_point = pos(curbp, curbp->b_egap);
 }
 
+@ @<Procedures@>=
 void delete()
 {
 	curbp->b_point = movegap(curbp, curbp->b_point);
@@ -538,12 +597,14 @@ void delete()
 	}
 }
 
+@ @<Procedures@>=
 void set_mark()
 {
 	curbp->b_mark = (curbp->b_mark == curbp->b_point ? NOMARK : curbp->b_point);
 	msg("Mark set");
 }
 
+@ @<Procedures@>=
 void copy_cut(int cut)
 {
 	char_t *p;
@@ -580,6 +641,7 @@ void copy_cut(int cut)
 	}
 }
 
+@ @<Procedures@>=
 void paste()
 {
 	if (nscrap <= 0) {
@@ -593,9 +655,11 @@ void paste()
 	}
 }
 
+@ @<Procedures@>=
 void copy() { copy_cut(FALSE); }
 void cut() { copy_cut(TRUE); }
 
+@ @<Procedures@>=
 void killtoeol()
 {
 	/* point = start of empty line or last char in file */
@@ -610,6 +674,7 @@ void killtoeol()
 	}
 }
 
+@ @<Procedures@>=
 point_t search_forward(buffer_t *bp, point_t start_p, char *stext)
 {
 	point_t end_p = pos(bp, bp->b_ebuf);
@@ -630,6 +695,7 @@ point_t search_forward(buffer_t *bp, point_t start_p, char *stext)
 	return -1;
 }
 
+@ @<Procedures@>=
 void search()
 {
 	int cpos = 0;	
@@ -689,51 +755,15 @@ void search()
 	}
 }
 
-/* the key bindings:  desc, keys, func */
-keymap_t keymap[] = {
-	{"C-a beginning-of-line    ", "\x01", lnbegin },
-	{"C-b                      ", "\x02", left },
-	{"C-d forward-delete-char  ", "\x04", delete },
-	{"C-e end-of-line          ", "\x05", lnend },
-	{"C-f                      ", "\x06", right },
-	{"C-n                      ", "\x0E", down },
-	{"C-p                      ", "\x10", up },
-	{"C-h backspace            ", "\x08", backsp },
-	{"C-k kill-to-eol          ", "\x0B", killtoeol },
-	{"C-s search               ", "\x13", search },
-	{"C-v                      ", "\x16", pgdown },
-	{"C-w kill-region          ", "\x17", cut},
-	{"C-y yank                 ", "\x19", paste},
-	{"C-space set-mark         ", "\x00", set_mark },
-	{"esc @@ set-mark           ", "\x1B\x40", set_mark },
-	{"esc k kill-region        ", "\x1B\x6B", cut },
-	{"esc v                    ", "\x1B\x76", pgup },
-	{"esc w copy-region        ", "\x1B\x77", copy},
-	{"esc < beg-of-buf         ", "\x1B\x3C", top },
-	{"esc > end-of-buf         ", "\x1B\x3E", bottom },
-	{"up previous-line         ", "\x1B\x5B\x41", up },
-	{"down next-line           ", "\x1B\x5B\x42", down },
-	{"left backward-character  ", "\x1B\x5B\x44", left },
-	{"right forward-character  ", "\x1B\x5B\x43", right },
-	{"home beginning-of-line   ", "\x1B\x4F\x48", lnbegin },
-	{"end end-of-line          ", "\x1B\x4F\x46", lnend },
-	{"DEL forward-delete-char  ", "\x1B\x5B\x33\x7E", delete },
-	{"backspace delete-left    ", "\x7f", backsp },
-	{"PgUp                     ", "\x1B\x5B\x35\x7E",pgup },
-	{"PgDn                     ", "\x1B\x5B\x36\x7E", pgdown },
-	{"C-x C-s save-buffer      ", "\x18\x13", save },  
-	{"C-x C-c exit             ", "\x18\x03", quit },
-	{"K_ERROR                  ", NULL, NULL }
-};
-
+@ @<Main program@>=
 int main(int argc, char **argv)
 {
 	if (argc != 2) fatal("usage: " E_NAME " filename\n");
 
-	initscr();	
+	initscr();
 	raw();
 	noecho();
-	
+
 	curbp = new_buffer();
 	(void)insert_file(argv[1], FALSE);
 	/* Save filename irregardless of load() success. */
@@ -767,3 +797,18 @@ int main(int argc, char **argv)
 	endwin();
 	return 0;
 }
+
+@ @<Header files@>=
+#include <stdlib.h>
+#include <stdarg.h>
+#include <assert.h>
+#include <curses.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <ctype.h>
+#include <limits.h>
+#include <string.h>
+#include <unistd.h>
+#include <termios.h>
