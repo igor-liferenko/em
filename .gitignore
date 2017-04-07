@@ -2,3 +2,12 @@
 
 *.o
 zep
+*.c
+*.dvi
+*.idx
+*.log
+*.ps
+*.scn
+*.tex
+*.toc
+
