@@ -107,7 +107,7 @@ void msg(wchar_t *msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
-	vswprintf(msgline, sizeof(msgline), msg, args);
+	vswprintf(msgline, ARRAY_SIZE(msgline), msg, args);
 	va_end(args);
 	msgflag = TRUE;
 }
@@ -204,15 +204,22 @@ void save(void)
 	point_t length;
 
 	fp = fopen(curbp->b_fname, "w");
-	if (fp == NULL) msg("Failed to open file \"%s\".", curbp->b_fname);
-	(void) movegap(curbp, (point_t) 0);
+	if (fp == NULL) msg(L"Failed to open file \"%s\".", curbp->b_fname);
+	movegap(curbp, (point_t) 0);
 	length = (point_t) (curbp->b_ebuf - curbp->b_egap);
-	if (fputws(curbp->b_egap, fp) < 0)
-		msg(L"Failed to write file \"%s\".", curbp->b_fname);
+        @<Write file@>@;
 	fclose(fp);
 	curbp->b_flags &= ~B_MODIFIED;
 	msg(L"File \"%s\" %ld bytes saved.", curbp->b_fname, pos(curbp, curbp->b_ebuf));
 }
+
+@ @<Write file@>=
+size_t n;
+for (n = 0; n < length; n++)
+  if (fputwc(*(curbp->b_egap + n), fp) == WEOF)
+    break;
+if (n != length)
+  msg(L"Failed to write file \"%s\".", curbp->b_fname);
 
 @ Reads file into buffer at point.
 
@@ -252,16 +259,13 @@ int insert_file(char *fn, int modflag)
 }
 
 @ @<Read file@>=
-        wint_t c;
-        for (len = 0; len < (size_t) sb.st_size; len++) { 
-          if ((c = fgetwc(fp)) == WEOF)
-            break;
-          if (c == L'\0') fatal(L"File contains zero character");
-          *(curbp->b_gap + len) = (wchar_t) c;
-        }
-        if (c==WEOF && !feof(fp)) fatal(L"Error reading file");
-        *(curbp->b_gap + len) = L'\0';
-	curbp->b_gap += len;
+wint_t c;
+for (len=0; len<(size_t)sb.st_size-1 && (c=fgetwc(fp))!=WEOF; len++) {
+  if (c == L'\0') fatal(L"File contains zero character");
+  *(curbp->b_gap + len) = (wchar_t) c;
+}
+if (len != sb.st_size) fatal(L"Error reading file");
+curbp->b_gap += len;
 
 @ UTF-8 is valid encoding for Unicode. The requirement of UTF-8 is that it is equal to
 ASCII in |\000|--|\177| range. According to the structure of UTF-8 (first bit is zero
@@ -269,10 +273,12 @@ for ASCII), it follows that all ASCII codes are Unicode values (and vice versa).
 In other words, the following transformation is always valid:
 |wc = (wchar_t)c|, where |c| is of type |char| and |wc| is of type
 |wchar_t|, and |c| contains ASCII codes. In our case |c| can only contain ASCII codes
-(see |@<Keymap definition@>|).
+(see |@<Key bindings@>|).
+
+\xdef\asciisec{\secno} % remember the number of this section
 
 @<Procedures@>=
-wchar_t *get_key(keymap_t **key_return)
+wchar_t get_key(keymap_t **key_return)
 {
 	keymap_t *k;
 	int submatch;
@@ -283,7 +289,7 @@ wchar_t *get_key(keymap_t **key_return)
 
 	if (*record != L'\0') { /* if recorded bytes remain, return next recorded byte. */
 		*key_return = NULL;
-		return record++;
+		return *(record++);
 	}
 	record = buffer; /* reset record buffer. */
 
@@ -299,12 +305,11 @@ wchar_t *get_key(keymap_t **key_return)
 			wchar_t *p;
                         char *q;
 
-			for (p = buffer, q = k->key_bytes; *p == (wchar_t) *q; p++, q++) {
+			for (p = buffer, q = k->key_bytes; isascii(*q) && *p == (wchar_t) *q; p++, q++) {
 				if (*q == '\0' && *p == L'\0') { /* an exact match */
-	    				record = buffer;
-					*record = L'\0';
 					*key_return = k;
-					return record; /* empty string */
+					*buffer = L'\0'; /* clear record buffer */
+					return L'\0'; /* not used */
 				}
 			}
 			if (*p == L'\0' && *q != '\0') /* record bytes match part of
@@ -313,7 +318,7 @@ wchar_t *get_key(keymap_t **key_return)
 		}
 	} while (submatch);
 	record = buffer; /* nothing matched, return recorded bytes. */
-	return (record++); /* FIXME: why ++ ? */
+	return *(record++); /* FIXME: why ++ ? */
 }
 
 @ Reverse scan for start of logical line containing offset.
@@ -419,7 +424,7 @@ void modeline(buffer_t *bp)
 	standout();
 	move(bp->w_top + bp->w_rows, 0);
 	mch = ((bp->b_flags & B_MODIFIED) ? '*' : '=');
-	swprintf(temp, sizeof(temp), "=%c " E_LABEL " == %s ", mch, bp->b_fname);
+	swprintf(temp, ARRAY_SIZE(temp), "=%c " E_LABEL " == %s ", mch, bp->b_fname);
 	addwstr(temp);
 
 	for (i = (int)(wcslen(temp) + 1); i <= COLS; i++)
@@ -550,7 +555,7 @@ void pgup()
 }
 
 @ @<Procedures@>=
-void insert()
+void insert(wchar_t *input)
 {
 	assert(curbp->b_gap <= curbp->b_egap);
 	if (curbp->b_gap == curbp->b_egap && !growgap(curbp, CHUNK)) return;
@@ -600,26 +605,26 @@ void copy_cut(int cut)
 	}
 	if (curbp->b_point < curbp->b_mark) {
 		/* point above marker: move gap under point, region = marker - point */
-		(void)movegap(curbp, curbp->b_point);
+		movegap(curbp, curbp->b_point);
 		p = ptr(curbp, curbp->b_point);
 		nscrap = curbp->b_mark - curbp->b_point;
 	} else {
 		/* if point below marker: move gap under marker, region = point - marker */
-		(void)movegap(curbp, curbp->b_mark);
+		movegap(curbp, curbp->b_mark);
 		p = ptr(curbp, curbp->b_mark);
 		nscrap = curbp->b_point - curbp->b_mark;
 	}
-	if ((scrap = (char_t *) malloc((size_t) nscrap)) == NULL) {
-		msg("No more memory available.");
+	if ((scrap = malloc((size_t) nscrap * sizeof(wchar_t))) == NULL) {
+		msg(L"No more memory available.");
 	} else {
-		(void)memcpy(scrap, p, (size_t) nscrap * sizeof (char_t));
+		memcpy(scrap, p, (size_t) nscrap * sizeof (wchar_t));
 		if (cut) {
 			curbp->b_egap += nscrap; /* if cut expand gap down */
 			curbp->b_point = pos(curbp, curbp->b_egap); /* set point to after region */
 			curbp->b_flags |= B_MODIFIED;
-			msg("%ld bytes cut.", nscrap);
+			msg(L"%ld bytes cut.", nscrap);
 		} else {
-			msg("%ld bytes copied.", nscrap);
+			msg(L"%ld bytes copied.", nscrap);
 		}
 		curbp->b_mark = NOMARK;  /* unmark */
 	}
@@ -629,7 +634,7 @@ void copy_cut(int cut)
 void paste()
 {
 	if (nscrap <= 0) {
-		msg("Nothing to paste.");
+		msg(L"Nothing to paste.");
 	} else if (nscrap < curbp->b_egap - curbp->b_gap || growgap(curbp, nscrap)) {
 		curbp->b_point = movegap(curbp, curbp->b_point);
 		memcpy(curbp->b_gap, scrap, (size_t) nscrap * sizeof (char_t));
@@ -647,7 +652,7 @@ void cut() { copy_cut(TRUE); }
 void killtoeol()
 {
 	/* point = start of empty line or last char in file */
-	if (*(ptr(curbp, curbp->b_point)) == 0xa ||
+	if (*(ptr(curbp, curbp->b_point)) == L'\n' ||
           (curbp->b_point + 1 ==
           ((curbp->b_ebuf - curbp->b_buf) - (curbp->b_egap - curbp->b_gap))) ) {
 		delete();
@@ -659,20 +664,20 @@ void killtoeol()
 }
 
 @ @<Procedures@>=
-point_t search_forward(buffer_t *bp, point_t start_p, char *stext)
+point_t search_forward(buffer_t *bp, point_t start_p, wchar_t *stext)
 {
 	point_t end_p = pos(bp, bp->b_ebuf);
 	point_t p,pp;
-	char* s;
+	wchar_t *s;
 
-	if (0 == strlen(stext))
+	if (0 == wcslen(stext))
 		return start_p;
 
 	for (p=start_p; p < end_p; p++) {
-		for (s=stext, pp=p; *s == *(ptr(bp, pp)) && *s !='\0' && pp < end_p; s++, pp++)
+		for (s=stext, pp=p; *s == *(ptr(bp, pp)) && *s !=L'\0' && pp < end_p; s++, pp++)
 			;
 
-		if (*s == '\0')
+		if (*s == L'\0')
 			return pp;
 	}
 
@@ -682,59 +687,61 @@ point_t search_forward(buffer_t *bp, point_t start_p, char *stext)
 @ @<Global variables@>=
 wchar_t searchtext[STRBUF_M];
 
-@ @<Procedures@>=
+@ Here is used the concept which is explained in section~\asciisec.
+
+@<Procedures@>=
 void search()
 {
 	int cpos = 0;	
-	int c;
+	wint_t c;
 	point_t o_point = curbp->b_point;
 	point_t found;
 
-	searchtext[0] = '\0';
-	msg("Search: %s", searchtext);
+	searchtext[0] = L'\0';
+	msg(L"Search: ");
 	dispmsg();
-	cpos = (int) strlen(searchtext);
+	cpos = (int) wcslen(searchtext);
 
 	for (;;) {
-		refresh();
-		c = getch();
-		/* ignore control keys other than C-g, backspace, CR,  C-s, C-R, ESC */
-		if (c < 32 && c != 07 && c != 0x08 && c != 0x13 && c != 0x12 && c != 0x1b)
-			continue;
+	  refresh();
+	  if (get_wch(&c) == ERR) fatal(L"bad key");
+	  if (c < L' ' && c != L'\a' && c != L'\b' && c != (wint_t)0x13
+            && c != (wint_t)0x12 && c != L'\e')
+	    continue; /* ignore control keys other than C-g, backspace, C-s, C-r, ESC */
 
-		switch(c) {
-		case 0x1b: /* esc */
-			searchtext[cpos] = '\0';
+	  switch(c) {
+	    case L'\e': /* esc */
+			searchtext[cpos] = L'\0';
 			flushinp(); /* discard any escape sequence without writing in buffer */
 			return;
-		case 0x07: /* ctrl-g */
+	    case L'\a': /* ctrl-g */
 			curbp->b_point = o_point;
 			return;
-		case 0x13: /* ctrl-s, do the search */
+	    case (wint_t)0x13: /* ctrl-s, do the search */
 			found = search_forward(curbp, curbp->b_point, searchtext);
 			if (found != -1 ) {
 				curbp->b_point = found;
-				msg("Search: %s", searchtext);
+				msg(L"Search: %ls", searchtext);
 				display();
 			} else {
-				msg("Failing Search: %s", searchtext);
+				msg(L"Failing Search: %ls", searchtext);
 				dispmsg();
 				curbp->b_point = 0;
 			}
 			break;
-		case 0x7f: /* del, erase */
-		case 0x08: /* backspace */
+	    case (wint_t)0x7f: /* del, erase */
+	    case L'\b': /* backspace */
 			if (cpos == 0)
 				continue;
-			searchtext[--cpos] = '\0';
-			msg("Search: %s", searchtext);
+			searchtext[--cpos] = L'\0';
+			msg(L"Search: %ls", searchtext);
 			dispmsg();
 			break;
-		default:	
+	    default:
 			if (cpos < STRBUF_M - 1) {
-				searchtext[cpos++] = (char) c;
-				searchtext[cpos] = '\0';
-				msg("Search: %s", searchtext);
+				searchtext[cpos++] = (wchar_t) c;
+				searchtext[cpos] = L'\0';
+				msg(L"Search: %ls", searchtext);
 				dispmsg();
 			}
 			break;
@@ -789,38 +796,36 @@ keymap_t key_map[] = {@|
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
-        wchar_t *input;
+        wchar_t input;
         keymap_t *key_return;
 	setlocale(LC_CTYPE, "C.UTF-8");
-	if (argc != 2) fatal("usage: " E_NAME " filename\n");
+	if (argc != 2) fatal(L"usage: " E_NAME " filename\n");
 
 	initscr();
 	raw();
 	noecho();
 
 	curbp = new_buffer();
-	(void)insert_file(argv[1], FALSE);
+	insert_file(argv[1], FALSE);
 	/* Save filename irregardless of load() success. */
 	strncpy(curbp->b_fname, argv[1], MAX_FNAME);
 	curbp->b_fname[MAX_FNAME] = '\0'; /* force truncation */
 
-	if (!growgap(curbp, CHUNK)) fatal("Failed to allocate required memory.\n");
-
-	key_map = keymap;
+	if (!growgap(curbp, CHUNK)) fatal(L"Failed to allocate required memory.\n");
 
 	while (!done) {
 		display();
-		input = get_key(key_map, &key_return);
+		input = get_key(&key_return);
 
 		if (key_return != NULL) {
 			(key_return->func)();
 		} else {
 			/* allow TAB and NEWLINE, any other control char is 'Not Bound' */
-			if (*input > 31 || *input == 10 || *input == 9)
-				insert();
+			if (input >= L' ' || input == L'\n' || input == L'\t')
+				insert(input);
                         else {
 				fflush(stdin);
-				msg("Not bound");
+				msg(L"Not bound");
 			}
 		}
 	}
@@ -829,8 +834,12 @@ int main(int argc, char **argv)
 	refresh();
 	noraw();
 	endwin();
+        free(curbp);
 	return 0;
 }
+
+@ Utility macros.
+@d ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 @ @<Header files@>=
 #include <stdlib.h>
