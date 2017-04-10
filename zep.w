@@ -21,8 +21,9 @@
 @<Header files@>@;
 @<Typedef declarations@>@;
 @<Global variables@>@;
-@<Procedures@>@;
+@<Predeclarations of procedures@>@;
 @<Key bindings@>@;
+@<Procedures@>@;
 @<Main program@>@;
 
 @ @s point_t int
@@ -52,7 +53,6 @@ typedef struct buffer_t
 @ @<Global variables@>=
 int done;
 int msgflag;
-keymap_t *key_map;
 buffer_t *curbp;
 point_t nscrap = 0;
 wchar_t *scrap = NULL;
@@ -95,7 +95,9 @@ void fatal(wchar_t *msg)
 	refresh();
 	endwin();
 	noraw();
-	wprintf(L"\n" E_NAME L" " E_VERSION L": %ls\n", msg);
+	wprintf(L"\n" E_NAME
+          L" " E_VERSION
+          L": %ls\n", msg);
 	exit(EXIT_FAILURE);
 }
 
@@ -197,6 +199,8 @@ point_t movegap(buffer_t *bp, point_t offset)
 	return (pos(bp, bp->b_egap));
 }
 
+@ @<Predecl...@>=
+void save(void);
 @ @<Procedures@>=
 void save(void)
 {
@@ -215,10 +219,10 @@ void save(void)
 
 @ @<Write file@>=
 size_t n;
-for (n = 0; n < length; n++)
+for (n = 0; n < (size_t) length; n++)
   if (fputwc(*(curbp->b_egap + n), fp) == WEOF)
     break;
-if (n != length)
+if (n != (size_t) length)
   msg(L"Failed to write file \"%s\".", curbp->b_fname);
 
 @ Reads file into buffer at point.
@@ -264,7 +268,7 @@ for (len=0; len<(size_t)sb.st_size-1 && (c=fgetwc(fp))!=WEOF; len++) {
   if (c == L'\0') fatal(L"File contains zero character");
   *(curbp->b_gap + len) = (wchar_t) c;
 }
-if (len != sb.st_size) fatal(L"Error reading file");
+if (len != (size_t)sb.st_size) fatal(L"Error reading file");
 curbp->b_gap += len;
 
 @ UTF-8 is valid encoding for Unicode. The requirement of UTF-8 is that it is equal to
@@ -295,7 +299,7 @@ wchar_t get_key(keymap_t **key_return)
 
 	do {
 		assert(K_BUFFER_LENGTH > record - buffer);
-		if (get_wch(record)==ERR) fatal(L"Error reading input"); /* read and record
+		if (get_wch((wint_t *)record)==ERR) fatal(L"Error reading input"); /* read and record
                   one code-point. */
 		*(++record) = L'\0'; /* FIXME: try to put ++ to |get_wch| from here after
                   you will finish everything */
@@ -309,7 +313,8 @@ wchar_t get_key(keymap_t **key_return)
 				if (*q == '\0' && *p == L'\0') { /* an exact match */
 					*key_return = k;
 					*buffer = L'\0'; /* clear record buffer */
-					return L'\0'; /* not used */
+					return
+                                          L'\0'; /* not used */
 				}
 			}
 			if (*p == L'\0' && *q != '\0') /* record bytes match part of
@@ -326,10 +331,10 @@ wchar_t get_key(keymap_t **key_return)
 @<Procedures@>=
 point_t lnstart(buffer_t *bp, register point_t off)
 {
-	register char_t *p;
+	register wchar_t *p;
 	do
 		p = ptr(bp, --off);
-	while (bp->b_buf < p && *p != '\n');
+	while (bp->b_buf < p && *p != L'\n');
 	return (bp->b_buf < p ? ++off : 0);
 }
 
@@ -357,11 +362,12 @@ point_t segstart(buffer_t *bp, point_t start, point_t finish)
 	return (c < COLS ? start : finish);
 }
 
-@ @<Procedures@>=
-/* Forward scan for start of logical line segment following 'finish' */
+@ Forward scan for start of logical line segment following `finish'.
+
+@<Procedures@>=
 point_t segnext(buffer_t *bp, point_t start, point_t finish)
 {
-	char_t *p;
+	wchar_t *p;
 	int c = 0;
 
 	point_t scan = segstart(bp, start, finish);
@@ -370,9 +376,9 @@ point_t segnext(buffer_t *bp, point_t start, point_t finish)
 		if (bp->b_ebuf <= p || COLS <= c)
 			break;
 		++scan;
-		if (*p == '\n')
+		if (*p == L'\n')
 			break;
-		c += *p == '\t' ? 8 - (c & 7) : 1;
+		c += *p == L'\t' ? 8 - (c & 7) : 1;
 	}
 	return (p < bp->b_ebuf ? scan : pos(bp, bp->b_ebuf));
 }
@@ -402,9 +408,9 @@ point_t dndn(buffer_t *bp, point_t off)
 point_t lncolumn(buffer_t *bp, point_t offset, int column)
 {
 	int c = 0;
-	char_t *p;
-	while ((p = ptr(bp, offset)) < bp->b_ebuf && *p != '\n' && c < column) {
-		c += *p == '\t' ? 8 - (c & 7) : 1;
+	wchar_t *p;
+	while ((p = ptr(bp, offset)) < bp->b_ebuf && *p != L'\n' && c < column) {
+		c += *p == L'\t' ? 8 - (c & 7) : 1;
 		++offset;
 	}
 	return (offset);
@@ -424,11 +430,12 @@ void modeline(buffer_t *bp)
 	standout();
 	move(bp->w_top + bp->w_rows, 0);
 	mch = ((bp->b_flags & B_MODIFIED) ? '*' : '=');
-	swprintf(temp, ARRAY_SIZE(temp), "=%c " E_LABEL " == %s ", mch, bp->b_fname);
+	swprintf(temp, ARRAY_SIZE(temp), L"=%c " E_LABEL
+          L" == %s ", mch, bp->b_fname);
 	addwstr(temp);
 
 	for (i = (int)(wcslen(temp) + 1); i <= COLS; i++)
-		add_wch(L'=');
+		addch('=');
 	standend();
 }
 
@@ -487,11 +494,11 @@ void display()
 		if (bp->w_top + bp->w_rows <= i || bp->b_ebuf <= p) /* maxline */
 			break;
 		if (*p != L'\r') {
-			if (iswprint(*p) || *p == L'\t' || *p == L'\n') {
+			if (iswprint((wint_t)*p) || *p == L'\t' || *p == L'\n') {
 				j += *p == L'\t' ? 8-(j&7) : 1;
-				add_wch(*p);
+				add_wch((cchar_t *)p);
 			} else {
-				const wchar_t *ctrl = wunctrl((cchar_t)p);
+				const wchar_t *ctrl = wunctrl((cchar_t *)p);
 				j += (int) wcslen(ctrl);
 				addwstr(ctrl);
 			}
@@ -518,25 +525,40 @@ void display()
 	refresh();
 }
 
-@ @<Procedures@>=
-void top() { curbp->b_point = 0; }
-void bottom() {	curbp->b_epage = curbp->b_point = pos(curbp, curbp->b_ebuf); }
-void left() { if (0 < curbp->b_point) --curbp->b_point; }
-void right() { if (curbp->b_point < pos(curbp, curbp->b_ebuf)) ++curbp->b_point; }
-void up() { curbp->b_point = lncolumn(curbp, upup(curbp, curbp->b_point),curbp->b_col); }
-void down() { curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point),curbp->b_col); }
-void lnbegin() { curbp->b_point = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point); }
-void quit() { done = 1; }
+@ @<Predecl...@>=
+void top(void);
+void bottom(void);
+void left(void);
+void right(void);
+void up(void);
+void down(void);
+void lnbegin(void);
+void quit(void);
 
 @ @<Procedures@>=
-void lnend()
+void top(void) {@+ curbp->b_point = 0; @+}
+void bottom(void) {@+ curbp->b_epage = curbp->b_point = pos(curbp, curbp->b_ebuf); @+}
+void left(void) {@+ if (0 < curbp->b_point) --curbp->b_point; @+}
+void right(void) {@+ if (curbp->b_point < pos(curbp, curbp->b_ebuf)) ++curbp->b_point; @+}
+void up(void) {@+ curbp->b_point = lncolumn(curbp, upup(curbp, curbp->b_point),curbp->b_col); @+}
+void down(void) {@+ curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point),curbp->b_col); @+}
+void lnbegin(void) {@+ curbp->b_point = segstart(curbp,
+  lnstart(curbp,curbp->b_point), curbp->b_point); @+}
+void quit(void) {@+ done = 1; @+}
+
+@ @<Predecl...@>=
+void lnend(void);
+@ @<Procedures@>=
+void lnend(void)
 {
 	curbp->b_point = dndn(curbp, curbp->b_point);
 	left();
 }
 
+@ @<Predecl...@>=
+void pgdown(void);
 @ @<Procedures@>=
-void pgdown()
+void pgdown(void)
 {
 	curbp->b_page = curbp->b_point = upup(curbp, curbp->b_epage);
 	while (0 < curbp->b_row--)
@@ -544,8 +566,10 @@ void pgdown()
 	curbp->b_epage = pos(curbp, curbp->b_ebuf);
 }
 
+@ @<Predecl...@>=
+void pgup(void);
 @ @<Procedures@>=
-void pgup()
+void pgup(void)
 {
 	int i = curbp->w_rows;
 	while (0 < --i) {
@@ -555,18 +579,20 @@ void pgup()
 }
 
 @ @<Procedures@>=
-void insert(wchar_t *input)
+void insert(wchar_t input)
 {
 	assert(curbp->b_gap <= curbp->b_egap);
 	if (curbp->b_gap == curbp->b_egap && !growgap(curbp, CHUNK)) return;
 	curbp->b_point = movegap(curbp, curbp->b_point);
-	*curbp->b_gap++ = *input == L'\r' ? L'\n' : *input;
+	*curbp->b_gap++ = input == L'\r' ? L'\n' : input;
 	curbp->b_point = pos(curbp, curbp->b_egap);
 	curbp->b_flags |= B_MODIFIED;
 }
 
+@ @<Predecl...@>=
+void backsp(void);
 @ @<Procedures@>=
-void backsp()
+void backsp(void)
 {
 	curbp->b_point = movegap(curbp, curbp->b_point);
 	if (curbp->b_buf < curbp->b_gap) {
@@ -576,8 +602,10 @@ void backsp()
 	curbp->b_point = pos(curbp, curbp->b_egap);
 }
 
+@ @<Predecl...@>=
+void delete(void);
 @ @<Procedures@>=
-void delete()
+void delete(void)
 {
 	curbp->b_point = movegap(curbp, curbp->b_point);
 	if (curbp->b_egap < curbp->b_ebuf) {
@@ -586,13 +614,17 @@ void delete()
 	}
 }
 
+@ @<Predecl...@>=
+void set_mark(void);
 @ @<Procedures@>=
-void set_mark()
+void set_mark(void)
 {
 	curbp->b_mark = (curbp->b_mark == curbp->b_point ? NOMARK : curbp->b_point);
 	msg(L"Mark set");
 }
 
+@ @<Predecl...@>=
+void copy_cut(int cut);
 @ @<Procedures@>=
 void copy_cut(int cut)
 {
@@ -630,26 +662,33 @@ void copy_cut(int cut)
 	}
 }
 
+@ @<Predecl...@>=
+void paste(void);
 @ @<Procedures@>=
-void paste()
+void paste(void)
 {
 	if (nscrap <= 0) {
 		msg(L"Nothing to paste.");
 	} else if (nscrap < curbp->b_egap - curbp->b_gap || growgap(curbp, nscrap)) {
 		curbp->b_point = movegap(curbp, curbp->b_point);
-		memcpy(curbp->b_gap, scrap, (size_t) nscrap * sizeof (char_t));
+		memcpy(curbp->b_gap, scrap, (size_t) nscrap * sizeof (wchar_t));
 		curbp->b_gap += nscrap;
 		curbp->b_point = pos(curbp, curbp->b_egap);
 		curbp->b_flags |= B_MODIFIED;
 	}
 }
 
+@ @<Predecl...@>=
+void copy(void);
+void cut(void);
 @ @<Procedures@>=
-void copy() { copy_cut(FALSE); }
-void cut() { copy_cut(TRUE); }
+void copy(void) { copy_cut(FALSE); }
+void cut(void) { copy_cut(TRUE); }
 
+@ @<Predecl...@>=
+void killtoeol(void);
 @ @<Procedures@>=
-void killtoeol()
+void killtoeol(void)
 {
 	/* point = start of empty line or last char in file */
 	if (*(ptr(curbp, curbp->b_point)) == L'\n' ||
@@ -689,8 +728,10 @@ wchar_t searchtext[STRBUF_M];
 
 @ Here is used the concept which is explained in section~\asciisec.
 
-@<Procedures@>=
-void search()
+@<Predecl...@>=
+void search(void);
+@ @<Procedures@>=
+void search(void)
 {
 	int cpos = 0;	
 	wint_t c;
@@ -710,11 +751,13 @@ void search()
 	    continue; /* ignore control keys other than C-g, backspace, C-s, C-r, ESC */
 
 	  switch(c) {
-	    case L'\e': /* esc */
+	    case
+              L'\e': /* esc */
 			searchtext[cpos] = L'\0';
 			flushinp(); /* discard any escape sequence without writing in buffer */
 			return;
-	    case L'\a': /* ctrl-g */
+	    case
+              L'\a': /* ctrl-g */
 			curbp->b_point = o_point;
 			return;
 	    case (wint_t)0x13: /* ctrl-s, do the search */
@@ -730,7 +773,8 @@ void search()
 			}
 			break;
 	    case (wint_t)0x7f: /* del, erase */
-	    case L'\b': /* backspace */
+	    case
+              L'\b': /* backspace */
 			if (cpos == 0)
 				continue;
 			searchtext[--cpos] = L'\0';
