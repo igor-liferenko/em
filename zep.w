@@ -1,77 +1,35 @@
 \let\lheader\rheader
 \datethis
+
 @s delete normal
 @s new normal
+
 @* Zep Emacs.
    Derived from: Anthony's Editor January 93 and Hugh Barney 2017
 
 @d MAX_FNAME       256
 @d MSGLINE         (LINES-1)
+@d B_MODIFIED	0x01		/* modified buffer */
+@d CHUNK           8096L
+@d K_BUFFER_LENGTH 256
+@d TEMPBUF         512
+@d MIN_GAP_EXPAND  512
+@d NOMARK          -1
+@d STRBUF_M        64
 
 @c
-@<Header files@>@/
+@<Header files@>@;
+@<Typedef declarations@>@;
+@<Global variables@>@;
+@<Procedures@>@;
+@<Key bindings@>@;
+@<Main program@>@;
 
-#define B_MODIFIED	0x01		/* modified buffer */
-#define CHUNK           8096L
-#define K_BUFFER_LENGTH 256
-#define TEMPBUF         512
-#define MIN_GAP_EXPAND  512
-#define NOMARK          -1
-#define STRBUF_M        64
+@ @s point_t int
+@s buffer_t int
 
-@<Typedef declarations@>@/
-@<Global variables@>@/
-@<Procedures@>@/
-
-/* the key bindings:  desc, keys, func */
-keymap_t keymap[] = {
-	{"C-a beginning-of-line    ", "\x01", lnbegin },
-	{"C-b                      ", "\x02", left },
-	{"C-d forward-delete-char  ", "\x04", delete },
-	{"C-e end-of-line          ", "\x05", lnend },
-	{"C-f                      ", "\x06", right },
-	{"C-n                      ", "\x0E", down },
-	{"C-p                      ", "\x10", up },
-	{"C-h backspace            ", "\x08", backsp },
-	{"C-k kill-to-eol          ", "\x0B", killtoeol },
-	{"C-s search               ", "\x13", search },
-	{"C-v                      ", "\x16", pgdown },
-	{"C-w kill-region          ", "\x17", cut},
-	{"C-y yank                 ", "\x19", paste},
-	{"C-space set-mark         ", "\x00", set_mark },
-	{"esc @@ set-mark           ", "\x1B\x40", set_mark },
-	{"esc k kill-region        ", "\x1B\x6B", cut },
-	{"esc v                    ", "\x1B\x76", pgup },
-	{"esc w copy-region        ", "\x1B\x77", copy},
-	{"esc < beg-of-buf         ", "\x1B\x3C", top },
-	{"esc > end-of-buf         ", "\x1B\x3E", bottom },
-	{"up previous-line         ", "\x1B\x5B\x41", up },
-	{"down next-line           ", "\x1B\x5B\x42", down },
-	{"left backward-character  ", "\x1B\x5B\x44", left },
-	{"right forward-character  ", "\x1B\x5B\x43", right },
-	{"home beginning-of-line   ", "\x1B\x4F\x48", lnbegin },
-	{"end end-of-line          ", "\x1B\x4F\x46", lnend },
-	{"DEL forward-delete-char  ", "\x1B\x5B\x33\x7E", delete },
-	{"backspace delete-left    ", "\x7f", backsp },
-	{"PgUp                     ", "\x1B\x5B\x35\x7E",pgup },
-	{"PgDn                     ", "\x1B\x5B\x36\x7E", pgdown },
-	{"C-x C-s save-buffer      ", "\x18\x13", save },  
-	{"C-x C-c exit             ", "\x18\x03", quit },
-	{"K_ERROR                  ", NULL, NULL }
-};
-
-@<Main program@>
-
-@ @<Typedef declarations@>=
-
-typedef unsigned char char_t;
+@<Typedef declarations@>=
 typedef long point_t;
-
-typedef struct keymap_t {
-	char *key_desc;                 /* name of bound function */
-	wchar_t *key_bytes;		/* the string of bytes when this key is pressed */
-	void (*func)(void);
-} keymap_t;
 
 typedef struct buffer_t
 {
@@ -83,7 +41,7 @@ typedef struct buffer_t
 	wchar_t *b_ebuf;           /* end of buffer */
 	wchar_t *b_gap;            /* start of gap */
 	wchar_t *b_egap;           /* end of gap */
-	char w_top;	          /* Origin 0 top row of window */
+	char w_top;	          /* origin (0 = top row of window) */
 	char w_rows;              /* no. of rows of text in window */
 	int b_row;                /* cursor row */
 	int b_col;                /* cursor col */
@@ -93,14 +51,11 @@ typedef struct buffer_t
 
 @ @<Global variables@>=
 int done;
-wchar_t *input;
 int msgflag;
-keymap_t *key_return;
 keymap_t *key_map;
 buffer_t *curbp;
 point_t nscrap = 0;
-char_t *scrap = NULL;
-wchar_t searchtext[STRBUF_M];
+wchar_t *scrap = NULL;
 
 @ Some compilers define |size_t| as a unsigned 16 bit number while
 |point_t| and |off_t| might be defined as a signed 32 bit number.
@@ -308,8 +263,16 @@ int insert_file(char *fn, int modflag)
         *(curbp->b_gap + len) = L'\0';
 	curbp->b_gap += len;
 
-@ @<Procedures@>=
-wchar_t *get_key(keymap_t *keys, keymap_t **key_return)
+@ UTF-8 is valid encoding for Unicode. The requirement of UTF-8 is that it is equal to
+ASCII in |\000|--|\177| range. According to the structure of UTF-8 (first bit is zero
+for ASCII), it follows that all ASCII codes are Unicode values (and vice versa).
+In other words, the following transformation is always valid:
+|wc = (wchar_t)c|, where |c| is of type |char| and |wc| is of type
+|wchar_t|, and |c| contains ASCII codes. In our case |c| can only contain ASCII codes
+(see |@<Keymap definition@>|).
+
+@<Procedures@>=
+wchar_t *get_key(keymap_t **key_return)
 {
 	keymap_t *k;
 	int submatch;
@@ -318,42 +281,39 @@ wchar_t *get_key(keymap_t *keys, keymap_t **key_return)
 
 	*key_return = NULL;
 
-	/* if recorded bytes remain, return next recorded byte. */
-	if (*record != L'\0') {
+	if (*record != L'\0') { /* if recorded bytes remain, return next recorded byte. */
 		*key_return = NULL;
 		return record++;
 	}
-	/* reset record buffer. */
-	record = buffer;
+	record = buffer; /* reset record buffer. */
 
 	do {
 		assert(K_BUFFER_LENGTH > record - buffer);
-		/* read and record one byte. */
-		if (get_wch(record)==ERR) fatal(L"Error reading input");
-		*(++record) = L'\0';
+		if (get_wch(record)==ERR) fatal(L"Error reading input"); /* read and record
+                  one code-point. */
+		*(++record) = L'\0'; /* FIXME: try to put ++ to |get_wch| from here after
+                  you will finish everything */
 
-		/* if recorded bytes match any multi-byte sequence... */
-		for (k = keys, submatch = 0; k->key_bytes != NULL; ++k) {
-			wchar_t *p, *q;
+		for (k = key_map, submatch = 0; k->key_bytes != NULL; k++) { /* if recorded
+                  code-points match any multi-byte sequence... */
+			wchar_t *p;
+                        char *q;
 
-			for (p = buffer, q = k->key_bytes; *p == *q; ++p, ++q) {
-			        /* an exact match */
-				if (*q == L'\0' && *p == L'\0') {
+			for (p = buffer, q = k->key_bytes; *p == (wchar_t) *q; p++, q++) {
+				if (*q == '\0' && *p == L'\0') { /* an exact match */
 	    				record = buffer;
 					*record = L'\0';
 					*key_return = k;
 					return record; /* empty string */
 				}
 			}
-			/* record bytes match part of a command sequence */
-			if (*p == L'\0' && *q != L'\0') {
+			if (*p == L'\0' && *q != '\0') /* record bytes match part of
+                          a command sequence */
 				submatch = 1;
-			}
 		}
 	} while (submatch);
-	/* nothing matched, return recorded bytes. */
-	record = buffer;
-	return (record++);
+	record = buffer; /* nothing matched, return recorded bytes. */
+	return (record++); /* FIXME: why ++ ? */
 }
 
 @ Reverse scan for start of logical line containing offset.
@@ -719,6 +679,9 @@ point_t search_forward(buffer_t *bp, point_t start_p, char *stext)
 	return -1;
 }
 
+@ @<Global variables@>=
+wchar_t searchtext[STRBUF_M];
+
 @ @<Procedures@>=
 void search()
 {
@@ -779,9 +742,56 @@ void search()
 	}
 }
 
+@ @s keymap_t int
+@<Typedef declarations@>=
+typedef struct keymap_t {
+	char *key_desc;                 /* name of bound function */
+	char *key_bytes;		/* the string of bytes when this key is pressed */
+	void (*func)(void);
+} keymap_t;
+
+@ @<Key bindings@>=
+keymap_t key_map[] = {@|
+	{"C-a beginning-of-line    ", "\x01", lnbegin },@|
+	{"C-b                      ", "\x02", left },@|
+	{"C-d forward-delete-char  ", "\x04", delete },@|
+	{"C-e end-of-line          ", "\x05", lnend },@|
+	{"C-f                      ", "\x06", right },@|
+	{"C-n                      ", "\x0E", down },@|
+	{"C-p                      ", "\x10", up },@|
+	{"C-h backspace            ", "\x08", backsp },@|
+	{"C-k kill-to-eol          ", "\x0B", killtoeol },@|
+	{"C-s search               ", "\x13", search },@|
+	{"C-v                      ", "\x16", pgdown },@|
+	{"C-w kill-region          ", "\x17", cut},@|
+	{"C-y yank                 ", "\x19", paste},@|
+	{"C-space set-mark         ", "\x00", set_mark },@|
+	{"esc @@ set-mark           ", "\x1B\x40", set_mark },@|
+	{"esc k kill-region        ", "\x1B\x6B", cut },@|
+	{"esc v                    ", "\x1B\x76", pgup },@|
+	{"esc w copy-region        ", "\x1B\x77", copy},@|
+	{"esc < beg-of-buf         ", "\x1B\x3C", top },@|
+	{"esc > end-of-buf         ", "\x1B\x3E", bottom },@|
+	{"up previous-line         ", "\x1B\x5B\x41", up },@|
+	{"down next-line           ", "\x1B\x5B\x42", down },@|
+	{"left backward-character  ", "\x1B\x5B\x44", left },@|
+	{"right forward-character  ", "\x1B\x5B\x43", right },@|
+	{"home beginning-of-line   ", "\x1B\x4F\x48", lnbegin },@|
+	{"end end-of-line          ", "\x1B\x4F\x46", lnend },@|
+	{"DEL forward-delete-char  ", "\x1B\x5B\x33\x7E", delete },@|
+	{"backspace delete-left    ", "\x7f", backsp },@|
+	{"PgUp                     ", "\x1B\x5B\x35\x7E",pgup },@|
+	{"PgDn                     ", "\x1B\x5B\x36\x7E", pgdown },@|
+	{"C-x C-s save-buffer      ", "\x18\x13", save },@|
+	{"C-x C-c exit             ", "\x18\x03", quit },@|
+	{"K_ERROR                  ", NULL, NULL }};
+
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
+        wchar_t *input;
+        keymap_t *key_return;
+	setlocale(LC_CTYPE, "C.UTF-8");
 	if (argc != 2) fatal("usage: " E_NAME " filename\n");
 
 	initscr();
@@ -836,3 +846,5 @@ int main(int argc, char **argv)
 #include <string.h>
 #include <unistd.h>
 #include <termios.h>
+#include <locale.h>
+#include <wchar.h>
