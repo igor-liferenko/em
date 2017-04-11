@@ -270,11 +270,11 @@ int insert_file(char *fn, int modflag)
 	return (TRUE);
 }
 
-@ We read file character-by-character, instead of reading the entire file
-into memory in one go (which is faster), because multi-byte string must be
-converted to wide-character string and this can be done only on
-character-by-character basis. This is the necessary price to pay for
-UTF-8 support.
+@ We read file byte-by-byte, instead of reading the entire file
+into memory in one go (which is faster), because UTF-8 data must be
+converted to wide-character representation. There is just no other
+way to convert input data from UTF-8 than processing it byte-by-byte.
+This is the necessary price to pay for using wide-character buffer.
 
 @<Read file@>=
 wint_t c;
