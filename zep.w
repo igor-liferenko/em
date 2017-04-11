@@ -906,3 +906,4 @@ int main(int argc, char **argv)
 #include <termios.h>
 #include <locale.h>
 #include <wchar.h>
+#include <errno.h>
