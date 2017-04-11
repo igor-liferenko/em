@@ -285,7 +285,7 @@ if (c==WEOF && !feof(fp))
 curbp->b_gap += len;
 
 @ UTF-8 is valid encoding for Unicode. The requirement of UTF-8 is that it is equal to
-ASCII in |\000|--|\177| range. According to the structure of UTF-8 (first bit is zero
+ASCII in |0000|--|0177| range. According to the structure of UTF-8 (first bit is zero
 for ASCII), it follows that all ASCII codes are Unicode values (and vice versa).
 In other words, the following transformation is always valid:
 |wc = (wchar_t)c|, where |c| is of type |char| and |wc| is of type
