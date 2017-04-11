@@ -279,9 +279,9 @@ UTF-8 support.
 
 @<Read file@>=
 wint_t c;
-for (len=0; len<(size_t)sb.st_size-1 && (c=fgetwc(fp))!=WEOF; len++)
+for (len=0; len < (size_t) sb.st_size && (c=fgetwc(fp)) != WEOF; len++)
   *(curbp->b_gap + len) = (wchar_t) c;
-if (len != (size_t)sb.st_size)
+if (len != (size_t) sb.st_size)
   fatal(L"Error reading file: %s.", strerror(errno));
 curbp->b_gap += len;
 
