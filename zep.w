@@ -63,7 +63,7 @@ malloc(), realloc(), fread(), and fwrite() take |size_t| parameters,
 which means there will be some size limits because |size_t| is too
 small of a type.
 
-@d MAX_SIZE_T      ((point_t) (size_t) ~0)
+@d MAX_SIZE_T      ((unsigned long) (size_t) ~0)
 
 @ @<Procedures@>=
 buffer_t* new_buffer()
@@ -156,14 +156,14 @@ int growgap(buffer_t *bp, point_t n)
 	@<Calculate new length |newlen| of gap@>@;
 
 	if (buflen == 0) {
-		if (newlen < 0 || MAX_SIZE_T < newlen)
+		if (newlen < 0 || MAX_SIZE_T < (unsigned long) newlen)
                   fatal(L"Failed to allocate required memory.");
 		new = malloc((size_t) newlen * sizeof(wchar_t));
 		if (new == NULL)
 		  fatal(L"Failed to allocate required memory.");
 	}
         else {
-		if (newlen < 0 || MAX_SIZE_T < newlen) {
+		if (newlen < 0 || MAX_SIZE_T < (unsigned long) newlen) {
 			msg(L"Failed to allocate required memory."); /* report non-fatal error */
 			return (FALSE);
 		}
@@ -186,7 +186,7 @@ int growgap(buffer_t *bp, point_t n)
 
 @ Reduce number of reallocs by growing by a minimum amount.
 
-@<Calculate new length of gap@>=
+@<Calculate new length...@>=
 n = (n < MIN_GAP_EXPAND ? MIN_GAP_EXPAND : n);
 newlen = buflen + n;
 
@@ -253,7 +253,7 @@ int insert_file(char *fn, int modflag)
 		msg(L"Failed to find file \"%s\".", fn);
 		return (FALSE);
 	}
-	if (MAX_SIZE_T < sb.st_size) {
+	if (MAX_SIZE_T < (unsigned long) sb.st_size) {
 		msg(L"File \"%s\" is too big to load.", fn);
 		return (FALSE);
 	}
