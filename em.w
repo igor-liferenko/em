@@ -280,7 +280,7 @@ UTF-8 support.
 wint_t c;
 for (len=0; len < (size_t) sb.st_size && (c=fgetwc(fp)) != WEOF; len++)
   *(curbp->b_gap + len) = (wchar_t) c;
-if (len != (size_t) sb.st_size)
+if (c==WEOF && !feof(fp))
   fatal(L"Error reading file: %s.", strerror(errno));
 curbp->b_gap += len;
 
