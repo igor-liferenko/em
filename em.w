@@ -226,7 +226,10 @@ void save(void)
 	msg(L"File \"%s\" %ld chars saved.", curbp->b_fname, pos(curbp, curbp->b_ebuf));
 }
 
-@ @<Write file@>=
+@ We write file character-by-character for similar reasons which are explained in
+|@<Read file@>|.
+
+@<Write file@>=
 size_t n;
 for (n = 0; n < (size_t) length; n++)
   if (fputwc(*(curbp->b_egap + n), fp) == WEOF)
