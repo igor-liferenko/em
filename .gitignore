@@ -1,7 +1,5 @@
-# -*- conf -*-
-
+em
 *.o
-zep
 *.c
 *.dvi
 *.idx

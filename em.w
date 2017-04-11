@@ -4,8 +4,7 @@
 @s delete normal
 @s new normal
 
-@* Zep Emacs.
-   Derived from: Anthony's Editor January 93 and Hugh Barney 2017
+@* EMacs. Derived from Zep Emacs by Hugh Barney, 2017
 
 @d MAX_FNAME       256
 @d MSGLINE         (LINES-1)
@@ -85,10 +84,7 @@ buffer_t* new_buffer()
 	return bp;
 }
 
-@ @d E_NAME          L"zep"
-@d E_VERSION       L"v1.2"
-
-@<Procedures@>=
+@ @<Procedures@>=
 void fatal(wchar_t *msg, ...)
 {
 	va_list args;
@@ -97,9 +93,7 @@ void fatal(wchar_t *msg, ...)
 	noraw();
 	endwin();
 	free(curbp);
-	wprintf(L"\n" E_NAME
-          L" " E_VERSION
-          L": ");
+	wprintf(L"\n");
 	va_start(args, msg);
 	vwprintf(msg, args);
 	va_end(args);
@@ -441,9 +435,7 @@ point_t lncolumn(buffer_t *bp, point_t offset, int column)
 @ @<Global variables@>=
 wchar_t temp[TEMPBUF];
 
-@ @d E_LABEL         "Zep:"
-
-@<Procedures@>=
+@ @<Procedures@>=
 void modeline(buffer_t *bp)
 {
 	int i;
@@ -452,8 +444,7 @@ void modeline(buffer_t *bp)
 	standout();
 	move(bp->w_top + bp->w_rows, 0);
 	mch = ((bp->b_flags & B_MODIFIED) ? '*' : '=');
-	swprintf(temp, ARRAY_SIZE(temp), L"=%c " E_LABEL
-          L" == %s ", mch, bp->b_fname);
+	swprintf(temp, ARRAY_SIZE(temp), L"=%c em == %s ", mch, bp->b_fname);
 	addwstr(temp);
 
 	for (i = (int)(wcslen(temp) + 1); i <= COLS; i++)
@@ -866,7 +857,7 @@ int main(int argc, char **argv)
         wchar_t input;
         keymap_t *key_return;
 	setlocale(LC_CTYPE, "C.UTF-8");
-	if (argc != 2) fatal(L"usage: " E_NAME " filename");
+	if (argc != 2) fatal(L"usage: em filename");
 
 	initscr();
 	raw();
