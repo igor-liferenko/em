@@ -311,11 +311,12 @@ wchar_t get_key(keymap_t **key_return)
 
 	*key_return = NULL;
 
-	if (*record != L'\0') { /* if recorded bytes remain, return next recorded byte. */
+	if (*record != L'\0') { /* if recorded code-point(s) remain, return current code-point
+          and advance pointer to the next */
 		*key_return = NULL;
 		return *(record++);
 	}
-	record = buffer; /* reset record buffer. */
+	record = buffer; /* reset record buffer */
 
 	do {
 		assert(K_BUFFER_LENGTH > record - buffer);
@@ -342,8 +343,9 @@ wchar_t get_key(keymap_t **key_return)
 				submatch = 1;
 		}
 	} while (submatch);
-	record = buffer; /* nothing matched, return recorded bytes. */
-	return *(record++); /* FIXME: why ++ ? */
+	record = buffer; /* if nothing matched, return the first recorded code-point
+          and advance pointer to the next */
+	return *(record++);
 }
 
 @ Reverse scan for start of logical line containing offset.
