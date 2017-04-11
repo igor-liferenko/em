@@ -224,7 +224,7 @@ void save(void)
 }
 
 @ We write file character-by-character for similar reasons which are explained in
-|@<Read file@>|.
+|@<Read file...@>|.
 
 @<Write file@>=
 size_t n;
@@ -259,7 +259,7 @@ int insert_file(char *fn, int modflag)
 	}
 	curbp->b_point = movegap(curbp, curbp->b_point);
 
-        @<Read file@>@;
+        @<Read file and set number |len| of chars@>@;
 
 	if (fclose(fp) != 0) {
 		msg(L"Failed to close file \"%s\".", fn);
@@ -276,7 +276,7 @@ converted to wide-character representation. There is just no other
 way to convert input data from UTF-8 than processing it byte-by-byte.
 This is the necessary price to pay for using wide-character buffer.
 
-@<Read file@>=
+@<Read file...@>=
 wint_t c;
 for (len=0; len < (size_t) sb.st_size && (c=fgetwc(fp)) != WEOF; len++)
   *(curbp->b_gap + len) = (wchar_t) c;
