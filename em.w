@@ -509,7 +509,8 @@ void display()
 		if (*p != L'\r') {
 			if (iswprint((wint_t)*p) || *p == L'\t' || *p == L'\n') {
 				j += *p == L'\t' ? 8-(j&7) : 1;
-				add_wch((cchar_t *)p);
+                                add_wch_hack[wctomb(add_wch_hack, *p)]='\0';
+                                addstr(add_wch_hack);
 			} else {
 				const wchar_t *ctrl = wunctrl((cchar_t *)p);
 				j += (int) wcslen(ctrl);
@@ -898,6 +899,12 @@ int main(int argc, char **argv)
 
 @ Utility macros.
 @d ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
+@ |add_wch| is buggy. So use workaround - convert wide character to multibyte
+string with |wctomb| and then use |addstr|.
+
+@<Global...@>=
+char add_wch_hack[MB_LEN_MAX+1];
 
 @ @<Header files@>=
 #include <stdlib.h>
