@@ -223,7 +223,7 @@ void save(void)
         @<Write file@>@;
 	fclose(fp);
 	curbp->b_flags &= ~B_MODIFIED;
-	msg(L"File \"%s\" %ld bytes saved.", curbp->b_fname, pos(curbp, curbp->b_ebuf));
+	msg(L"File \"%s\" %ld chars saved.", curbp->b_fname, pos(curbp, curbp->b_ebuf));
 }
 
 @ @<Write file@>=
@@ -266,7 +266,7 @@ int insert_file(char *fn, int modflag)
 		return (FALSE);
 	}
 	curbp->b_flags = (char)(curbp->b_flags & (char)(modflag ? B_MODIFIED : ~B_MODIFIED));
-	msg(L"File \"%s\" %ld bytes read.", fn, len);
+	msg(L"File \"%s\" %ld chars read.", fn, len);
 	return (TRUE);
 }
 
@@ -668,9 +668,9 @@ void copy_cut(int cut)
 			curbp->b_egap += nscrap; /* if cut expand gap down */
 			curbp->b_point = pos(curbp, curbp->b_egap); /* set point to after region */
 			curbp->b_flags |= B_MODIFIED;
-			msg(L"%ld bytes cut.", nscrap);
+			msg(L"%ld chars cut.", nscrap);
 		} else {
-			msg(L"%ld bytes copied.", nscrap);
+			msg(L"%ld chars copied.", nscrap);
 		}
 		curbp->b_mark = NOMARK;  /* unmark */
 	}
