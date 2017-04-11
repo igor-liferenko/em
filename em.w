@@ -251,8 +251,7 @@ int insert_file(char *fn, int modflag)
 		msg(L"File \"%s\" is too big to load.", fn);
 		return (FALSE);
 	}
-	if (curbp->b_egap - curbp->b_gap < sb.st_size * (off_t) sizeof (wchar_t) &&
-          !growgap(curbp, sb.st_size))
+	if (curbp->b_egap - curbp->b_gap < sb.st_size && !growgap(curbp, sb.st_size))
 		return (FALSE);
 	if ((fp = fopen(fn, "r")) == NULL) {
 		msg(L"Failed to open file \"%s\".", fn);
