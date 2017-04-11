@@ -651,8 +651,8 @@ void copy_cut(int cut);
 void copy_cut(int cut)
 {
 	wchar_t *p;
-	/* if no mark or point == marker, nothing doing */
-	if (curbp->b_mark == NOMARK || curbp->b_point == curbp->b_mark) return;
+	if (curbp->b_mark == NOMARK || curbp->b_point == curbp->b_mark) return;	/* if no
+          mark or point == marker, do nothing */
 	if (scrap != NULL) {
 		free(scrap);
 		scrap = NULL;
