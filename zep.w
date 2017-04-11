@@ -89,15 +89,21 @@ buffer_t* new_buffer()
 @d E_VERSION       L"v1.2"
 
 @<Procedures@>=
-void fatal(wchar_t *msg)
+void fatal(wchar_t *msg, ...)
 {
 	move(LINES-1, 0);
 	refresh();
-	endwin();
 	noraw();
+	endwin();
+	free(curbp);
 	wprintf(L"\n" E_NAME
           L" " E_VERSION
-          L": %ls\n", msg);
+          L": ");
+	va_list args;
+	va_start(args, msg);
+	vwprintf(msg, args);
+	va_end(args);
+	wprintf(L"\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -264,11 +270,10 @@ int insert_file(char *fn, int modflag)
 
 @ @<Read file@>=
 wint_t c;
-for (len=0; len<(size_t)sb.st_size-1 && (c=fgetwc(fp))!=WEOF; len++) {
-  if (c == L'\0') fatal(L"File contains zero character");
+for (len=0; len<(size_t)sb.st_size-1 && (c=fgetwc(fp))!=WEOF; len++)
   *(curbp->b_gap + len) = (wchar_t) c;
-}
-if (len != (size_t)sb.st_size) fatal(L"Error reading file");
+if (len != (size_t)sb.st_size)
+  fatal(L"Error reading file: %s", strerror(errno));
 curbp->b_gap += len;
 
 @ UTF-8 is valid encoding for Unicode. The requirement of UTF-8 is that it is equal to
