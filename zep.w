@@ -91,6 +91,7 @@ buffer_t* new_buffer()
 @<Procedures@>=
 void fatal(wchar_t *msg, ...)
 {
+	va_list args;
 	move(LINES-1, 0);
 	refresh();
 	noraw();
@@ -99,7 +100,6 @@ void fatal(wchar_t *msg, ...)
 	wprintf(L"\n" E_NAME
           L" " E_VERSION
           L": ");
-	va_list args;
 	va_start(args, msg);
 	vwprintf(msg, args);
 	va_end(args);
@@ -153,43 +153,52 @@ int growgap(buffer_t *bp, point_t n)
 	xegap = bp->b_egap - bp->b_buf;
 	buflen = bp->b_ebuf - bp->b_buf;
     
-	/* reduce number of reallocs by growing by a minimum amount */
-	n = (n < MIN_GAP_EXPAND ? MIN_GAP_EXPAND : n);
-	newlen = buflen + n;
+	@<Calculate new length |newlen| of gap@>@;
 
 	if (buflen == 0) {
-		if (newlen < 0 || MAX_SIZE_T < newlen) fatal(L"Failed to allocate required memory.");
-		new = malloc((size_t) newlen);
-		if (new == NULL) fatal(L"Failed to allocate required memory.");
-	} else {
+		if (newlen < 0 || MAX_SIZE_T < newlen)
+                  fatal(L"Failed to allocate required memory.");
+		new = malloc((size_t) newlen * sizeof(wchar_t));
+		if (new == NULL)
+		  fatal(L"Failed to allocate required memory.");
+	}
+        else {
 		if (newlen < 0 || MAX_SIZE_T < newlen) {
 			msg(L"Failed to allocate required memory."); /* report non-fatal error */
 			return (FALSE);
 		}
-		new = realloc(bp->b_buf, (size_t) newlen);
+		new = realloc(bp->b_buf, (size_t) newlen * sizeof(wchar_t));
 		if (new == NULL) {
 			msg(L"Failed to allocate required memory."); /* report non-fatal error */
 			return (FALSE);
 		}
 	}
 
-	/* Relocate pointers in new buffer and append the new
-	 * extension to the end of the gap.
-	 */
-	bp->b_buf = new;
-	bp->b_gap = bp->b_buf + xgap;      
-	bp->b_ebuf = bp->b_buf + buflen;
-	bp->b_egap = bp->b_buf + newlen;
-	while (xegap < buflen--)
-		*--bp->b_egap = *--bp->b_ebuf;
-	bp->b_ebuf = bp->b_buf + newlen;
+	@<Relocate pointers in new buffer and append the new
+	  extension to the end of the gap@>@;
 
-	assert(bp->b_buf < bp->b_ebuf);          /* Buffer must exist. */
+	assert(bp->b_buf < bp->b_ebuf);          /* buffer must exist */
 	assert(bp->b_buf <= bp->b_gap);
-	assert(bp->b_gap < bp->b_egap);          /* Gap must grow only. */
+	assert(bp->b_gap < bp->b_egap);          /* gap must grow only */
 	assert(bp->b_egap <= bp->b_ebuf);
 	return (TRUE);
 }
+
+@ Reduce number of reallocs by growing by a minimum amount.
+
+@<Calculate new length of gap@>=
+n = (n < MIN_GAP_EXPAND ? MIN_GAP_EXPAND : n);
+newlen = buflen + n;
+
+@ @<Relocate pointers in new buffer and append the new
+    extension to the end of the gap@>=
+bp->b_buf = new;
+bp->b_gap = bp->b_buf + xgap;
+bp->b_ebuf = bp->b_buf + buflen;
+bp->b_egap = bp->b_buf + newlen;
+while (xegap < buflen--)
+	*--bp->b_egap = *--bp->b_ebuf;
+bp->b_ebuf = bp->b_buf + newlen;
 
 @ @<Procedures@>=
 point_t movegap(buffer_t *bp, point_t offset)
@@ -657,9 +666,10 @@ void copy_cut(int cut)
 		p = ptr(curbp, curbp->b_mark);
 		nscrap = curbp->b_point - curbp->b_mark;
 	}
-	if ((scrap = malloc((size_t) nscrap * sizeof(wchar_t))) == NULL) {
+	scrap = malloc((size_t) nscrap * sizeof(wchar_t));
+	if (scrap == NULL)
 		msg(L"No more memory available.");
-	} else {
+	else {
 		memcpy(scrap, p, (size_t) nscrap * sizeof (wchar_t));
 		if (cut) {
 			curbp->b_egap += nscrap; /* if cut expand gap down */
