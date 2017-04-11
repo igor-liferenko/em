@@ -103,7 +103,7 @@ void fatal(wchar_t *msg, ...)
 	va_start(args, msg);
 	vwprintf(msg, args);
 	va_end(args);
-	wprintf(L"\n");
+	wprintf(L"\n\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -158,17 +158,17 @@ int growgap(buffer_t *bp, point_t n)
 	newlen = buflen + n;
 
 	if (buflen == 0) {
-		if (newlen < 0 || MAX_SIZE_T < newlen) fatal(L"Failed to allocate required memory.\n");
+		if (newlen < 0 || MAX_SIZE_T < newlen) fatal(L"Failed to allocate required memory.");
 		new = malloc((size_t) newlen);
-		if (new == NULL) fatal(L"Failed to allocate required memory.\n");
+		if (new == NULL) fatal(L"Failed to allocate required memory.");
 	} else {
 		if (newlen < 0 || MAX_SIZE_T < newlen) {
-			msg(L"Failed to allocate required memory");
+			msg(L"Failed to allocate required memory."); /* report non-fatal error */
 			return (FALSE);
 		}
 		new = realloc(bp->b_buf, (size_t) newlen);
 		if (new == NULL) {
-			msg(L"Failed to allocate required memory");    /* Report non-fatal error. */
+			msg(L"Failed to allocate required memory."); /* report non-fatal error */
 			return (FALSE);
 		}
 	}
@@ -279,7 +279,7 @@ wint_t c;
 for (len=0; len<(size_t)sb.st_size-1 && (c=fgetwc(fp))!=WEOF; len++)
   *(curbp->b_gap + len) = (wchar_t) c;
 if (len != (size_t)sb.st_size)
-  fatal(L"Error reading file: %s", strerror(errno));
+  fatal(L"Error reading file: %s.", strerror(errno));
 curbp->b_gap += len;
 
 @ UTF-8 is valid encoding for Unicode. The requirement of UTF-8 is that it is equal to
@@ -310,8 +310,8 @@ wchar_t get_key(keymap_t **key_return)
 
 	do {
 		assert(K_BUFFER_LENGTH > record - buffer);
-		if (get_wch((wint_t *)record)==ERR) fatal(L"Error reading input"); /* read and record
-                  one code-point. */
+		if (get_wch((wint_t *)record)==ERR) fatal(L"Error reading key."); /* read
+                  and record one code-point. */
 		*(++record) = L'\0'; /* FIXME: try to put ++ to |get_wch| from here after
                   you will finish everything */
 
@@ -756,7 +756,7 @@ void search(void)
 
 	for (;;) {
 	  refresh();
-	  if (get_wch(&c) == ERR) fatal(L"bad key");
+	  if (get_wch(&c) == ERR) fatal(L"Error reading key.");
 	  if (c < L' ' && c != L'\a' && c != L'\b' && c != (wint_t)0x13
             && c != (wint_t)0x12 && c != L'\e')
 	    continue; /* ignore control keys other than C-g, backspace, C-s, C-r, ESC */
@@ -854,7 +854,7 @@ int main(int argc, char **argv)
         wchar_t input;
         keymap_t *key_return;
 	setlocale(LC_CTYPE, "C.UTF-8");
-	if (argc != 2) fatal(L"usage: " E_NAME " filename\n");
+	if (argc != 2) fatal(L"usage: " E_NAME " filename");
 
 	initscr();
 	raw();
@@ -866,7 +866,7 @@ int main(int argc, char **argv)
 	strncpy(curbp->b_fname, argv[1], MAX_FNAME);
 	curbp->b_fname[MAX_FNAME] = '\0'; /* force truncation */
 
-	if (!growgap(curbp, CHUNK)) fatal(L"Failed to allocate required memory.\n");
+	if (!growgap(curbp, CHUNK)) fatal(L"Failed to allocate required memory.");
 
 	while (!done) {
 		display();
