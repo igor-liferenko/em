@@ -92,7 +92,6 @@ void fatal(wchar_t *msg, ...)
 	refresh();
 	noraw();
 	endwin();
-	free(curbp);
 
 	va_start(args, msg);
 	vwprintf(msg, args);
@@ -912,11 +911,13 @@ int main(int argc, char **argv)
 		}
 	}
 
+	if (scrap != NULL) free(scrap);
+	if (curbp != NULL) free(curbp);
+
 	move(MSGLINE, 0);
 	refresh();
 	noraw();
 	endwin();
-        free(curbp);
 	return 0;
 }
 
