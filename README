@@ -6,6 +6,8 @@ I have taken the C source from
 
 and converted it to CWEB, then added UTF-8
 support (using wide-character API).
+To build it, just type `make'. You will need
+ctangle/cweave binaries.
 
 While wide-character support is present in CWEB,
 unfortunately it is not complete. There are these two
@@ -32,9 +34,27 @@ The things which I'm currently planning to add to zep are:
 * automatically save cursor position on exit and restore on open
 * implement proper job control as said here:
   http://web.archive.org/web/20160329140839/http://www.cons.org/cracauer/sigint.html
+* handle gnome-terminal window resize
 
 I am indepted to Hugh Barney on whose initial ideas and code
 EM is based.
 
 I also want to express my gratitude to Silvio Levy and
 Donald Knuth for CWEB.
+
+-----------------------------------------------------------
+
+For those, who are not fond of CWEB, the following may be used
+to reformat tangled output:
+
+perl -i -pe 's!/\*.*\*/$!\n$&!' em.c
+perl -i -ne 'if(/^#line \d+/){undef$prev}else{if(defined$prev){print$prev}$prev=$_}if(eof){print unless m!^/\*.*\*/$!}' em.c
+cat -s em.c | indent -kr > em.tmp && mv em.tmp em.c
+perl -i -0777 -pe 's/^\s*//' em.c
+perl -i -0777 -pe 's/\s+\\(?=\n\n)//g' em.c; perl -i -0777 -pe 's/\s+\\(?=\n\n)//g' em.c
+
+--
+
+April 2017.
+
+Igor Liferenko
