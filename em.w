@@ -317,7 +317,7 @@ wchar_t get_key(keymap_t **key_return)
 
 	do {
 		assert(K_BUFFER_LENGTH > record - buffer);
-		if (get_wch((wint_t *)record)==ERR) fatal(L"Error reading key.\n"); /* read
+		if (get_wch((wint_t *) record)==ERR) fatal(L"Error reading key.\n"); /* read
                   and record one char. */
 		*(++record) = L'\0'; /* FIXME: try to put ++ to |get_wch| from here after
                   you will finish everything */
@@ -512,7 +512,7 @@ void display()
 		if (bp->w_top + bp->w_rows <= i || bp->b_ebuf <= p) /* maxline */
 			break;
 		if (*p != L'\r') {
-			if (iswprint((wint_t)*p) || *p == L'\t' || *p == L'\n') {
+			if (iswprint((wint_t) *p) || *p == L'\t' || *p == L'\n') {
 				j += *p == L'\t' ? 8-(j&7) : 1;
                                 add_wch_hack[wctomb(add_wch_hack, *p)]='\0';
                                 addstr(add_wch_hack);
@@ -754,7 +754,7 @@ void search(void);
 void search(void)
 {
 	int cpos = 0;	
-	wint_t c;
+	wchar_t c;
 	point_t o_point = curbp->b_point;
 	point_t found;
 
@@ -765,9 +765,9 @@ void search(void)
 
 	for (;;) {
 	  refresh();
-	  if (get_wch(&c) == ERR) fatal(L"Error reading key.\n");
-	  if (c < L' ' && c != L'\a' && c != L'\b' && c != (wint_t)0x13
-            && c != (wint_t)0x12 && c != L'\e')
+	  if (get_wch((wint_t *) &c) == ERR) fatal(L"Error reading key.\n");
+	  if (c < L' ' && c != L'\a' && c != L'\b' && c != (wchar_t)0x13
+            && c != (wchar_t)0x12 && c != L'\e')
 	    continue; /* ignore control keys other than C-g, backspace, C-s, C-r, ESC */
 
 	  switch(c) {
@@ -780,7 +780,7 @@ void search(void)
               L'\a': /* ctrl-g */
 			curbp->b_point = o_point;
 			return;
-	    case (wint_t)0x13: /* ctrl-s, do the search */
+	    case (wchar_t)0x13: /* ctrl-s, do the search */
 			found = search_forward(curbp, curbp->b_point, searchtext);
 			if (found != -1 ) {
 				curbp->b_point = found;
@@ -792,7 +792,7 @@ void search(void)
 				curbp->b_point = 0;
 			}
 			break;
-	    case (wint_t)0x7f: /* del, erase */
+	    case (wchar_t)0x7f: /* del, erase */
 	    case
               L'\b': /* backspace */
 			if (cpos == 0)
