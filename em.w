@@ -56,7 +56,9 @@ buffer_t *curbp;
 point_t nscrap = 0;
 wchar_t *scrap = NULL;
 
-@ |malloc| and |realloc| take |size_t| parameters,
+@ Some compilers define |size_t| as a unsigned 16 bit number while
+|point_t| and |off_t| might be defined as a signed 32 bit number.
+|malloc| and |realloc| take |size_t| parameters,
 which means there will be some size limits.
 
 @d MAX_SIZE_T      (size_t)~0
@@ -147,14 +149,14 @@ int growgap(buffer_t *bp, point_t n)
 	@<Calculate new length |newlen| of gap@>@;
 
 	if (buflen == 0) {
-		if (newlen < 0 || MAX_SIZE_T < (size_t) newlen)
+		if (newlen < 0 || (point_t)~MAX_SIZE_T & newlen)
                   fatal(L"Failed to allocate required memory.\n");
 		new = malloc((size_t) newlen * sizeof(wchar_t));
 		if (new == NULL)
 		  fatal(L"Failed to allocate required memory.\n");
 	}
         else {
-		if (newlen < 0 || MAX_SIZE_T < (size_t) newlen) {
+		if (newlen < 0 || (point_t)~MAX_SIZE_T & newlen) {
 			msg(L"Failed to allocate required memory."); /* report non-fatal error */
 			return (FALSE);
 		}
@@ -236,6 +238,8 @@ if (n != (size_t) length)
 
 @ Reads file into buffer at point.
 
+@s off_t int
+
 @<Procedures@>=
 int insert_file(char *fn, int modflag)
 {
@@ -247,7 +251,7 @@ int insert_file(char *fn, int modflag)
 		msg(L"Failed to find file \"%s\".", fn);
 		return (FALSE);
 	}
-	if (MAX_SIZE_T < (size_t) sb.st_size) {
+	if ((off_t)~MAX_SIZE_T & sb.st_size) {
 		msg(L"File \"%s\" is too big to load.", fn);
 		return (FALSE);
 	}
