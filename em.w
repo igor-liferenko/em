@@ -308,7 +308,7 @@ wchar_t get_key(keymap_t **key_return)
 
 	*key_return = NULL;
 
-	if (*record != L'\0') { /* if recorded code-point(s) remain, return current code-point
+	if (*record != L'\0') { /* if recorded char(s) remain, return current char
           and advance pointer to the next */
 		*key_return = NULL;
 		return *(record++);
@@ -318,12 +318,12 @@ wchar_t get_key(keymap_t **key_return)
 	do {
 		assert(K_BUFFER_LENGTH > record - buffer);
 		if (get_wch((wint_t *)record)==ERR) fatal(L"Error reading key.\n"); /* read
-                  and record one code-point. */
+                  and record one char. */
 		*(++record) = L'\0'; /* FIXME: try to put ++ to |get_wch| from here after
                   you will finish everything */
 
 		for (k = key_map, submatch = 0; k->key_bytes != NULL; k++) { /* if recorded
-                  code-points match any multi-byte sequence... */
+                  chars match any multi-byte sequence... */
 			wchar_t *p;
                         char *q;
 
@@ -340,7 +340,7 @@ wchar_t get_key(keymap_t **key_return)
 				submatch = 1;
 		}
 	} while (submatch);
-	record = buffer; /* if nothing matched, return the first recorded code-point
+	record = buffer; /* if nothing matched, return the first recorded char
           and advance pointer to the next */
 	return *(record++);
 }
@@ -466,7 +466,9 @@ void dispmsg()
 	clrtoeol();
 }
 
-@ @<Procedures@>=
+@ @s cchar_t int
+
+@<Procedures@>=
 void display()
 {
 	wchar_t *p;
