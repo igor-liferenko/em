@@ -463,12 +463,12 @@ void modeline(buffer_t *bp)
 	
 	standout();
 	move(bp->w_top + bp->w_rows, 0);
-	mch = ((bp->b_flags & B_MODIFIED) ? '*' : '=');
-	swprintf(temp, ARRAY_SIZE(temp), L"=%c em == %s ", mch, bp->b_fname);
+	mch = ((bp->b_flags & B_MODIFIED) ? '*' : '-');
+	swprintf(temp, ARRAY_SIZE(temp), L"-%c em -- %s ", mch, bp->b_fname);
 	addwstr(temp);
 
 	for (i = (int)(wcslen(temp) + 1); i <= COLS; i++)
-		addch('=');
+		addch('-');
 	standend();
 }
 
