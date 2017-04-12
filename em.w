@@ -243,7 +243,7 @@ to wide characters by C standard library function |fgetwc|.
 
 Number of bytes in the file is used as an estimate of the upper
 bound for the memory buffer to allocate, using the fact that the
-number of wide characters cannot be more than the number of bytes
+number of wide characters cannot be greater than the number of bytes
 from which they were converted.
 
 In the worst case (when file is ASCII-only) we will use 4-times
