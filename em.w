@@ -249,7 +249,7 @@ from which they were converted.
 In the worst case (when file is ASCII-only) we will use 4-times
 more memory than would be required for UTF-8 buffer.
 In this implementation we opt to ease of implementation, so we use
-wide-character buffer to to support UTF-8.
+wide-character buffer to support UTF-8.
 
 Maybe it is possible to come up with code which will increment the
 buffer in small chunks as we are reading the file, in order to use
