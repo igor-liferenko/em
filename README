@@ -16,7 +16,9 @@ the `L' wide-character string and character modifer
 sticks to previous token.
 
 This can be worked around by prefixing the
-`L' modifier with a newline.
+`L' modifier with a newline. Unfortunately, this works
+only for CTANGLE, not for CWEAVE. I did not try to figure
+out the proper fix for this yet.
 
 2. There is only "wchar_t" type and no "wint_t" type in CWEB
 syntax parsing rules. This causes TeX output to be formatted

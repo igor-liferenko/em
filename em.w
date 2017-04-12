@@ -247,7 +247,7 @@ number of wide characters cannot be greater than the number of bytes
 from which they were converted.
 
 In the worst case (when file is ASCII-only) we will use
-sizeof(wchar_t)-times
+|sizeof(wchar_t)|-times
 more memory than would be required for UTF-8 buffer.
 In this implementation we opt to ease of implementation, so we use
 wide-character buffer to support UTF-8.
