@@ -29,7 +29,7 @@ It is possible to use workaround like
 "@s wint_t wchar_t", but I just changed my local copy of cweave
 instead (just added the same stuff for "wint_t" as for "wchar_t").
 
-The things which I'm currently planning to add to zep are:
+The things which I'm currently planning to add to EM are:
 
 * automatically save cursor position on exit and restore on open
 * implement proper job control as said here:
