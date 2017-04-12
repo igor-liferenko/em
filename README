@@ -53,6 +53,9 @@ cat -s em.c | indent -kr > em.tmp && mv em.tmp em.c
 perl -i -0777 -pe 's/^\s*//' em.c
 perl -i -0777 -pe 's/\s+\\(?=\n\n)//g' em.c; perl -i -0777 -pe 's/\s+\\(?=\n\n)//g' em.c
 
+(WARNING: valuable documentation from .w file will be skipped from .c file, because it is intended
+only for the eyes of the C compiler)
+
 --
 
 April 2017.
