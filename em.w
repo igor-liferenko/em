@@ -459,16 +459,16 @@ wchar_t temp[TEMPBUF];
 void modeline(buffer_t *bp)
 {
 	int i;
-	char mch;
+	wchar_t mch;
 	
 	standout();
 	move(bp->w_top + bp->w_rows, 0);
-	mch = ((bp->b_flags & B_MODIFIED) ? '*' : '-');
-	swprintf(temp, ARRAY_SIZE(temp), L"-%c em -- %s ", mch, bp->b_fname);
+	mch = ((bp->b_flags & B_MODIFIED) ? L'*' : L'\u2500');
+	swprintf(temp, ARRAY_SIZE(temp), L"\u2500%lc em \u2500\u2500 %s ", mch, bp->b_fname);
 	addwstr(temp);
 
 	for (i = (int)(wcslen(temp) + 1); i <= COLS; i++)
-		addch('-');
+		addwstr(L"\u2500");
 	standend();
 }
 
