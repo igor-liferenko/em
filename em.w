@@ -533,8 +533,14 @@ void display()
 				j += *p == L'\t' ? 8-(j&7) : 1;
                                 add_wch_hack[wctomb(add_wch_hack, *p)]='\0';
                                 addstr(add_wch_hack);
-			} else {
-				const wchar_t *ctrl = wunctrl((cchar_t *)p);
+			}
+			else {
+
+				cchar_t my_cchar;
+				memset(&my_cchar, 0, sizeof(my_cchar));
+				my_cchar.chars[0] = *p;
+				my_cchar.chars[1] = L'\0';
+				wchar_t *ctrl = wunctrl(&my_cchar);
 				j += (int) wcslen(ctrl);
 				addwstr(ctrl);
 			}
