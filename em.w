@@ -535,7 +535,6 @@ void display()
                                 addstr(add_wch_hack);
 			}
 			else {
-
 				cchar_t my_cchar;
 				memset(&my_cchar, 0, sizeof(my_cchar));
 				my_cchar.chars[0] = *p;
