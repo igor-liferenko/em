@@ -1,0 +1,6 @@
+Greetings in various languages:
+
+  Hello world, Καλημέρα κόσμε, コンニチハ
+
+
+
