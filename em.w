@@ -299,7 +299,7 @@ This is the necessary price to pay for using wide-character buffer.
 
 @<Read file...@>=
 wint_t c;
-for (len=0; len < (size_t) sb.st_size && (c=fgetwc(fp)) != WEOF; len++)
+for (len=0; (c=fgetwc(fp)) != WEOF; len++)
   *(curbp->b_gap + len) = (wchar_t) c;
 if (c==WEOF && !feof(fp))
   fatal(L"Error reading file: %s.\n", strerror(errno));
