@@ -4,7 +4,48 @@
 @s delete normal
 @s new normal
 
-@* EMacs. Derived from Zep Emacs by Hugh Barney, 2017
+@* EMacs editor. Derived from Zep Emacs by Hugh Barney, 2017
+
+Em uses buffer-gap algorithm.
+
+When a file is loaded it is loaded with the gap at the bottom.
+{\tt\obeylines
+ccccccc
+ccccccc
+cccc.....\par}
+\noindent where |c| are the bytes in the file and \.{...} is the gap.
+As long as we just move around the file we dont need to worry about the gap.
+The current point is a long.  If we want the actual memory location we
+use |pos| which converts to a memory pointer
+and ensures that the gap is skipped at the right point.
+
+When we need to insert chars or delete then the gap has to be moved to the
+current position using |movegap|. SAY:
+{\tt\obeylines
+cccccccc
+cccC.....c
+cccccccc\par}
+
+Now we decide to delete the character at the point (C) - we just made the gap
+1 char bigger.  IE the gap pointer is decremented.
+In effect nothing is thrown away.  The gap swallows up the deleted character.
+{\tt\obeylines
+cccccccc
+ccc.......c
+cccccccc\par}
+
+Insertion works the opposite way.
+{\tt\obeylines
+cccccccc
+cccY.....c
+cccccccc\par}
+\noindent Here we incremented the gap pointer on and put a Y in the new space when the gap
+has just moved from.
+
+When we paste we have to be a bigger clever and make sure the GAP is big enough to take the
+paste. This is where |growgap| comes into play.
+
+@ This is the outline of our program.
 
 @d MAX_FNAME       256
 @d MSGLINE         (LINES-1)
@@ -949,3 +990,14 @@ char add_wch_hack[MB_LEN_MAX+1];
 #include <locale.h>
 #include <wchar.h>
 #include <errno.h>
+
+@* References.
+
+\noindent \.{[1] Perfect Emacs - https://github.com/hughbarney/pEmacs} \par
+\noindent \.{[2] Anthony's Editor - https://github.com/hughbarney/Anthony-s-Editor} \par
+\noindent \.{[3] MG - https://github.com/rzalamena/mg} \par
+\noindent \.{[4] Jonathan Payne, Buffer-Gap: http://ned.rubyforge.org/doc/buffer-gap.txt} \par
+\noindent \.{[5] Anthony Howe,  http://ned.rubyforge.org/doc/editor-101.txt} \par
+\noindent \.{[6] Anthony Howe, http://ned.rubyforge.org/doc/editor-102.txt} \par
+
+@* Index.
