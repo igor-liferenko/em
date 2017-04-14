@@ -328,7 +328,7 @@ wchar_t get_key(keymap_t **key_return)
 	if (*record != L'\0') { /* if recorded char(s) remain, return current char
           and advance pointer to the next */
 		*key_return = NULL;
-		return *(record++);
+		return *record++;
 	}
 	record = buffer; /* reset record buffer */
 
@@ -336,8 +336,7 @@ wchar_t get_key(keymap_t **key_return)
 		assert(K_BUFFER_LENGTH > record - buffer);
 		if (get_wch((wint_t *) record)==ERR) fatal(L"Error reading key.\n"); /* read
                   and record one char. */
-		*(++record) = L'\0'; /* FIXME: try to put ++ to |get_wch| from here after
-                  you will finish everything */
+		*++record = L'\0';
 
 		for (k = key_map, submatch = 0; k->key_bytes != NULL; k++) { /* if recorded
                   chars match any multi-byte sequence... */
@@ -359,7 +358,7 @@ wchar_t get_key(keymap_t **key_return)
 	} while (submatch);
 	record = buffer; /* if nothing matched, return the first recorded char
           and advance pointer to the next */
-	return *(record++);
+	return *record++;
 }
 
 @ Reverse scan for start of logical line containing offset.
@@ -755,7 +754,7 @@ point_t search_forward(buffer_t *bp, point_t start_p, wchar_t *stext)
 		return start_p;
 
 	for (p=start_p; p < end_p; p++) {
-		for (s=stext, pp=p; *s == *(ptr(bp, pp)) && *s !=L'\0' && pp < end_p; s++, pp++)
+		for (s=stext, pp=p; *s == *ptr(bp, pp) && *s !=L'\0' && pp < end_p; s++, pp++)
 			;
 
 		if (*s == L'\0')
