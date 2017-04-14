@@ -61,7 +61,7 @@ wchar_t *scrap = NULL;
 |malloc| and |realloc| take |size_t| parameters,
 which means there will be some size limits.
 
-@d MAX_SIZE_T      (size_t)~0
+@d MAX_SIZE_T      (size_t)((size_t)~0 / (sizeof(wchar_t)))
 
 @ @<Procedures@>=
 buffer_t* new_buffer()
