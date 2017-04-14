@@ -503,7 +503,7 @@ void modeline(buffer_t *bp)
 	
 	standout();
 	move(bp->w_top + bp->w_rows, 0);
-	mch = ((bp->b_flags & B_MODIFIED) ? L'\u26ab' : L'\u2500');
+	mch = ((bp->b_flags & B_MODIFIED) ? L'\u25cf' : L'\u2500');
 	swprintf(temp, ARRAY_SIZE(temp), L"\u2500%lc em \u2500\u2500 %s ", mch, bp->b_fname);
 	addwstr(temp);
 
