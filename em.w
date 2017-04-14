@@ -228,11 +228,11 @@ void save(void)
 |@<Read file...@>|.
 
 @<Write file@>=
-size_t n;
-for (n = 0; n < (size_t) length; n++)
+point_t n;
+for (n = 0; n < length; n++)
   if (fputwc(*(curbp->b_egap + n), fp) == WEOF)
     break;
-if (n != (size_t) length)
+if (n != length)
   msg(L"Failed to write file \"%s\".", curbp->b_fname);
 
 @ Reads file into buffer at point.
