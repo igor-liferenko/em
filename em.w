@@ -20,7 +20,7 @@
 @<Header files@>@;
 @<Typedef declarations@>@;
 @<Global variables@>@;
-@<Predeclarations of procedures@>@;
+@<Predeclarations of procedures for key bindings@>@;
 @<Key bindings@>@;
 @<Procedures@>@;
 @<Main program@>@;
@@ -663,8 +663,6 @@ void set_mark(void)
 	msg(L"Mark set");
 }
 
-@ @<Predecl...@>=
-void copy_cut(int cut);
 @ @<Procedures@>=
 void copy_cut(int cut)
 {
