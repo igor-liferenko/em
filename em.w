@@ -917,9 +917,6 @@ keymap_t key_map[] = {@|
 	{"C-x C-c exit             ", "\x18\x03", quit },@|
 	{"K_ERROR                  ", NULL, NULL }};
 
-@ @<Global...@>=
-char lockfn[MAX_FNAME];
-
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
@@ -928,12 +925,7 @@ int main(int argc, char **argv)
 	setlocale(LC_CTYPE, "C.UTF-8");
 	if (argc != 2) fatal(L"usage: em filename\n");
 
-        struct stat sb;
-        strcat(strcpy(lockfn, argv[1]), ".lock~");
-        if (stat(lockfn, &sb) == 0)
-          fatal(L"Lock file exists.\n");
-        int fd = open(lockfn, O_RDWR | O_CREAT, 0666);
-        close(fd);
+        @<Create lock file@>@;
 
 	initscr();
 	raw();
@@ -971,10 +963,25 @@ int main(int argc, char **argv)
 	noraw();
 	endwin();
 
-        unlink(lockfn);
+        @<Remove lock file@>@;
 
 	return 0;
 }
+
+@ TODO: do various error checking
+
+@<Global...@>=
+char lockfn[MAX_FNAME];
+
+@ @<Create lock file@>=
+int lockfd;
+strcat(strcpy(lockfn, argv[1]), ".lock~");
+if ((lockfd = open(lockfn, O_EXCL | O_CREAT)) == -1)
+  fatal(L"Lock file exists.\n");
+close(lockfd);
+
+@ @<Remove lock file@>=
+unlink(lockfn);
 
 @ Utility macros.
 @d ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
