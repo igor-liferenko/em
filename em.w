@@ -316,9 +316,10 @@ int insert_file(char *fn, int modflag)
 	if (curbp->b_egap - curbp->b_gap < sb.st_size && !growgap(curbp, sb.st_size))
 		return (FALSE);
 	if ((fp = fopen(fn, "r")) == NULL) {
-		msg(L"Failed to open file \"%s\".", fn);
+		fatal(L"Failed to open file \"%s\".", fn);
 		return (FALSE);
 	}
+
 	curbp->b_point = movegap(curbp, curbp->b_point);
 
         @<Read file and set number |len| of chars@>@;
@@ -916,6 +917,9 @@ keymap_t key_map[] = {@|
 	{"C-x C-c exit             ", "\x18\x03", quit },@|
 	{"K_ERROR                  ", NULL, NULL }};
 
+@ @<Global...@>=
+char lockfn[MAX_FNAME];
+
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
@@ -923,6 +927,13 @@ int main(int argc, char **argv)
         keymap_t *key_return;
 	setlocale(LC_CTYPE, "C.UTF-8");
 	if (argc != 2) fatal(L"usage: em filename\n");
+
+        struct stat sb;
+        strcat(strcpy(lockfn, argv[1]), ".lock~");
+        if (stat(lockfn, &sb) == 0)
+          fatal(L"Lock file exists.\n");
+        int fd = open(lockfn, O_RDWR | O_CREAT, 0666);
+        close(fd);
 
 	initscr();
 	raw();
@@ -933,7 +944,6 @@ int main(int argc, char **argv)
 	/* Save filename irregardless of load() success. */
 	strncpy(curbp->b_fname, argv[1], MAX_FNAME);
 	curbp->b_fname[MAX_FNAME] = '\0'; /* force truncation */
-
 	if (!growgap(curbp, CHUNK)) fatal(L"Failed to allocate required memory.\n");
 
 	while (!done) {
@@ -960,6 +970,9 @@ int main(int argc, char **argv)
 	refresh();
 	noraw();
 	endwin();
+
+        unlink(lockfn);
+
 	return 0;
 }
 
@@ -983,6 +996,7 @@ int main(int argc, char **argv)
 #include <locale.h>
 #include <wchar.h>
 #include <errno.h>
+#include <fcntl.h>
 
 @* References.
 
