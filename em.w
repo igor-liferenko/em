@@ -968,12 +968,26 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-@ TODO: do various error checking
+@ Utility macros.
+
+@d ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
+@* Lock file. Lock file is necessary to indicate that this file is already
+opened. For the name of the lock file we use the same name as opened file,
+and add \.{.lock~}. When we open a file, lock file is created. When we
+finish editing the file, lock file is removed.
+
+TODO: do various error checking
 
 @<Global...@>=
 char lockfn[MAX_FNAME];
 
-@ @<Create lock file@>=
+@ @<Header files@>=
+#include <fcntl.h>
+
+@ FIXME: is it the right place to create lock file?
+
+@<Create lock file@>=
 int lockfd;
 strcat(strcpy(lockfn, argv[1]), ".lock~");
 if ((lockfd = open(lockfn, O_EXCL | O_CREAT)) == -1)
@@ -982,9 +996,6 @@ close(lockfd);
 
 @ @<Remove lock file@>=
 unlink(lockfn);
-
-@ Utility macros.
-@d ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 @ @<Header files@>=
 #include <stdlib.h>
@@ -1003,7 +1014,6 @@ unlink(lockfn);
 #include <locale.h>
 #include <wchar.h>
 #include <errno.h>
-#include <fcntl.h>
 
 @* References.
 
