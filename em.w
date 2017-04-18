@@ -978,6 +978,7 @@ and add \.{.lock~}. When we open a file, lock file is created. When we
 finish editing the file, lock file is removed.
 
 TODO: do various error checking
+@^TODO@>
 
 @<Global...@>=
 char lockfn[MAX_FNAME];
