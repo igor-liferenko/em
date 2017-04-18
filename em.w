@@ -70,7 +70,7 @@ paste. This is where |growgap| comes into play.
 @s buffer_t int
 
 @<Typedef declarations@>=
-typedef ssize_t point_t;
+typedef long point_t;
 
 typedef struct buffer_t
 {
@@ -96,6 +96,13 @@ int msgflag;
 buffer_t *curbp;
 point_t nscrap = 0;
 wchar_t *scrap = NULL;
+
+@ Some compilers define |size_t| as a unsigned 16 bit number while
+|point_t| and |off_t| might be defined as a signed 32 bit number.
+|malloc| and |realloc| take |size_t| parameters,
+which means there will be some size limits.
+
+@d MAX_SIZE_T      (size_t)((size_t)~0 / (sizeof(wchar_t)))
 
 @ @<Procedures@>=
 buffer_t* new_buffer()
@@ -182,25 +189,17 @@ int growgap(buffer_t *bp, point_t n)
 	@<Calculate new length |newlen| of gap@>@;
 
 	if (buflen == 0) {
-		if (newlen < 0) /* FIXME: can this ever happen? */
-@^FIXME@>
+		if (newlen < 0 || (point_t)~MAX_SIZE_T & newlen)
                   fatal(L"Failed to allocate required memory.\n");
-#if 1==0
-  check if (size_t)newlen*sizeof(wchar_t) will cause overflow
-#endif
 		new = malloc((size_t) newlen * sizeof(wchar_t));
 		if (new == NULL)
 		  fatal(L"Failed to allocate required memory.\n");
 	}
         else {
-		if (newlen < 0) { /* FIXME: can this ever happen? */
-@^FIXME@>
+		if (newlen < 0 || (point_t)~MAX_SIZE_T & newlen) {
 			msg(L"Failed to allocate required memory."); /* report non-fatal error */
 			return (FALSE);
 		}
-#if 1==0
-  check if (size_t)newlen*sizeof(wchar_t) will cause overflow
-#endif
 		new = realloc(bp->b_buf, (size_t) newlen * sizeof(wchar_t));
 		if (new == NULL) {
 			msg(L"Failed to allocate required memory."); /* report non-fatal error */
@@ -219,8 +218,6 @@ int growgap(buffer_t *bp, point_t n)
 }
 
 @ Reduce number of reallocs by growing by a minimum amount.
-FIXME: check for |point_t| overflow.
-@^FIXME@>
 
 @<Calculate new length...@>=
 n = (n < MIN_GAP_EXPAND ? MIN_GAP_EXPAND : n);
@@ -299,16 +296,31 @@ Maybe it is possible to come up with code which will increment the
 buffer in small chunks as we are reading the file, in order to use
 less memory.
 
+@s off_t int
+
 @<Procedures@>=
 int insert_file(char *fn, int modflag)
 {
 	FILE *fp;
 	size_t len;
+	struct stat sb;
 
+	if (stat(fn, &sb) < 0) {
+		msg(L"Failed to find file \"%s\".", fn);
+		return (FALSE);
+	}
+	if ((off_t)~MAX_SIZE_T & sb.st_size) {
+		msg(L"File \"%s\" is too big to load.", fn);
+		return (FALSE);
+	}
+	if (curbp->b_egap - curbp->b_gap < sb.st_size && !growgap(curbp, sb.st_size))
+		return (FALSE);
 	if ((fp = fopen(fn, "r")) == NULL) {
 		fatal(L"Failed to open file \"%s\".", fn);
 		return (FALSE);
 	}
+
+	curbp->b_point = movegap(curbp, curbp->b_point);
 
         @<Read file and set number |len| of chars@>@;
 
@@ -328,18 +340,9 @@ way to convert input data from UTF-8 than processing it byte-by-byte.
 This is the necessary price to pay for using wide-character buffer.
 
 @<Read file...@>=
-#if 1==0
-/* where is this necessary? */
-curbp->b_point = movegap(curbp, curbp->b_point);
-#endif
 wint_t c;
-for (len=0; (c=fgetwc(fp)) != WEOF; len++) {
-  if (curbp->b_egap - (curbp->b_gap + len) < MIN_GAP_EXPAND && !growgap(curbp, MIN_GAP_EXPAND)) {
-    fclose(fp);
-    return (FALSE);
-  }
+for (len=0; (c=fgetwc(fp)) != WEOF; len++)
   *(curbp->b_gap + len) = (wchar_t) c;
-}
 if (!feof(fp))
   fatal(L"Error reading file: %s.\n", strerror(errno));
 curbp->b_gap += len;
