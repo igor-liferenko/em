@@ -376,8 +376,7 @@ wchar_t get_key(keymap_t **key_return)
 
 	do {
 		assert(K_BUFFER_LENGTH > record - buffer);
-		if (get_wch((wint_t *) record)==ERR) fatal(L"Error reading key.\n"); /* read
-                  and record one char. */
+		get_wch((wint_t *) record); /* read and record one char. */
 		*++record = L'\0';
 
 		for (k = key_map, submatch = 0; k->key_bytes != NULL; k++) { /* if recorded
@@ -626,26 +625,26 @@ void lnbegin(void) {@+ curbp->b_point = segstart(curbp,
   lnstart(curbp,curbp->b_point), curbp->b_point); @+}
 
 @ @<Predecl...@>=
-void quit_ask(void);
+void quit(void);
 @ @<Procedures@>=
-void quit_ask(void)
+void quit(void)
 {
 	if (curbp->b_flags & B_MODIFIED) {
-                mvaddwstr(MSGLINE, 0, L"File not saved; really exit (y/n) ? ");
-                clrtoeol();
+		@<Print prompt@>@;
 		@<Read answer@>@;
         }
-        else @<Quit@>@;
+	done = 1; /* quit */
 }
 
-@ @<Read answer@>=
-wchar_t ch;
+@ @<Print prompt@>=
+mvaddwstr(MSGLINE, 0, L"File not saved; really exit (y/n) ? ");
+clrtoeol();
 refresh();
-if (get_wch((wint_t *)&ch) == ERR) fatal(L"error reading key\n");
-if (towlower((wint_t) ch) == L'y') @<Quit@>@;
 
-@ @<Quit@>=
-done = 1;
+@ @<Read answer@>=
+wchar_t c;
+get_wch((wint_t *) &c);
+if (towlower((wint_t) c) != L'y') return;
 
 @ @<Predecl...@>=
 void lnend(void);
@@ -845,7 +844,7 @@ void search(void)
 
 	for (;;) {
 	  refresh();
-	  if (get_wch((wint_t *) &c) == ERR) fatal(L"Error reading key.\n");
+	  get_wch((wint_t *) &c);
 	  if (c < L' ' && c != L'\a' && c != L'\b' && c != (wchar_t)0x13
             && c != (wchar_t)0x12 && c != L'\e')
 	    continue; /* ignore control keys other than C-g, backspace, C-s, C-r, ESC */
@@ -934,7 +933,7 @@ keymap_t key_map[] = {@|
 	{"PgUp                     ", "\x1B\x5B\x35\x7E",pgup },@|
 	{"PgDn                     ", "\x1B\x5B\x36\x7E", pgdown },@|
 	{"C-x C-s save-buffer      ", "\x18\x13", save },@|
-	{"C-x C-c exit             ", "\x18\x03", quit_ask },@|
+	{"C-x C-c exit             ", "\x18\x03", quit },@|
 	{"K_ERROR                  ", NULL, NULL }};
 
 @ @<Main program@>=
