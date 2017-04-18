@@ -984,16 +984,21 @@ TODO: do various error checking
 char lockfn[MAX_FNAME];
 
 @ @<Header files@>=
-#include <fcntl.h>
+#include <stdio.h> /* |fopen|, |fclose| */
+#include <unistd.h> /* |unlink| */
 
 @ FIXME: is it the right place to create lock file?
 
 @<Create lock file@>=
-int lockfd;
+FILE *lockfp;
 strcat(strcpy(lockfn, argv[1]), ".lock~");
-if ((lockfd = open(lockfn, O_EXCL | O_CREAT)) == -1)
+if ((lockfp=fopen(lockfn, "r"))!=NULL) {
+  fclose(lockfp);
   fatal(L"Lock file exists.\n");
-close(lockfd);
+}
+if ((lockfp = fopen(lockfn, "w"))==NULL)
+  fatal(L"Cannot create lock file.\n");
+fclose(lockfp);
 
 @ @<Remove lock file@>=
 unlink(lockfn);
