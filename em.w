@@ -130,9 +130,9 @@ void fatal(wchar_t *msg, ...)
 	va_list args;
 
 	move(LINES-1, 0);
-	refresh();
+	refresh(); /* update the real screen */
 	noraw();
-	endwin();
+	endwin(); /* end curses mode */
 
 	va_start(args, msg);
 	vwprintf(msg, args);
@@ -596,7 +596,7 @@ void display()
 	modeline(bp);
 	dispmsg();
 	move(bp->b_row, bp->b_col); /* set cursor */
-	refresh();
+	refresh(); /* update the real screen */
 }
 
 @ @<Predecl...@>=
@@ -633,7 +633,7 @@ void quit(void)
 @ @<Print prompt@>=
 mvaddwstr(MSGLINE, 0, L"File not saved; really exit (y/n) ? ");
 clrtoeol();
-refresh();
+refresh(); /* update the real screen */
 
 @ @<Read answer@>=
 wchar_t c;
@@ -837,7 +837,7 @@ void search(void)
 	cpos = (int) wcslen(searchtext);
 
 	for (;;) {
-	  refresh();
+	  refresh(); /* update the real screen */
 	  get_wch((wint_t *) &c);
 	  if (c < L' ' && c != L'\a' && c != L'\b' && c != (wchar_t)0x13
             && c != (wchar_t)0x12 && c != L'\e')
@@ -940,7 +940,7 @@ int main(int argc, char **argv)
 
         @<Create lock file@>@;
 
-	initscr();
+	initscr(); /* start curses mode */
 	raw();
 	noecho();
 
@@ -972,9 +972,9 @@ int main(int argc, char **argv)
 	if (curbp != NULL) free(curbp);
 
 	move(MSGLINE, 0);
-	refresh();
+	refresh(); /* update the real screen */
 	noraw();
-	endwin();
+	endwin(); /* end curses mode */
 
         @<Remove lock file@>@;
 
