@@ -974,24 +974,26 @@ int main(int argc, char **argv)
 
 @* Lock file. Lock file is necessary to indicate that this file is already
 opened. For the name of the lock file we use the same name as opened file,
-and add \.{.lock~}. When we open a file, lock file is created. When we
+and add |LOCK_EXT|. When we open a file, lock file is created. When we
 finish editing the file, lock file is removed.
 
-TODO: do various error checking
-@^TODO@>
+@d LOCK_EXT ".lock~"
 
 @<Global...@>=
-char lockfn[MAX_FNAME];
+char lockfn[MAX_FNAME+sizeof(LOCK_EXT)+1];
 
 @ @<Header files@>=
 #include <stdio.h> /* |fopen|, |fclose| */
 #include <unistd.h> /* |unlink| */
 
 @ FIXME: is it the right place to create lock file?
+@^FIXME@>
 
 @<Create lock file@>=
 FILE *lockfp;
-strcat(strcpy(lockfn, argv[1]), ".lock~");
+strncpy(lockfn, argv[1], MAX_FNAME);
+lockfn[MAX_FNAME]='\0';
+strcat(lockfn, LOCK_EXT);
 if ((lockfp=fopen(lockfn, "r"))!=NULL) {
   fclose(lockfp);
   fatal(L"Lock file exists.\n");
