@@ -614,7 +614,6 @@ void right(void);
 void up(void);
 void down(void);
 void lnbegin(void);
-void quit(void);
 
 @ @<Procedures@>=
 void top(void) {@+ curbp->b_point = 0; @+}
@@ -625,7 +624,28 @@ void up(void) {@+ curbp->b_point = lncolumn(curbp, upup(curbp, curbp->b_point),c
 void down(void) {@+ curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point),curbp->b_col); @+}
 void lnbegin(void) {@+ curbp->b_point = segstart(curbp,
   lnstart(curbp,curbp->b_point), curbp->b_point); @+}
-void quit(void) {@+ done = 1; @+}
+
+@ @<Predecl...@>=
+void quit_ask(void);
+@ @<Procedures@>=
+void quit_ask(void)
+{
+	if (curbp->b_flags & B_MODIFIED) {
+                mvaddwstr(MSGLINE, 0, L"File not saved; really exit (y/n) ? ");
+                clrtoeol();
+		@<Read answer@>@;
+        }
+        else @<Quit@>@;
+}
+
+@ @<Read answer@>=
+wchar_t ch;
+refresh();
+if (get_wch((wint_t *)&ch) == ERR) fatal(L"error reading key\n");
+if (towlower((wint_t) ch) == L'y') @<Quit@>@;
+
+@ @<Quit@>=
+done = 1;
 
 @ @<Predecl...@>=
 void lnend(void);
@@ -914,7 +934,7 @@ keymap_t key_map[] = {@|
 	{"PgUp                     ", "\x1B\x5B\x35\x7E",pgup },@|
 	{"PgDn                     ", "\x1B\x5B\x36\x7E", pgdown },@|
 	{"C-x C-s save-buffer      ", "\x18\x13", save },@|
-	{"C-x C-c exit             ", "\x18\x03", quit },@|
+	{"C-x C-c exit             ", "\x18\x03", quit_ask },@|
 	{"K_ERROR                  ", NULL, NULL }};
 
 @ @<Main program@>=
