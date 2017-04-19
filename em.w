@@ -320,7 +320,6 @@ int insert_file(char *fn)
 		msg(L"Failed to close file \"%s\".", fn);
 		return (FALSE);
 	}
-	msg(L"File \"%s\" %ld chars read.", fn, len);
 	return (TRUE);
 }
 
