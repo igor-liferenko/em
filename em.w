@@ -248,9 +248,9 @@ point_t movegap(buffer_t *bp, point_t offset)
 }
 
 @ @<Predecl...@>=
-void save(void);
+void quit(void);
 @ @<Procedures@>=
-void save(void)
+void quit(void)
 {
 	FILE *fp;
 	point_t length;
@@ -261,7 +261,7 @@ void save(void)
 	length = (point_t) (curbp->b_ebuf - curbp->b_egap);
         @<Write file@>@;
 	fclose(fp);
-	quit();
+	done = 1;
 }
 
 @ We write file character-by-character for similar reasons which are explained in
@@ -606,7 +606,6 @@ void right(void);
 void up(void);
 void down(void);
 void lnbegin(void);
-void quit(void);
 
 @ @<Procedures@>=
 void top(void) {@+ curbp->b_point = 0; @+}
@@ -617,7 +616,6 @@ void up(void) {@+ curbp->b_point = lncolumn(curbp, upup(curbp, curbp->b_point),c
 void down(void) {@+ curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point),curbp->b_col); @+}
 void lnbegin(void) {@+ curbp->b_point = segstart(curbp,
   lnstart(curbp,curbp->b_point), curbp->b_point); @+}
-void quit(void) {@+ done = 1; @+}
 
 @ @<Predecl...@>=
 void lnend(void);
@@ -906,9 +904,7 @@ keymap_t key_map[] = {@|
 	{"PgDn                     ", "\x1B\x5B\x36\x7E", pgdown },@|
 	{"C-v                      ", "\x16",             pgdown },@|
 
-	{"C-z save and exit        ", "\x1A", save },@|
-
-	{"C-x exit without saving  ", "\x18", quit }};
+	{"C-z quit        ", "\x1A", quit }};
 
 @ @<Main program@>=
 int main(int argc, char **argv)
