@@ -359,7 +359,6 @@ In other words, the following transformation is always valid:
                                 break;
 			case
 				L'\u019a': /* resize */
-				rows = LINES;
 				break;
                         case (wchar_t) 0x1b: /* C-[ */
                                 top();
