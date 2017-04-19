@@ -358,6 +358,10 @@ In other words, the following transformation is always valid:
                         case (wchar_t) 0x13: /* C-s */
                                 search();
                                 break;
+			case
+				L'\u019a': /* resize */
+				rows = LINES;
+				break;
                         case (wchar_t) 0x1b: /* C-[ */
                                 top();
                                 break;

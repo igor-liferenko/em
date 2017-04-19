@@ -34,7 +34,6 @@ The things which I'm currently planning to add to EM are:
 * automatically save cursor position on exit and restore on open
 * implement proper job control as said here:
   http://web.archive.org/web/20160329140839/http://www.cons.org/cracauer/sigint.html
-* handle gnome-terminal window resize
 
 I am indepted to Hugh Barney on whose initial ideas and code
 EM is based.
