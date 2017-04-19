@@ -452,8 +452,9 @@ point_t segnext(buffer_t *bp, point_t start, point_t finish)
 	return (p < bp->b_ebuf ? scan : pos(bp, bp->b_ebuf));
 }
 
-@ @<Procedures@>=
-/* Move up one screen line */
+@ Move up one screen line.
+
+@<Procedures@>=
 point_t upup(buffer_t *bp, point_t off)
 {
 	point_t curr = lnstart(bp, off);
@@ -465,15 +466,17 @@ point_t upup(buffer_t *bp, point_t off)
 	return (off);
 }
 
-@ @<Procedures@>=
-/* Move down one screen line */
+@ Move down one screen line.
+
+@<Procedures@>=
 point_t dndn(buffer_t *bp, point_t off)
 {
 	return (segnext(bp, lnstart(bp,off), off));
 }
 
-@ @<Procedures@>=
-/* Return the offset of a column on the specified line */
+@ Return the offset of a column on the specified line.
+
+@<Procedures@>=
 point_t lncolumn(buffer_t *bp, point_t offset, int column)
 {
 	int c = 0;
@@ -685,84 +688,6 @@ void delete(void)
 	}
 }
 
-@ @<Predecl...@>=
-void set_mark(void);
-@ @<Procedures@>=
-void set_mark(void)
-{
-	curbp->b_mark = (curbp->b_mark == curbp->b_point ? NOMARK : curbp->b_point);
-	msg(L"Mark set");
-}
-
-@ @<Predecl...@>=
-void cut(void);
-@ @<Procedures@>=
-void cut(void)
-{
-	wchar_t *p;
-	if (curbp->b_mark == NOMARK || curbp->b_point == curbp->b_mark) return;	/* if no
-          mark or point == marker, do nothing */
-	if (scrap != NULL) {
-		free(scrap);
-		scrap = NULL;
-	}
-	if (curbp->b_point < curbp->b_mark) {
-		/* point above marker: move gap under point, region = marker - point */
-		movegap(curbp, curbp->b_point);
-		p = ptr(curbp, curbp->b_point);
-		nscrap = curbp->b_mark - curbp->b_point;
-	} else {
-		/* if point below marker: move gap under marker, region = point - marker */
-		movegap(curbp, curbp->b_mark);
-		p = ptr(curbp, curbp->b_mark);
-		nscrap = curbp->b_point - curbp->b_mark;
-	}
-	scrap = malloc((size_t) nscrap * sizeof(wchar_t));
-	if (scrap == NULL)
-		msg(L"No more memory available.");
-	else {
-		memcpy(scrap, p, (size_t) nscrap * sizeof (wchar_t));
-		curbp->b_egap += nscrap; /* if cut expand gap down */
-		curbp->b_point = pos(curbp, curbp->b_egap); /* set point to after region */
-		curbp->b_flags |= B_MODIFIED;
-		msg(L"%ld chars cut.", nscrap);
-		curbp->b_mark = NOMARK;  /* unmark */
-	}
-}
-
-@ @<Predecl...@>=
-void paste(void);
-@ @<Procedures@>=
-void paste(void)
-{
-	if (nscrap <= 0) {
-		msg(L"Nothing to paste.");
-	} else if (nscrap < curbp->b_egap - curbp->b_gap || growgap(curbp, nscrap)) {
-		curbp->b_point = movegap(curbp, curbp->b_point);
-		memcpy(curbp->b_gap, scrap, (size_t) nscrap * sizeof (wchar_t));
-		curbp->b_gap += nscrap;
-		curbp->b_point = pos(curbp, curbp->b_egap);
-		curbp->b_flags |= B_MODIFIED;
-	}
-}
-
-@ @<Predecl...@>=
-void killtoeol(void);
-@ @<Procedures@>=
-void killtoeol(void)
-{
-	/* point = start of empty line or last char in file */
-	if (*(ptr(curbp, curbp->b_point)) == L'\n' ||
-          (curbp->b_point + 1 ==
-          ((curbp->b_ebuf - curbp->b_buf) - (curbp->b_egap - curbp->b_gap))) ) {
-		delete();
-	} else {
-		curbp->b_mark = curbp->b_point;
-		lnend();
-		cut();
-	}
-}
-
 @ @<Procedures@>=
 point_t search_forward(buffer_t *bp, point_t start_p, wchar_t *stext)
 {
@@ -864,44 +789,30 @@ typedef struct keymap_t {
 
 @ @<Key bindings@>=
 keymap_t key_map[] = {@|
-	{"C-k kill-to-eol          ", "\x0B", killtoeol },@|
-	{"C-y yank                 ", "\x19", paste},@|
-	{"C-w kill-region          ", "\x17", cut},@|
-	{"C-space set-mark         ", "\x00", set_mark },@|
-
 	{"C-s search               ", "\x13", search },@|
 
-	{"C-\\ beg-of-buf        ", "\x1C", top },@|
-	{"C-/ end-of-buf         ", "\x1F", bottom },@|
+	{"C-[ beg-of-buf        ", "\x1B", top },@|
+	{"C-] end-of-buf        ", "\x1D", bottom },@|
 
-	{"Up previous-line         ", "\x1B\x5B\x41", up },@|
 	{"C-p                      ", "\x10",         up },@|
 
-	{"Down next-line           ", "\x1B\x5B\x42", down },@|
 	{"C-n                      ", "\x0E",         down },@|
 
-	{"Left backward-character  ", "\x1B\x5B\x44", left },@|
 	{"C-b                      ", "\x02",         left },@|
 
-	{"Right forward-character  ", "\x1B\x5B\x43", right },@|
 	{"C-f                      ", "\x06",         right },@|
 
-	{"End end-of-line          ", "\x1B\x5B\x46", lnend },@|
 	{"C-e end-of-line          ", "\x05",         lnend },@|
 
-	{"Home beginning-of-line   ", "\x1B\x5B\x48", lnbegin },@|
 	{"C-a beginning-of-line    ", "\x01",         lnbegin },@|
 
-	{"DEL forward-delete-char  ", "\x1B\x5B\x33\x7E", delete },@|
 	{"C-d forward-delete-char  ", "\x04",             delete },@|
 
 	{"BackSpace delete-left    ", "\x7f", backsp },@|
 	{"C-h backspace            ", "\x08", backsp },@|
 
-	{"PgUp                     ", "\x1B\x5B\x35\x7E",pgup },@|
-	{"C-u                      ", "\x15",            pgup },@|
+	{"C-^                      ", "\x1E",            pgup },@|
 
-	{"PgDn                     ", "\x1B\x5B\x36\x7E", pgdown },@|
 	{"C-v                      ", "\x16",             pgdown },@|
 
 	{"C-z quit        ", "\x1A", quit }};
