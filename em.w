@@ -345,6 +345,9 @@ In other words, the following transformation is always valid:
 			case (wchar_t) 0x0f: /* C-o */
 				open_line();
 				break;
+			case (wchar_t) 0x18: /* C-x */
+				done = 1; /* quit without saving */
+				break;
                         case (wchar_t) 0x13: /* C-s */
                                 search();
                                 break;
