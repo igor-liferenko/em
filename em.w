@@ -339,6 +339,9 @@ In other words, the following transformation is always valid:
 
 @<Get key@>=
                 switch(input) {
+			case (wchar_t) 0x0f: /* C-o */
+				open_line();
+				break;
                         case (wchar_t) 0x13: /* C-s */
                                 search();
                                 break;
@@ -640,6 +643,12 @@ void delete(void)
 	curbp->b_point = movegap(curbp, curbp->b_point);
 	if (curbp->b_egap < curbp->b_ebuf)
 		curbp->b_point = pos(curbp, ++curbp->b_egap);
+}
+
+@ @<Procedures@>=
+void open_line(void)
+{
+  msg(L"open_line() not implemented yet");
 }
 
 @ @<Procedures@>=
