@@ -49,7 +49,6 @@ paste. This is where |growgap| comes into play.
 
 @d MAX_FNAME       256
 @d MSGLINE         (LINES-1)
-@d B_MODIFIED	0x01		/* modified buffer */
 @d CHUNK           8096L
 @d K_BUFFER_LENGTH 256
 @d TEMPBUF         512
@@ -80,12 +79,9 @@ typedef struct buffer_t
 	wchar_t *b_ebuf;           /* end of buffer */
 	wchar_t *b_gap;            /* start of gap */
 	wchar_t *b_egap;           /* end of gap */
-	char w_top;	          /* origin (0 = top row of window) */
-	char w_rows;              /* no. of rows of text in window */
 	int b_row;                /* cursor row */
 	int b_col;                /* cursor col */
 	char b_fname[MAX_FNAME + 1]; /* filename */
-	char b_flags;             /* buffer flags */
 } buffer_t;
 
 @ @<Global variables@>=
@@ -111,14 +107,11 @@ buffer_t* new_buffer()
 	bp->b_point = 0;
 	bp->b_page = 0;
 	bp->b_epage = 0;
-	bp->b_flags = 0;
 	bp->b_buf = NULL;
 	bp->b_ebuf = NULL;
 	bp->b_gap = NULL;
 	bp->b_egap = NULL;
 	bp->b_fname[0] = '\0';
-	bp->w_top = 0;	
-	bp->w_rows = (char)(LINES - 2);
 	return bp;
 }
 
@@ -288,7 +281,7 @@ for non-wide-character buffer.
 @s off_t int
 
 @<Procedures@>=
-int insert_file(char *fn, int modflag)
+int insert_file(char *fn)
 {
 	FILE *fp;
 	size_t len;
@@ -317,7 +310,6 @@ int insert_file(char *fn, int modflag)
 		msg(L"Failed to close file \"%s\".", fn);
 		return (FALSE);
 	}
-	curbp->b_flags = (char)(curbp->b_flags & (char)(modflag ? B_MODIFIED : ~B_MODIFIED));
 	msg(L"File \"%s\" %ld chars read.", fn, len);
 	return (TRUE);
 }
@@ -493,31 +485,18 @@ point_t lncolumn(buffer_t *bp, point_t offset, int column)
 wchar_t temp[TEMPBUF];
 
 @ @<Procedures@>=
-void modeline(buffer_t *bp)
-{
-	int i;
-	wchar_t mch;
-	
-	standout();
-	move(bp->w_top + bp->w_rows, 0);
-	mch = ((bp->b_flags & B_MODIFIED) ? L'\u25cf' : L'\u2500');
-	swprintf(temp, ARRAY_SIZE(temp), L"\u2500%lc em \u2500\u2500 %s ", mch, bp->b_fname);
-	addwstr(temp);
-
-	for (i = (int)(wcslen(temp) + 1); i <= COLS; i++)
-		addwstr(L"\u2500");
-	standend();
-}
-
-@ @<Procedures@>=
 void dispmsg()
 {
+	standout();
+	move(MSGLINE, 0);
+	for (int i = 1; i <= COLS; i++)
+		addwstr(L" ");
 	move(MSGLINE, 0);
 	if (msgflag) {
 		addwstr(msgline);
 		msgflag = FALSE;
 	}
-	clrtoeol();
+	standend();
 }
 
 @ @s cchar_t int
@@ -536,22 +515,21 @@ void display()
 
 	/* reframe when scrolled off bottom */
 	if (bp->b_epage <= bp->b_point) {
-		/* Find end of screen plus one. */
-		bp->b_page = dndn(bp, bp->b_point);
-		/* if we scoll to EOF we show 1 blank line at bottom of screen */
-		if (pos(bp, bp->b_ebuf) <= bp->b_page) {
+		bp->b_page = dndn(bp, bp->b_point); /* find end of screen plus one */
+		if (pos(bp, bp->b_ebuf) <= bp->b_page) { /* if we scoll to EOF we show 1
+                  blank line at bottom of screen */
 			bp->b_page = pos(bp, bp->b_ebuf);
-			i = bp->w_rows - 1;
-		} else {
-			i = bp->w_rows - 0;
+			i = LINES - 2;
 		}
-		/* Scan backwards the required number of lines. */
-		while (0 < i--)
+		else
+			i = LINES - 1;
+
+		while (0 < i--) /* scan backwards the required number of lines */
 			bp->b_page = upup(bp, bp->b_page);
 	}
 
-	move(bp->w_top, 0); /* start from top of window */
-	i = bp->w_top;
+	move(0, 0); /* start from top of window */
+	i = 0;
 	j = 0;
 	bp->b_epage = bp->b_page;
 	
@@ -563,7 +541,7 @@ void display()
 			bp->b_col = j;
 		}
 		p = ptr(bp, bp->b_epage);
-		if (bp->w_top + bp->w_rows <= i || bp->b_ebuf <= p) /* maxline */
+		if (LINES - 1 <= i || bp->b_ebuf <= p) /* maxline */
 			break;
 		if (*p != L'\r') {
 			cchar_t my_cchar;
@@ -590,13 +568,12 @@ void display()
 	}
 
 	/* replacement for clrtobot() to bottom of window */
-	for (k=i; k < bp->w_top + bp->w_rows; k++) {
+	for (k=i; k < LINES - 1; k++) {
 		move(k, j); /* clear from very last char not start of line */
 		clrtoeol();
 		j = 0; /* thereafter start of line */
 	}
 
-	modeline(bp);
 	dispmsg();
 	move(bp->b_row, bp->b_col); /* set cursor */
 	refresh(); /* update the real screen */
@@ -631,7 +608,7 @@ void pgdown(void)
 @ @<Procedures@>=
 void pgup(void)
 {
-	int i = curbp->w_rows;
+	int i = LINES - 1;
 	while (0 < --i) {
 		curbp->b_page = upup(curbp, curbp->b_page);
 		up();
@@ -646,17 +623,14 @@ void insert(wchar_t input)
 	curbp->b_point = movegap(curbp, curbp->b_point);
 	*curbp->b_gap++ = input == L'\r' ? L'\n' : input;
 	curbp->b_point = pos(curbp, curbp->b_egap);
-	curbp->b_flags |= B_MODIFIED;
 }
 
 @ @<Procedures@>=
 void backsp(void)
 {
 	curbp->b_point = movegap(curbp, curbp->b_point);
-	if (curbp->b_buf < curbp->b_gap) {
+	if (curbp->b_buf < curbp->b_gap)
 		--curbp->b_gap;
-		curbp->b_flags |= B_MODIFIED;
-	}
 	curbp->b_point = pos(curbp, curbp->b_egap);
 }
 
@@ -664,10 +638,8 @@ void backsp(void)
 void delete(void)
 {
 	curbp->b_point = movegap(curbp, curbp->b_point);
-	if (curbp->b_egap < curbp->b_ebuf) {
+	if (curbp->b_egap < curbp->b_ebuf)
 		curbp->b_point = pos(curbp, ++curbp->b_egap);
-		curbp->b_flags |= B_MODIFIED;
-	}
 }
 
 @ @<Procedures@>=
@@ -773,7 +745,7 @@ int main(int argc, char **argv)
 	noecho();
 
 	curbp = new_buffer();
-	insert_file(argv[1], FALSE);
+	insert_file(argv[1]);
 	/* Save filename irregardless of load() success. */
 	strncpy(curbp->b_fname, argv[1], MAX_FNAME);
 	curbp->b_fname[MAX_FNAME] = '\0'; /* force truncation */
