@@ -696,8 +696,10 @@ void set_mark(void)
 	msg(L"Mark set");
 }
 
+@ @<Predecl...@>=
+void cut(void);
 @ @<Procedures@>=
-void copy_cut(int cut)
+void cut(void)
 {
 	wchar_t *p;
 	if (curbp->b_mark == NOMARK || curbp->b_point == curbp->b_mark) return;	/* if no
@@ -722,14 +724,10 @@ void copy_cut(int cut)
 		msg(L"No more memory available.");
 	else {
 		memcpy(scrap, p, (size_t) nscrap * sizeof (wchar_t));
-		if (cut) {
-			curbp->b_egap += nscrap; /* if cut expand gap down */
-			curbp->b_point = pos(curbp, curbp->b_egap); /* set point to after region */
-			curbp->b_flags |= B_MODIFIED;
-			msg(L"%ld chars cut.", nscrap);
-		} else {
-			msg(L"%ld chars copied.", nscrap);
-		}
+		curbp->b_egap += nscrap; /* if cut expand gap down */
+		curbp->b_point = pos(curbp, curbp->b_egap); /* set point to after region */
+		curbp->b_flags |= B_MODIFIED;
+		msg(L"%ld chars cut.", nscrap);
 		curbp->b_mark = NOMARK;  /* unmark */
 	}
 }
@@ -751,13 +749,6 @@ void paste(void)
 }
 
 @ @<Predecl...@>=
-void copy(void);
-void cut(void);
-@ @<Procedures@>=
-void copy(void) { copy_cut(FALSE); }
-void cut(void) { copy_cut(TRUE); }
-
-@ @<Predecl...@>=
 void killtoeol(void);
 @ @<Procedures@>=
 void killtoeol(void)
@@ -770,7 +761,7 @@ void killtoeol(void)
 	} else {
 		curbp->b_mark = curbp->b_point;
 		lnend();
-		copy_cut(TRUE);
+		cut();
 	}
 }
 
@@ -876,9 +867,11 @@ typedef struct keymap_t {
 @ @<Key bindings@>=
 keymap_t key_map[] = {@|
 	{"C-k kill-to-eol          ", "\x0B", killtoeol },@|
-	{"C-s search               ", "\x13", search },@|
 	{"C-y yank                 ", "\x19", paste},@|
+	{"C-w kill-region          ", "\x17", cut},@|
 	{"C-space set-mark         ", "\x00", set_mark },@|
+
+	{"C-s search               ", "\x13", search },@|
 
 	{"C-\\ beg-of-buf        ", "\x1C", top },@|
 	{"C-/ end-of-buf         ", "\x1F", bottom },@|
