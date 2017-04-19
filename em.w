@@ -908,12 +908,12 @@ keymap_t key_map[] = {@|
 	{"C-h backspace            ", "\x08", backsp },@|
 
 	{"PgUp                     ", "\x1B\x5B\x35\x7E",pgup },@|
-	{"C-z                      ", "\x1A",            pgup },@|
+	{"C-u                      ", "\x15",            pgup },@|
 
 	{"PgDn                     ", "\x1B\x5B\x36\x7E", pgdown },@|
 	{"C-v                      ", "\x16",             pgdown },@|
 
-	{"C-w exit with saving     ", "\x17", save },@|
+	{"C-z save and exit        ", "\x1A", save },@|
 
 	{"C-x exit without saving  ", "\x18", quit }};
 
