@@ -383,7 +383,7 @@ In other words, the following transformation is always valid:
                         case (wchar_t) 0x08: /* C-h */
                                 backsp();
                                 break;
-                        case (wchar_t) 0x1e: /* C-|^| */
+                        case (wchar_t) 0x1e: /* C-6 */
                                 pgup();
                                 break;
                         case (wchar_t) 0x16: /* C-v */
