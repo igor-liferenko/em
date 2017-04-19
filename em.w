@@ -261,8 +261,7 @@ void save(void)
 	length = (point_t) (curbp->b_ebuf - curbp->b_egap);
         @<Write file@>@;
 	fclose(fp);
-	curbp->b_flags &= ~B_MODIFIED;
-	msg(L"File \"%s\" %ld chars saved.", curbp->b_fname, pos(curbp, curbp->b_ebuf));
+	quit();
 }
 
 @ We write file character-by-character for similar reasons which are explained in
@@ -370,7 +369,7 @@ wchar_t get_key(keymap_t **key_return)
 
 	do {
 		assert(K_BUFFER_LENGTH > record - buffer);
-		get_wch((wint_t *) record); /* read and record one char. */
+		get_wch((wint_t *) record); /* read and record one char */
 		*++record = L'\0';
 
 		for (k = key_map, submatch = 0; k->key_bytes != NULL; k++) { /* if recorded
@@ -607,6 +606,7 @@ void right(void);
 void up(void);
 void down(void);
 void lnbegin(void);
+void quit(void);
 
 @ @<Procedures@>=
 void top(void) {@+ curbp->b_point = 0; @+}
@@ -617,28 +617,7 @@ void up(void) {@+ curbp->b_point = lncolumn(curbp, upup(curbp, curbp->b_point),c
 void down(void) {@+ curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point),curbp->b_col); @+}
 void lnbegin(void) {@+ curbp->b_point = segstart(curbp,
   lnstart(curbp,curbp->b_point), curbp->b_point); @+}
-
-@ @<Predecl...@>=
-void quit(void);
-@ @<Procedures@>=
-void quit(void)
-{
-	if (curbp->b_flags & B_MODIFIED) {
-		@<Print prompt@>@;
-		@<Read answer@>@;
-        }
-	done = 1; /* quit */
-}
-
-@ @<Print prompt@>=
-mvaddwstr(MSGLINE, 0, L"File not saved; really exit (y/n) ? ");
-clrtoeol();
-refresh(); /* update the real screen */
-
-@ @<Read answer@>=
-wchar_t c;
-get_wch((wint_t *) &c);
-if (towlower((wint_t) c) != L'y') return;
+void quit(void) {@+ done = 1; @+}
 
 @ @<Predecl...@>=
 void lnend(void);
@@ -896,39 +875,47 @@ typedef struct keymap_t {
 
 @ @<Key bindings@>=
 keymap_t key_map[] = {@|
-	{"C-a beginning-of-line    ", "\x01", lnbegin },@|
-	{"C-b                      ", "\x02", left },@|
-	{"C-d forward-delete-char  ", "\x04", delete },@|
-	{"C-e end-of-line          ", "\x05", lnend },@|
-	{"C-f                      ", "\x06", right },@|
-	{"C-n                      ", "\x0E", down },@|
-	{"C-p                      ", "\x10", up },@|
-	{"C-h backspace            ", "\x08", backsp },@|
 	{"C-k kill-to-eol          ", "\x0B", killtoeol },@|
 	{"C-s search               ", "\x13", search },@|
-	{"C-v                      ", "\x16", pgdown },@|
-	{"C-w kill-region          ", "\x17", cut},@|
 	{"C-y yank                 ", "\x19", paste},@|
 	{"C-space set-mark         ", "\x00", set_mark },@|
-	{"esc @@ set-mark           ", "\x1B\x40", set_mark },@|
-	{"esc k kill-region        ", "\x1B\x6B", cut },@|
-	{"esc v                    ", "\x1B\x76", pgup },@|
-	{"esc w copy-region        ", "\x1B\x77", copy},@|
-	{"esc < beg-of-buf         ", "\x1B\x3C", top },@|
-	{"esc > end-of-buf         ", "\x1B\x3E", bottom },@|
-	{"up previous-line         ", "\x1B\x5B\x41", up },@|
-	{"down next-line           ", "\x1B\x5B\x42", down },@|
-	{"left backward-character  ", "\x1B\x5B\x44", left },@|
-	{"right forward-character  ", "\x1B\x5B\x43", right },@|
-	{"home beginning-of-line   ", "\x1B\x4F\x48", lnbegin },@|
-	{"end end-of-line          ", "\x1B\x4F\x46", lnend },@|
+
+	{"C-\\ beg-of-buf        ", "\x1C", top },@|
+	{"C-/ end-of-buf         ", "\x1F", bottom },@|
+
+	{"Up previous-line         ", "\x1B\x5B\x41", up },@|
+	{"C-p                      ", "\x10",         up },@|
+
+	{"Down next-line           ", "\x1B\x5B\x42", down },@|
+	{"C-n                      ", "\x0E",         down },@|
+
+	{"Left backward-character  ", "\x1B\x5B\x44", left },@|
+	{"C-b                      ", "\x02",         left },@|
+
+	{"Right forward-character  ", "\x1B\x5B\x43", right },@|
+	{"C-f                      ", "\x06",         right },@|
+
+	{"End end-of-line          ", "\x1B\x5B\x46", lnend },@|
+	{"C-e end-of-line          ", "\x05",         lnend },@|
+
+	{"Home beginning-of-line   ", "\x1B\x5B\x48", lnbegin },@|
+	{"C-a beginning-of-line    ", "\x01",         lnbegin },@|
+
 	{"DEL forward-delete-char  ", "\x1B\x5B\x33\x7E", delete },@|
-	{"backspace delete-left    ", "\x7f", backsp },@|
+	{"C-d forward-delete-char  ", "\x04",             delete },@|
+
+	{"BackSpace delete-left    ", "\x7f", backsp },@|
+	{"C-h backspace            ", "\x08", backsp },@|
+
 	{"PgUp                     ", "\x1B\x5B\x35\x7E",pgup },@|
+	{"C-z                      ", "\x1A",            pgup },@|
+
 	{"PgDn                     ", "\x1B\x5B\x36\x7E", pgdown },@|
-	{"C-x C-s save-buffer      ", "\x18\x13", save },@|
-	{"C-x C-c exit             ", "\x18\x03", quit },@|
-	{"K_ERROR                  ", NULL, NULL }};
+	{"C-v                      ", "\x16",             pgdown },@|
+
+	{"C-w exit with saving     ", "\x17", save },@|
+
+	{"C-x exit without saving  ", "\x18", quit }};
 
 @ @<Main program@>=
 int main(int argc, char **argv)
