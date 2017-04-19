@@ -285,8 +285,10 @@ we will need |sizeof(wchar_t)|-times more memory than would be
 required for non-wide-character buffer.
 
 Moreover, memory is wasted if input file is non-ASCII.
-To waste as little memory as possible, we allocate memory
+
+TODO: to waste as little memory as possible, allocate memory
 chunk-by-chunk as we are reading the file.
+@^TODO@>
 
 @s off_t int
 
