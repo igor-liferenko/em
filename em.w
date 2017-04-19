@@ -63,6 +63,13 @@ paste. This is where |growgap| comes into play.
 @<Procedures@>@;
 @<Main program@>@;
 
+@ The number of lines in window |LINES| is automatically set by {\sl ncurses\/}
+library. We maintain our own variable to be able to reduce number of lines if
+a message is to be displayed.
+
+@<Global...@>=
+int rows;              /* no. of rows of text in window */
+
 @ @s point_t int
 @s buffer_t int
 
@@ -496,16 +503,14 @@ wchar_t temp[TEMPBUF];
 @ @<Procedures@>=
 void dispmsg()
 {
-	standout();
-	move(MSGLINE, 0);
-	for (int i = 1; i <= COLS; i++)
-		addwstr(L" ");
-	move(MSGLINE, 0);
 	if (msgflag) {
+		standout();
+		move(MSGLINE, 0);
 		addwstr(msgline);
+		standend();
+		clrtoeol();
 		msgflag = FALSE;
 	}
-	standend();
 }
 
 @ @s cchar_t int
@@ -516,6 +521,9 @@ void display()
 	wchar_t *p;
 	int i, j, k;
 	buffer_t *bp = curbp;
+
+	if (msgflag) rows = LINES - 1;
+	else rows = LINES;
 	
 	/* find start of screen, handle scroll up off page or top of file  */
 	/* point is always within |b_page| and |b_epage| */
@@ -528,11 +536,10 @@ void display()
 		if (pos(bp, bp->b_ebuf) <= bp->b_page) { /* if we scoll to EOF we show 1
                   blank line at bottom of screen */
 			bp->b_page = pos(bp, bp->b_ebuf);
-			i = LINES - 2;
+			i = rows - 1;
+		} else {
+			i = rows - 0;
 		}
-		else
-			i = LINES - 1;
-
 		while (0 < i--) /* scan backwards the required number of lines */
 			bp->b_page = upup(bp, bp->b_page);
 	}
@@ -550,7 +557,7 @@ void display()
 			bp->b_col = j;
 		}
 		p = ptr(bp, bp->b_epage);
-		if (LINES - 1 <= i || bp->b_ebuf <= p) /* maxline */
+		if (rows <= i || bp->b_ebuf <= p) /* maxline */
 			break;
 		if (*p != L'\r') {
 			cchar_t my_cchar;
@@ -577,7 +584,7 @@ void display()
 	}
 
 	/* replacement for clrtobot() to bottom of window */
-	for (k=i; k < LINES - 1; k++) {
+	for (k=i; k < rows; k++) {
 		move(k, j); /* clear from very last char not start of line */
 		clrtoeol();
 		j = 0; /* thereafter start of line */
@@ -617,7 +624,7 @@ void pgdown(void)
 @ @<Procedures@>=
 void pgup(void)
 {
-	int i = LINES - 1;
+	int i = rows;
 	while (0 < --i) {
 		curbp->b_page = upup(curbp, curbp->b_page);
 		up();
@@ -758,6 +765,8 @@ int main(int argc, char **argv)
 	initscr(); /* start curses mode */
 	raw();
 	noecho();
+
+	rows = LINES - 1;
 
 	curbp = new_buffer();
 	insert_file(argv[1]);
