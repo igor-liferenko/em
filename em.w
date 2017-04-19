@@ -61,8 +61,6 @@ paste. This is where |growgap| comes into play.
 @<Header files@>@;
 @<Typedef declarations@>@;
 @<Global variables@>@;
-@<Predeclarations of procedures for key bindings@>@;
-@<Key bindings@>@;
 @<Procedures@>@;
 @<Main program@>@;
 
@@ -247,8 +245,6 @@ point_t movegap(buffer_t *bp, point_t offset)
 	return (pos(bp, bp->b_egap));
 }
 
-@ @<Predecl...@>=
-void quit(void);
 @ @<Procedures@>=
 void quit(void)
 {
@@ -345,54 +341,59 @@ ASCII in |0000|--|0177| range. According to the structure of UTF-8 (first bit is
 for ASCII), it follows that all ASCII codes are Unicode values (and vice versa).
 In other words, the following transformation is always valid:
 |wc = (wchar_t)c|, where |c| is of type |char| and |wc| is of type
-|wchar_t|, and |c| contains ASCII codes. In our case |c| can only contain ASCII codes
-(see |@<Key bindings@>|).
+|wchar_t|, and |c| contains ASCII codes. In our case |c| can only contain ASCII codes.
 
 \xdef\asciisec{\secno} % remember the number of this section
 
-@<Procedures@>=
-wchar_t get_key(keymap_t **key_return)
-{
-	keymap_t *k;
-	int submatch;
-	static wchar_t buffer[K_BUFFER_LENGTH];
-	static wchar_t *record = buffer;
-
-	*key_return = NULL;
-
-	if (*record != L'\0') { /* if recorded char(s) remain, return current char
-          and advance pointer to the next */
-		*key_return = NULL;
-		return *record++;
-	}
-	record = buffer; /* reset record buffer */
-
-	do {
-		assert(K_BUFFER_LENGTH > record - buffer);
-		get_wch((wint_t *) record); /* read and record one char */
-		*++record = L'\0';
-
-		for (k = key_map, submatch = 0; k->key_bytes != NULL; k++) { /* if recorded
-                  chars match any multi-byte sequence... */
-			wchar_t *p;
-                        char *q;
-
-			for (p = buffer, q = k->key_bytes; isascii(*q) && *p == (wchar_t) *q; p++, q++) {
-				if (*q == '\0' && *p == L'\0') { /* an exact match */
-					*key_return = k;
-					*buffer = L'\0'; /* clear record buffer */
-					return
-                                          L'\0'; /* not used */
-				}
-			}
-			if (*p == L'\0' && *q != '\0') /* record bytes match part of
-                          a command sequence */
-				submatch = 1;
-		}
-	} while (submatch);
-	record = buffer; /* if nothing matched, return the first recorded char
-          and advance pointer to the next */
-	return *record++;
+@<Get key@>=
+                switch(input) {
+                        case (wchar_t) 0x13: /* C-s */
+                                search();
+                                break;
+                        case (wchar_t) 0x1b: /* C-[ */
+                                top();
+                                break;
+                        case (wchar_t) 0x1d: /* C-] */
+                                bottom();
+                                break;
+                        case (wchar_t) 0x10: /* C-p */
+                                up();
+                                break;
+                        case (wchar_t) 0x0e: /* C-n */
+                                down();
+                                break;
+                        case (wchar_t) 0x02: /* C-b */
+                                left();
+                                break;
+                        case (wchar_t) 0x06: /* C-f */
+                                right();
+                                break;
+                        case (wchar_t) 0x05: /* C-e */
+                                lnend();
+                                break;
+                        case (wchar_t) 0x01: /* C-a */
+                                lnbegin();
+                                break;
+                        case (wchar_t) 0x04: /* C-d */
+                                delete();
+                                break;
+                        case (wchar_t) 0x7f: /* BackSpace */
+                                backsp();
+                                break;
+                        case (wchar_t) 0x08: /* C-h */
+                                backsp();
+                                break;
+                        case (wchar_t) 0x1e: /* C-|^| */
+                                pgup();
+                                break;
+                        case (wchar_t) 0x16: /* C-v */
+                                pgdown();
+                                break;
+                        case (wchar_t) 0x1a: /* C-z */
+                                quit();
+                                break;
+                        default:
+				insert(input);
 }
 
 @ Reverse scan for start of logical line containing offset.
@@ -601,15 +602,6 @@ void display()
 	refresh(); /* update the real screen */
 }
 
-@ @<Predecl...@>=
-void top(void);
-void bottom(void);
-void left(void);
-void right(void);
-void up(void);
-void down(void);
-void lnbegin(void);
-
 @ @<Procedures@>=
 void top(void) {@+ curbp->b_point = 0; @+}
 void bottom(void) {@+ curbp->b_epage = curbp->b_point = pos(curbp, curbp->b_ebuf); @+}
@@ -620,8 +612,6 @@ void down(void) {@+ curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point)
 void lnbegin(void) {@+ curbp->b_point = segstart(curbp,
   lnstart(curbp,curbp->b_point), curbp->b_point); @+}
 
-@ @<Predecl...@>=
-void lnend(void);
 @ @<Procedures@>=
 void lnend(void)
 {
@@ -629,8 +619,6 @@ void lnend(void)
 	left();
 }
 
-@ @<Predecl...@>=
-void pgdown(void);
 @ @<Procedures@>=
 void pgdown(void)
 {
@@ -640,8 +628,6 @@ void pgdown(void)
 	curbp->b_epage = pos(curbp, curbp->b_ebuf);
 }
 
-@ @<Predecl...@>=
-void pgup(void);
 @ @<Procedures@>=
 void pgup(void)
 {
@@ -663,8 +649,6 @@ void insert(wchar_t input)
 	curbp->b_flags |= B_MODIFIED;
 }
 
-@ @<Predecl...@>=
-void backsp(void);
 @ @<Procedures@>=
 void backsp(void)
 {
@@ -676,8 +660,6 @@ void backsp(void)
 	curbp->b_point = pos(curbp, curbp->b_egap);
 }
 
-@ @<Predecl...@>=
-void delete(void);
 @ @<Procedures@>=
 void delete(void)
 {
@@ -714,9 +696,7 @@ wchar_t searchtext[STRBUF_M];
 
 @ Here is used the concept which is explained in section~\asciisec.
 
-@<Predecl...@>=
-void search(void);
-@ @<Procedures@>=
+@<Procedures@>=
 void search(void)
 {
 	int cpos = 0;	
@@ -779,49 +759,10 @@ void search(void)
 	}
 }
 
-@ @s keymap_t int
-@<Typedef declarations@>=
-typedef struct keymap_t {
-	char *key_desc;                 /* name of bound function */
-	char *key_bytes;		/* the string of bytes when this key is pressed */
-	void (*func)(void);
-} keymap_t;
-
-@ @<Key bindings@>=
-keymap_t key_map[] = {@|
-	{"C-s search               ", "\x13", search },@|
-
-	{"C-[ beg-of-buf        ", "\x1B", top },@|
-	{"C-] end-of-buf        ", "\x1D", bottom },@|
-
-	{"C-p                      ", "\x10",         up },@|
-
-	{"C-n                      ", "\x0E",         down },@|
-
-	{"C-b                      ", "\x02",         left },@|
-
-	{"C-f                      ", "\x06",         right },@|
-
-	{"C-e end-of-line          ", "\x05",         lnend },@|
-
-	{"C-a beginning-of-line    ", "\x01",         lnbegin },@|
-
-	{"C-d forward-delete-char  ", "\x04",             delete },@|
-
-	{"BackSpace delete-left    ", "\x7f", backsp },@|
-	{"C-h backspace            ", "\x08", backsp },@|
-
-	{"C-^                      ", "\x1E",            pgup },@|
-
-	{"C-v                      ", "\x16",             pgdown },@|
-
-	{"C-z quit        ", "\x1A", quit }};
-
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
         wchar_t input;
-        keymap_t *key_return;
 	setlocale(LC_CTYPE, "C.UTF-8");
 	if (argc != 2) fatal(L"usage: em filename\n");
 
@@ -840,19 +781,8 @@ int main(int argc, char **argv)
 
 	while (!done) {
 		display();
-		input = get_key(&key_return);
-
-		if (key_return != NULL) {
-			(key_return->func)();
-		} else {
-			/* allow TAB and NEWLINE, any other control char is 'Not Bound' */
-			if (input >= L' ' || input == L'\n' || input == L'\t')
-				insert(input);
-                        else {
-				fflush(stdin);
-				msg(L"Not bound");
-			}
-		}
+		get_wch((wint_t *) &input); /* read and record one char */
+		@<Get key@>@;
 	}
 
 	if (scrap != NULL) free(scrap);
