@@ -819,12 +819,12 @@ void search(void)
 	  refresh(); /* update the real screen */
 	  get_wch((wint_t *) &c);
 	  if (c < L' ' && c != L'\a' && c != L'\b' && c != (wchar_t)0x13
-            && c != (wchar_t)0x12 && c != L'\e')
-	    continue; /* ignore control keys other than C-g, backspace, C-s, C-r, ESC */
+            && c != (wchar_t)0x12 && c != L'\n')
+	    continue; /* ignore control keys other than in |switch| below */
 
 	  switch(c) {
 	    case
-              L'\e': /* esc */
+              L'\n': /* ctrl-m */
 			searchtext[cpos] = L'\0';
 			flushinp(); /* discard any escape sequence without writing in buffer */
 			return;
@@ -832,7 +832,7 @@ void search(void)
               L'\a': /* ctrl-g */
 			curbp->b_point = o_point;
 			return;
-	    case (wchar_t)0x13: /* ctrl-s, do the search */
+	    case (wchar_t) 0x13: /* ctrl-s, do the search */
 			found = search_forward(curbp, curbp->b_point, searchtext);
 			if (found != -1 ) {
 				curbp->b_point = found;
@@ -844,7 +844,7 @@ void search(void)
 				curbp->b_point = 0;
 			}
 			break;
-	    case (wchar_t)0x7f: /* del, erase */
+	    case (wchar_t) 0x7f: /* del, erase */
 	    case
               L'\b': /* backspace */
 			if (cpos == 0)
