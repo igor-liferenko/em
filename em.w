@@ -274,9 +274,12 @@ Number of bytes in the file is used as an estimate of the upper
 bound for the memory buffer to allocate, using the fact that the
 number of wide characters cannot be greater than the number of bytes
 from which they were converted. Using such an estimate,
-in the best case (when file is ASCII-only) we will use
-|sizeof(wchar_t)|-times more memory than would be required
-for non-wide-character buffer.
+we will need |sizeof(wchar_t)|-times more memory than would be
+required for non-wide-character buffer.
+
+Moreover, memory is wasted if input file is non-ASCII.
+To waste as little memory as possible, we allocate memory
+chunk-by-chunk as we are reading the file.
 
 @s off_t int
 
