@@ -282,9 +282,8 @@ bound for the memory buffer to allocate, using the fact that the
 number of wide characters cannot be greater than the number of bytes
 from which they were converted. Using such an estimate,
 we will need |sizeof(wchar_t)|-times more memory than would be
-required for non-wide-character buffer.
-
-Moreover, memory is wasted if input file is non-ASCII.
+required for non-wide-character buffer, and memory is wasted if
+the input file contains multibyte sequence(s).
 
 TODO: to waste as little memory as possible, allocate memory
 chunk-by-chunk as we are reading the file.
