@@ -98,13 +98,6 @@ buffer_t *curbp;
 point_t nscrap = 0;
 wchar_t *scrap = NULL;
 
-@ Some compilers define |size_t| as a unsigned 16 bit number while
-|point_t| and |off_t| might be defined as a signed 32 bit number.
-|malloc| and |realloc| take |size_t| parameters,
-which means there will be some size limits.
-
-@d MAX_SIZE_T      (size_t)((size_t)~0 / (sizeof(wchar_t)))
-
 @ @<Procedures@>=
 buffer_t* new_buffer()
 {
@@ -187,20 +180,20 @@ int growgap(buffer_t *bp, point_t n)
 	@<Calculate new length |newlen| of gap@>@;
 
 	if (buflen == 0) {
-		if (newlen < 0 || (point_t)~MAX_SIZE_T & newlen)
-                  fatal(L"Failed to allocate required memory.\n");
+		if (newlen < 0)
+                  fatal(L"Why this happened?\n"); /* fatal */
 		new = malloc((size_t) newlen * sizeof(wchar_t));
 		if (new == NULL)
-		  fatal(L"Failed to allocate required memory.\n");
+		  fatal(L"Failed to allocate required memory.\n"); /* fatal */
 	}
         else {
-		if (newlen < 0 || (point_t)~MAX_SIZE_T & newlen) {
-			msg(L"Failed to allocate required memory."); /* report non-fatal error */
+		if (newlen < 0) {
+			msg(L"Why this happened?"); /* non-fatal */
 			return (FALSE);
 		}
 		new = realloc(bp->b_buf, (size_t) newlen * sizeof(wchar_t));
 		if (new == NULL) {
-			msg(L"Failed to allocate required memory."); /* report non-fatal error */
+			msg(L"Failed to allocate required memory."); /* non-fatal */
 			return (FALSE);
 		}
 	}
@@ -261,7 +254,7 @@ void quit(void)
 }
 
 @ We write file character-by-character for similar reasons which are explained in
-|@<Read file...@>|.
+|@<Read file@>|.
 
 @<Write file@>=
 point_t n;
@@ -271,58 +264,38 @@ for (n = 0; n < length; n++)
 if (n != length)
   msg(L"Failed to write file \"%s\".", curbp->b_fname);
 
-@ Reads file into buffer at point.
+@* Reading file into buffer at point.
 
 In this program we use wide-character editing buffer.
 UTF-8 sequences from input file stream are automatically converted
 to wide characters by C standard library function |fgetwc|.
 
-Number of bytes in the file is used as an estimate of the upper
-bound for the memory buffer to allocate, using the fact that the
-number of wide characters cannot be greater than the number of bytes
-from which they were converted. Using such an estimate,
-we will need |sizeof(wchar_t)|-times more memory than would be
-required for non-wide-character buffer, and memory is wasted if
-the input file contains multibyte sequence(s).
+To allocate memory for editing buffer, we need to know how many
+chars are in input file. But this is impossible to know until
+you read the whole file. So, we will use an estimate.
 
-TODO: to waste as little memory as possible, allocate memory
-chunk-by-chunk as we are reading the file.
-@^TODO@>
+One way to estimate the required amount of memory for editing buffer
+is to use the fact that the number of chars cannot be
+greater than the number of bytes from which they were converted.
+Using such an estimate, memory is wasted if the input file contains
+multibyte sequence(s).
 
-@s off_t int
+To waste less memory, we will allocate memory for editing buffer
+chunk-by-chunk as we are reading the file. The chunk of chars
+from input file is stored in buffer |buf| before being copied
+to editing buffer.
 
-@<Procedures@>=
-int insert_file(char *fn)
-{
-	FILE *fp;
-	size_t len;
-	struct stat sb;
+@ @<Global...@>=
+wchar_t buf[MIN_GAP_EXPAND]; /* we read the input into this array */
+wchar_t *buf_end; /* where the next char goes */
 
-	if (stat(fn, &sb) < 0) {
-		msg(L"Failed to find file \"%s\".", fn);
-		return (FALSE);
-	}
-	if ((off_t)~MAX_SIZE_T & sb.st_size) {
-		msg(L"File \"%s\" is too big to load.", fn);
-		return (FALSE);
-	}
-	if (curbp->b_egap - curbp->b_gap < sb.st_size && !growgap(curbp, sb.st_size))
-		return (FALSE);
-	if ((fp = fopen(fn, "r")) == NULL) {
-		fatal(L"Failed to open file \"%s\".", fn);
-		return (FALSE);
-	}
-
-	curbp->b_point = movegap(curbp, curbp->b_point);
-
-        @<Read file and set number |len| of chars@>@;
-
-	if (fclose(fp) != 0) {
-		msg(L"Failed to close file \"%s\".", fn);
-		return (FALSE);
-	}
-	return (TRUE);
-}
+@ @<Insert file@>=
+FILE *fp;
+if ((fp = fopen(argv[1], "r")) == NULL)
+	fatal(L"Failed to open file \"%s\".\n", argv[1]);
+@<Create lock file@>@;
+@<Read file@>@;
+fclose(fp);
 
 @ We read file byte-by-byte, instead of reading the entire file
 into memory in one go (which is faster), because UTF-8 data must be
@@ -330,13 +303,22 @@ converted to wide-character representation. There is just no other
 way to convert input data from UTF-8 than processing it byte-by-byte.
 This is the necessary price to pay for using wide-character buffer.
 
-@<Read file...@>=
+@<Read file@>=
 wint_t c;
-for (len=0; (c=fgetwc(fp)) != WEOF; len++)
-  *(curbp->b_gap + len) = (wchar_t) c;
-if (!feof(fp))
-  fatal(L"Error reading file: %s.\n", strerror(errno));
-curbp->b_gap += len;
+while (1) {
+  buf_end = buf;
+  while (buf_end - buf < MIN_GAP_EXPAND && (c = getwc(fp)) != WEOF)
+    *buf_end++ = (wchar_t) c;
+  if (buf_end == buf) break; /* end of file */
+  @<Copy contents of |buf| to editing buffer@>@;
+}
+
+@ @<Copy contents of |buf|...@>=
+if (curbp->b_egap - curbp->b_gap < buf_end-buf && !growgap(curbp, buf_end-buf))
+  break;
+curbp->b_point = movegap(curbp, curbp->b_point);
+wcsncpy(curbp->b_gap, buf, (size_t)(buf_end-buf));
+curbp->b_gap += (buf_end-buf);
 
 @ UTF-8 is valid encoding for Unicode. The requirement of UTF-8 is that it is equal to
 ASCII in |0000|--|0177| range. According to the structure of UTF-8 (first bit is zero
@@ -763,8 +745,6 @@ int main(int argc, char **argv)
 	setlocale(LC_CTYPE, "C.UTF-8");
 	if (argc != 2) fatal(L"usage: em filename\n");
 
-        @<Create lock file@>@;
-
 	initscr(); /* start curses mode */
 	raw();
 	noecho();
@@ -772,7 +752,8 @@ int main(int argc, char **argv)
 	rows = LINES - 1;
 
 	curbp = new_buffer();
-	insert_file(argv[1]);
+
+	@<Insert file@>@;
 	/* Save filename irregardless of load() success. */
 	strncpy(curbp->b_fname, argv[1], MAX_FNAME);
 	curbp->b_fname[MAX_FNAME] = '\0'; /* force truncation */
@@ -815,10 +796,7 @@ char lockfn[MAX_FNAME+sizeof(LOCK_EXT)+1];
 #include <stdio.h> /* |fopen|, |fclose| */
 #include <unistd.h> /* |unlink| */
 
-@ FIXME: is it the right place to create lock file?
-@^FIXME@>
-
-@<Create lock file@>=
+@ @<Create lock file@>=
 FILE *lockfp;
 strncpy(lockfn, argv[1], MAX_FNAME);
 lockfn[MAX_FNAME]='\0';
