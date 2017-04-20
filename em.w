@@ -325,73 +325,81 @@ curbp->b_point = movegap(curbp, curbp->b_point);
 wcsncpy(curbp->b_gap, buf, (size_t)(buf_end-buf));
 curbp->b_gap += (buf_end-buf);
 
-@ UTF-8 is valid encoding for Unicode. The requirement of UTF-8 is that it is equal to
-ASCII in |0000|--|0177| range. According to the structure of UTF-8 (first bit is zero
-for ASCII), it follows that all ASCII codes are Unicode values (and vice versa).
-In other words, the following transformation is always valid:
-|wc = (wchar_t)c|, where |c| is of type |char| and |wc| is of type
-|wchar_t|, and |c| contains ASCII codes. In our case |c| can only contain ASCII codes.
-
-\xdef\asciisec{\secno} % remember the number of this section
-
-@<Get key@>=
-                switch(input) {
-			case (wchar_t) 0x0f: /* C-o */
-				open_line();
-				break;
-			case (wchar_t) 0x18: /* C-x */
-				done = 1; /* quit without saving */
-				break;
-                        case (wchar_t) 0x13: /* C-s */
-                                search();
-                                break;
-			case
-				L'\u019a': /* resize */
-				break;
-                        case (wchar_t) 0x1b: /* C-[ */
-                                top();
-                                break;
-                        case (wchar_t) 0x1d: /* C-] */
-                                bottom();
-                                break;
-                        case (wchar_t) 0x10: /* C-p */
-                                up();
-                                break;
-                        case (wchar_t) 0x0e: /* C-n */
-                                down();
-                                break;
-                        case (wchar_t) 0x02: /* C-b */
-                                left();
-                                break;
-                        case (wchar_t) 0x06: /* C-f */
-                                right();
-                                break;
-                        case (wchar_t) 0x05: /* C-e */
-                                lnend();
-                                break;
-                        case (wchar_t) 0x01: /* C-a */
-                                lnbegin();
-                                break;
-                        case (wchar_t) 0x04: /* C-d */
-                                delete();
-                                break;
-                        case (wchar_t) 0x7f: /* BackSpace */
-                                backsp();
-                                break;
-                        case (wchar_t) 0x08: /* C-h */
-                                backsp();
-                                break;
-                        case (wchar_t) 0x1e: /* C-6 */
-                                pgup();
-                                break;
-                        case (wchar_t) 0x16: /* C-v */
-                                pgdown();
-                                break;
-                        case (wchar_t) 0x1a: /* C-z */
-                                quit();
-                                break;
-                        default:
-				insert(input);
+@ @<Get key@>=
+switch(input) {
+	case
+		L'\x0f': /* C-o */
+		open_line();
+		break;
+	case
+		L'\x18': /* C-x */
+		done = 1; /* quit without saving */
+		break;
+	case
+		L'\x13': /* C-s */
+		search();
+		break;
+	case
+		L'\u019a': /* resize */
+		break;
+	case
+		L'\x1b': /* C-[ */
+		top();
+		break;
+	case
+		L'\x1d': /* C-] */
+		bottom();
+		break;
+	case
+		L'\x10': /* C-p */
+		up();
+		break;
+	case
+		L'\x0e': /* C-n */
+		down();
+		break;
+	case
+		L'\x02': /* C-b */
+		left();
+		break;
+	case
+		L'\x06': /* C-f */
+		right();
+		break;
+	case
+		L'\x05': /* C-e */
+		lnend();
+		break;
+	case
+		L'\x01': /* C-a */
+		lnbegin();
+		break;
+	case
+		L'\x04': /* C-d */
+		delete();
+		break;
+	case
+		L'\x7f': /* BackSpace */
+		backsp();
+		break;
+	case
+		L'\x08': /* C-h */
+		backsp();
+		break;
+	case
+		L'\x1e': /* C-6 */
+		pgup();
+		break;
+	case
+		L'\x16': /* C-v */
+		pgdown();
+		break;
+	case
+		L'\x1a': /* C-z */
+		quit();
+		break;
+	default:
+		insert(input);
 }
 
 @ Reverse scan for start of logical line containing offset.
@@ -678,9 +686,7 @@ point_t search_forward(buffer_t *bp, point_t start_p, wchar_t *stext)
 @ @<Global variables@>=
 wchar_t searchtext[STRBUF_M];
 
-@ Here is used the concept which is explained in section~\asciisec.
-
-@<Procedures@>=
+@ @<Procedures@>=
 void search(void)
 {
 	int cpos = 0;	
@@ -696,35 +702,38 @@ void search(void)
 	for (;;) {
 	  refresh(); /* update the real screen */
 	  get_wch((wint_t *) &c);
-	  if (c < L' ' && c != L'\a' && c != L'\b' && c != (wchar_t)0x13
-            && c != (wchar_t)0x12 && c != L'\n')
+	  if (c < L' ' && c != L'\x07' && c != L'\x08' && c != L'\x13'
+            && c != L'\x12' && c != L'\x0a')
 	    continue; /* ignore control keys other than in |switch| below */
 
 	  switch(c) {
 	    case
-              L'\n': /* ctrl-m */
+              L'\x0a': /* ctrl-m */
 			searchtext[cpos] = L'\0';
 			flushinp(); /* discard any escape sequence without writing in buffer */
 			return;
 	    case
-              L'\a': /* ctrl-g */
+              L'\x07': /* ctrl-g */
 			curbp->b_point = o_point;
 			return;
-	    case (wchar_t) 0x13: /* ctrl-s, do the search */
+	    case
+		L'\x13': /* ctrl-s, do the search */
 			found = search_forward(curbp, curbp->b_point, searchtext);
 			if (found != -1 ) {
 				curbp->b_point = found;
 				msg(L"Search: %ls", searchtext);
 				display();
-			} else {
+			}
+			else {
 				msg(L"Failing Search: %ls", searchtext);
 				dispmsg();
 				curbp->b_point = 0;
 			}
 			break;
-	    case (wchar_t) 0x7f: /* del, erase */
 	    case
-              L'\b': /* backspace */
+		L'\x7f': /* del, erase */
+	    case
+              L'\x08': /* backspace */
 			if (cpos == 0)
 				continue;
 			searchtext[--cpos] = L'\0';
@@ -733,7 +742,7 @@ void search(void)
 			break;
 	    default:
 			if (cpos < STRBUF_M - 1) {
-				searchtext[cpos++] = (wchar_t) c;
+				searchtext[cpos++] = c;
 				searchtext[cpos] = L'\0';
 				msg(L"Search: %ls", searchtext);
 				dispmsg();
