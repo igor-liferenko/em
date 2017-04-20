@@ -326,7 +326,12 @@ curbp->b_point = movegap(curbp, curbp->b_point);
 wcsncpy(curbp->b_gap, buf, (size_t)(buf_end-buf));
 curbp->b_gap += (buf_end-buf);
 
-@ @<Get key@>=
+@ FIXME: on terminal window resize in gnome-terminal character
+``LATIN SMALL LETTER L WITH BAR'' is generated. This is a valid
+character, not a signal. Report this as a bug and use |wint_t|
+type for |input|.
+
+@<Get key@>=
 switch(input) {
 	case
 		L'\x0f': /* C-o */
@@ -342,6 +347,7 @@ switch(input) {
 		break;
 	case
 		L'\u019a': /* resize */
+@^FIXME@>
 		break;
 	case
 		L'\x1b': /* C-[ */
