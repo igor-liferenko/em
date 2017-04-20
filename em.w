@@ -322,7 +322,6 @@ while (1) {
 @ @<Copy contents of |buf|...@>=
 if (curbp->b_egap - curbp->b_gap < buf_end-buf && !growgap(curbp, buf_end-buf))
   break;
-curbp->b_point = movegap(curbp, curbp->b_point);
 wcsncpy(curbp->b_gap, buf, (size_t)(buf_end-buf));
 curbp->b_gap += (buf_end-buf);
 
