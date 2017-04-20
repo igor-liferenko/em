@@ -4,9 +4,10 @@
 @s delete normal
 @s new normal
 
-@* EMacs editor. Derived from Zep Emacs by Hugh Barney, 2017
-
-Em uses buffer-gap algorithm.
+@* Buffer-gap algorithm. EM is a text editor. It is implemented
+using wide-character API and ncurses library. EM uses ``buffer-gap''
+algorithm to represent file in memory. Following is the description
+of how it works.
 
 When a file is loaded it is loaded with the gap at the bottom.
 {\tt\obeylines
