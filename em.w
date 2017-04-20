@@ -307,7 +307,7 @@ This is the necessary price to pay for using wide-character buffer.
 wint_t c;
 while (1) {
   buf_end = buf;
-  while (buf_end - buf < MIN_GAP_EXPAND && (c = getwc(fp)) != WEOF)
+  while (buf_end - buf < MIN_GAP_EXPAND && (c = fgetwc(fp)) != WEOF)
     *buf_end++ = (wchar_t) c;
   if (buf_end == buf) break; /* end of file */
   @<Copy contents of |buf| to editing buffer@>@;
