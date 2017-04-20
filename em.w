@@ -252,7 +252,7 @@ void quit(void)
 
 	fp = fopen(curbp->b_fname, "w");
 	if (fp == NULL) msg(L"Failed to open file \"%s\".", curbp->b_fname);
-	movegap(curbp, (point_t) 0);
+	movegap(curbp, 0);
 	length = (point_t) (curbp->b_ebuf - curbp->b_egap);
         @<Write file@>@;
 	fclose(fp);
@@ -405,7 +405,7 @@ switch(input) {
 		quit();
 		break;
 	default:
-		insert(input);
+		insert((wchar_t) input);
 }
 
 @ Reverse scan for start of logical line containing offset.
@@ -775,7 +775,7 @@ wchar_t searchtext[STRBUF_M];
 void search(void)
 {
 	int cpos = 0;	
-	wchar_t c;
+	wint_t c;
 	point_t o_point = curbp->b_point;
 	point_t found;
 
@@ -786,7 +786,7 @@ void search(void)
 
 	for (;;) {
 	  refresh(); /* update the real screen */
-	  get_wch((wint_t *) &c);
+	  get_wch(&c);
 	  if (c < L' ' && c != L'\x07' && c != L'\x08' && c != L'\x13'
             && c != L'\x12' && c != L'\x0a')
 	    continue; /* ignore control keys other than in |switch| below */
@@ -827,7 +827,7 @@ void search(void)
 			break;
 	    default:
 			if (cpos < STRBUF_M - 1) {
-				searchtext[cpos++] = c;
+				searchtext[cpos++] = (wchar_t) c;
 				searchtext[cpos] = L'\0';
 				msg(L"Search: %ls", searchtext);
 				dispmsg();
@@ -840,7 +840,7 @@ void search(void)
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
-        wchar_t input;
+        wint_t input;
 	setlocale(LC_CTYPE, "C.UTF-8");
 	if (argc != 2) fatal(L"usage: em filename\n");
 
@@ -860,7 +860,7 @@ int main(int argc, char **argv)
 
 	while (!done) {
 		display();
-		get_wch((wint_t *) &input); /* read and record one char */
+		get_wch(&input); /* read and record one char */
 		@<Get key@>@;
 	}
 
