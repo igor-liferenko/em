@@ -5,3 +5,7 @@ but first understand the buffer-gap algorithm well
 make second argument to be the line number to be shown when file is opened
 
 automatically add newline in the end of file if it does not exist
+
+move each #include to the section where it is needed
+
+add C-r for backward search

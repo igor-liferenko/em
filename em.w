@@ -74,7 +74,7 @@ int rows;              /* no. of rows of text in window */
 @s buffer_t int
 
 @<Typedef declarations@>=
-typedef long point_t;
+typedef ssize_t point_t;
 
 typedef struct buffer_t
 {
@@ -162,8 +162,11 @@ point_t pos(buffer_t *bp, register wchar_t *cp)
 	return (cp - bp->b_buf - (cp < bp->b_egap ? 0 : bp->b_egap - bp->b_gap));
 }
 
-@ @<Procedures@>=
-/* Enlarge gap by n chars, position of gap cannot change */
+@ Enlarge gap by n chars, position of gap cannot change.
+TODO: check that |(size_t)newlen*sizeof(wchar_t)| does not cause overflow.
+@^TODO@>
+
+@<Procedures@>=
 int growgap(buffer_t *bp, point_t n)
 {
 	wchar_t *new;
@@ -209,6 +212,8 @@ int growgap(buffer_t *bp, point_t n)
 }
 
 @ Reduce number of reallocs by growing by a minimum amount.
+TODO: check that |buflen + n| does not cause overflow.
+@^TODO@>
 
 @<Calculate new length...@>=
 n = (n < MIN_GAP_EXPAND ? MIN_GAP_EXPAND : n);
@@ -819,7 +824,6 @@ unlink(lockfn);
 #include <ncursesw/curses.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <ctype.h>
 #include <limits.h>
