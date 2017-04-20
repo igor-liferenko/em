@@ -511,7 +511,86 @@ void dispmsg()
 	}
 }
 
-@ @s cchar_t int
+@* Redisplay algorithm. Here's how buffer gap redisplay algorithm works.
+
+You need a new data structure to associate with a text object (e.g., an
+emacs buffer).  Call it a span.  It's just like an emacs mark, except in
+addition to a position, it has a (positive) length and a modified flag
+associated with it.  When text is inserted or deleted in a buffer, all
+the spans are updated accordingly.  That is, if the change occurs before
+the span, the spans position is updated, but the length is left
+unchanged.  If the change occurs AFTER the span (> pos + length) then the
+span is unchanged.  If, however, a change occurs in the middle of a span,
+that span is marked as dirty and the length is adjusted.  There are a few
+other conditions, but that's the general idea.
+
+
+First, a simple redisplay algorithm.  This doesn't do insert/delete line,
+but it does handle wrapping lines at character or word bounderies.
+
+The redisplay algorithm maintains one of those spans for each line in the
+window.  Each line in the window is layed out and redrawn iff
+
+	1) The span we used to represent this line has its modified flag
+	   set.
+
+	2) The buffer position we have reached is different from what it
+	   was the last time we displayed this line, OR
+
+1) happens when an insertion or deletion happened in that line, and 2)
+happens when a change in a previous line causes a ripple through into
+lower lines.  Most of the time, the redisplay only updates one line, the
+one line that has the modified flag set.  But sometimes, that will ripple
+down into other lines.  For instance, when a line first wraps the rest of
+the screen will be redrawn because of 2) above.
+
+Laying out a line basically means scanning through the buffer, one
+character at a time, expanding tabs and Control characters until either a
+Newline character is reached, or it's time to wrap the line.  Then it
+sets the pos and length of the span representing that line, and returns
+the buffer position that should be used for laying out the next line.  In
+word wrap mode, it backs up to the last space character and returns the
+first character after that.  In normal character wrapping mode, it just
+returns the next character.
+
+	[This is different from emacs fill mode, which inserts newlines
+	 into the document.  This new way doesn't insert newlines.  This
+	 is nice because the entire paragraph is always filled.  It's
+	 easy to make it so when you're typing in the middle of a HUGE
+	 word which wraps, and then type a space, the left half of the
+	 word might just pop up to the previous line if there is room.]
+
+What's the overhead?  It's maintaining these spans.  It turns out editors
+tend to maintain spans or marks for other reasons, so this isn't all that
+big a deal.  And, maintaining them is pretty simple, compared to the
+alternatives.  It's just a few integer comparisons and adjustments, and
+it's a small drop in the bucket compared to lots of other things going on
+in the editor.
+
+So this gives you a nice redisplay algorithm, very snappy, not too smart
+in that it won't do terminal insert/delete line kinds of things.  But,
+that's not all that hard, now.  Remember, the hard part was figuring out
+how to compare one line to another quickly.  In GNU and Gosling's
+emacses, comparing lines is done by hashing on the contents and then using
+the hash values.  In this new scheme, comparisons are done by buffer
+positions, namely the position of the spans represented in each line.
+
+This changes the above redisplay algorithm.  There now has to be a layout
+phase, followed by a movelines phase, followed by a redraw phase.  The
+layout phase re-layouts a line for reasons 1) and 2) above, then the the
+movelines phase looks for ways to move lines around instead of redrawing
+them.  And then the redraw phase goes through and redraws any lines that
+didn't get fixed up by being moved around.
+
+There are certain optimizations you can do in the layout phase, to cut
+down on the amount of laying out you do.  For instance, if you find
+yourself laying out a line because the position is different, you can do
+a quick scan down the list of lines from the previous redisplay looking
+for a line which began with that position after the last redisplay.  When
+that's the case, you can just copy that layout info into the new line,
+instead of recalculating it.
+
+@s cchar_t int
 
 @<Procedures@>=
 void display()
