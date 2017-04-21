@@ -878,10 +878,14 @@ have to use the variable of type |wint_t|. Why ncurses authors decided to use |w
 instead of |wchar_t *| as the argument? Answer: for uniformity. Although |get_wch| only
 sets |wchar_t| values to its argument (no |wint_t|), |wint_t| type is used because this
 same variable which is passed to |get_wch| may be used for reading
-the file, where |wint_t| type is necessary, because of WEOF. A
-question now comes: why for |get_wch| it was
-decided not to use |wint_t| to store the signal, like
-it is done in |getch|... Instead, they decided to distinguish via the return value
+the file, where |wint_t| type is necessary, because of WEOF.
+For |get_wch| it was
+decided not to use |wint_t| to store the signal (contrary to |getch|)
+because each implementation has its own sizes for |wint_t| and |wchar_t|, so
+it is impossible to have a constant to store the signal.
+And it is good to keep the same values for |KEY_RESIZE| etc which are used for
+|getch| anyway.
+So, they decided to distinguish via the return value
 if |get_wch| passed a signal or a char. The return value is
 |KEY_CODE_YES| if a signal is passed in the argument, |OK| if a char is passed, and
 |ERR| otherwise.
