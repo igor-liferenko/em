@@ -411,6 +411,10 @@ for (n = 0; n < length; n++)
     break;
 if (n != length)
   msg(L"Failed to write file \"%s\".", b_fname);
+else
+  if (*(b_egap+n-1) != L'\n')
+    if (fputwc(L'\n',fp) == WEOF)
+	msg(L"Failed to write file \"%s\".", b_fname);
 
 @* Reading file into buffer at point.
 
@@ -460,12 +464,18 @@ while (1) {
   if (buf_end == buf) break; /* end of file */
   @<Copy contents of |buf| to editing buffer@>@;
 }
+@<Add trailing newline if it is not present@>@;
 
 @ @<Copy contents of |buf|...@>=
 if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf))
   break;
 for (int i = 0; i < buf_end-buf; i++)
 	*b_gap++ = buf[i];
+
+@ @<Add trailing newline...@>=
+if (*(b_gap-1) != L'\n')
+	if (b_egap - b_gap >= 1 || growgap(1))
+		*b_gap++ = L'\n';
 
 @ @<Get key@>=
 switch(input) {
