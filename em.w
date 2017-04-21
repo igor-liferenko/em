@@ -308,6 +308,9 @@ void quit(void)
 
 @ We write file character-by-character for similar reasons which are explained in
 |@<Read file@>|.
+Writing files is done in two chunks, the data to the left of
+	  the gap and then the data to the right.(is it true? it was taken from
+references on page about ZEP)
 
 @<Write file@>=
 point_t n;
