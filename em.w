@@ -994,13 +994,4 @@ unlink(lockfn);
 #include <wchar.h>
 #include <errno.h>
 
-@* References.
-
-\noindent \.{[1] Perfect Emacs - https://github.com/hughbarney/pEmacs} \par
-\noindent \.{[2] Anthony's Editor - https://github.com/hughbarney/Anthony-s-Editor} \par
-\noindent \.{[3] MG - https://github.com/rzalamena/mg} \par
-\noindent \.{[4] Jonathan Payne, Buffer-Gap: http://ned.rubyforge.org/doc/buffer-gap.txt} \par
-\noindent \.{[5] Anthony Howe,  http://ned.rubyforge.org/doc/editor-101.txt} \par
-\noindent \.{[6] Anthony Howe, http://ned.rubyforge.org/doc/editor-102.txt} \par
-
 @* Index.
