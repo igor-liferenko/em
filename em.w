@@ -283,7 +283,6 @@ This is the necessary price to pay for using wide-character buffer.
 
 @<Read file@>=
 wint_t c;
-int i;
 while (1) {
   buf_end = buf;
   while (buf_end - buf < MIN_GAP_EXPAND && (c = fgetwc(fp)) != WEOF)
@@ -295,7 +294,7 @@ while (1) {
 @ @<Copy contents of |buf|...@>=
 if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf))
   break;
-for (i = 0; i < buf_end-buf; i++)
+for (int i = 0; i < buf_end-buf; i++)
 	*b_gap++ = buf[i];
 
 @ @<Get key@>=
