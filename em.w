@@ -325,12 +325,7 @@ if (curbp->b_egap - curbp->b_gap < buf_end-buf && !growgap(curbp, buf_end-buf))
 wcsncpy(curbp->b_gap, buf, (size_t)(buf_end-buf));
 curbp->b_gap += (buf_end-buf);
 
-@ FIXME: on terminal window resize in gnome-terminal character
-``LATIN SMALL LETTER L WITH BAR'' is generated. This is a valid
-character, not a signal. Report this as a bug and use |wint_t|
-type for |input|.
-
-@<Get key@>=
+@ @<Get key@>=
 switch(input) {
 	case
 		L'\x0f': /* C-o */
@@ -343,10 +338,6 @@ switch(input) {
 	case
 		L'\x13': /* C-s */
 		search();
-		break;
-	case
-		L'\u019a': /* resize */
-@^FIXME@>
 		break;
 	case
 		L'\x1b': /* C-[ */
@@ -860,7 +851,7 @@ int main(int argc, char **argv)
 
 	while (!done) {
 		display();
-		get_wch(&input); /* read and record one char */
+		@<Read and record one char@>@;
 		@<Get key@>@;
 	}
 
@@ -876,6 +867,29 @@ int main(int argc, char **argv)
 
 	return 0;
 }
+
+@ Here, besides reading user input, we handle resize event. We pass
+reference to variable of type
+|wint_t| to |get_wch| instead of type |wchar_t|, because |get_wch| takes
+|wint_t *| argument. While this would have been possible to typecast
+|wchar_t| to |wint_t|, this is impossible to typecast pointer. So, we
+have to use the variable of type |wint_t|. Why ncurses authors decided to use |wint_t *|
+instead of |wchar_t *| as the argument? Answer: for uniformity. Although |get_wch| only
+sets |wchar_t| values to its argument (no |wint_t|), |wint_t| type is used because this
+same variable which is passed to |get_wch| may be used for reading
+the file, where |wint_t| type is necessary, because of WEOF. A
+question now comes: why for |get_wch| it was
+decided not to use |wint_t| to store the signal, like
+it is done in |getch|... Instead, they decided to distinguish via the return value
+if |get_wch| passed a signal or a char. The return value is
+|KEY_CODE_YES| if a signal is passed in the argument, |OK| if a char is passed, and
+|ERR| otherwise.
+In our case, only one signal is used---|KEY_RESIZE|.
+So, we do not check |input| for this; we just do resize by default if a signal is passed.
+
+@<Read and record one char@>=
+if (get_wch(&input) == KEY_CODE_YES)
+	continue;
 
 @ Utility macros.
 
