@@ -46,6 +46,81 @@ has just moved from.
 When we paste we have to be a bigger clever and make sure the GAP is big enough to take the
 paste. This is where |growgap| comes into play.
 
+----------------
+
+Buffer gap is just one way to store a bunch of characters you wish to
+edit.  (Another way is having a linked list of lines.)  Emacs uses the
+buffer gap mechanism, and here is what a buffer looks like in emacs.
+
+|<----- first half -----><----- gap -----><------ second half ------>|
+
+An emacs buffer is just one huge array of characters, with a gap in the
+middle.  There are no characters in the gap.  So at any given time the
+buffer is described as the characters on the left side of the gap,
+followed by the characters on the right side of the gap.
+
+Why is there a gap?  Well if there isn't a gap and you want to insert one
+character at the beginning of the buffer, you would have to copy all the
+characters over to the right by one, and then stick in the character you
+were inserting.  That's ridiculous, right?  Imagine editing a 100kbyte
+file and inserting characters at the beginning.  The editor would be
+spending the entire time copying characters over to the right one.
+Delete would be done by copying characters to the left, just as slow.
+
+With a buffer gap, editing operations are achieved by moving the gap to
+the place in the buffer where you want to make the change, and then
+either by shrinking the size of the gap for insertions, or increasing the
+size of the gap for deletions.  In case it isn't obvious, this makes
+insertion and deletion incredible simple to implement.  To insert a
+character C at position POS in a buffer, you would do something like this:
+
+	/* Move the gap to position POS.  That is, make the first half
+	   be POS characters long. */
+	BufferMoveGap(b, pos);
+	b->data[b->firstHalf++] = c;
+	b->gapSize -= 1;
+
+There, done.  The gap is now one character smaller because we made the
+first half bigger while sticking in the character we wished to insert.
+Actually, at the beginning of the routine there should have been a check
+to make sure that there is room in the gap for more characters.  When the
+gapsize is 0, it is necessary to realloc the entire buffer.  Deletion is
+even easier.  To delete N characters at POS, all you do is make the gap
+bigger!  That is, by making the gap bigger, you take away from characters
+that used to be part of the buffer.
+
+	BufferMoveGap(b, pos);
+	b->gapSize += n;
+
+That is delete, folks.
+
+Moving the gap is pretty trivial.  Just decide if you are moving it
+forward or backward, and use bcopy.  bcopy is smart enough to handle
+overlapping regions.
+
+So, when emacs reads in a file it allocates enough memory for the entire
+file, plus maybe 1024 bytes for the buffer gap.  Initially the buffer gap
+is at the end of the file, so when you insert at the beginning of the
+file right after reading it in, you will notice a longer delay than
+usual, because it first has to move the gap to the beginning of the
+file.  The gap only has to be moved when you are doing edit operations.
+
+To examine the contents of a buffer, you can define a macro:
+
+	BufferCharAt(b, pos)
+
+All this does it check to see whether pos is in the first half or the
+second half, and then index that one HUGE array of characters correctly.
+It's surprisingly fast, actually.
+
+Somebody mentioned that GNU search takes two strings to search in.  That
+was Stallman's way of optimizing the hell out of the search.  The two
+strings passed in represent the first half and the second half of the
+buffer.  Now the search code does not have to use the BufferCharAt macro
+to examine the buffer because it is guarunteed to have two contiguous
+strings of valid data.  That's a good idea - I might have to adopt that
+approach.
+
 @ This is the outline of our program.
 
 @d MAX_FNAME       256
