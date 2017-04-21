@@ -64,13 +64,6 @@ paste. This is where |growgap| comes into play.
 @<Procedures@>@;
 @<Main program@>@;
 
-@ The number of lines in window |LINES| is automatically set by {\sl ncurses\/}
-library. We maintain our own variable to be able to reduce number of lines if
-a message is to be displayed.
-
-@<Global...@>=
-int rows;              /* no. of rows of text in window */
-
 @ @s point_t int
 @s buffer_t int
 
@@ -597,8 +590,7 @@ void display()
 	int i, j, k;
 	buffer_t *bp = curbp;
 
-	if (msgflag) rows = LINES - 1;
-	else rows = LINES;
+	@<Set number of rows@>@;
 	
 	/* find start of screen, handle scroll up off page or top of file  */
 	/* point is always within |b_page| and |b_epage| */
@@ -670,6 +662,15 @@ void display()
 	refresh(); /* update the real screen */
 }
 
+@ The number of lines in window |LINES| is automatically set by {\sl ncurses\/}
+library. We maintain our own variable to be able to reduce number of lines if
+a message is to be displayed.
+
+@<Set number of rows@>=
+int rows;
+if (msgflag) rows = LINES - 1;
+else rows = LINES;
+
 @ @<Procedures@>=
 void top(void) {@+ curbp->b_point = 0; @+}
 void bottom(void) {@+ curbp->b_epage = curbp->b_point = pos(curbp, curbp->b_ebuf); @+}
@@ -699,7 +700,7 @@ void pgdown(void)
 @ @<Procedures@>=
 void pgup(void)
 {
-	int i = rows;
+	int i = LINES - 1;
 	while (0 < --i) {
 		curbp->b_page = upup(curbp, curbp->b_page);
 		up();
@@ -839,8 +840,6 @@ int main(int argc, char **argv)
 	initscr(); /* start curses mode */
 	raw();
 	noecho();
-
-	rows = LINES - 1;
 
 	curbp = new_buffer();
 
