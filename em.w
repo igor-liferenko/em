@@ -70,44 +70,23 @@ paste. This is where |growgap| comes into play.
 @<Typedef declarations@>=
 typedef ssize_t point_t;
 
-typedef struct buffer_t
-{
-	point_t b_mark;	     	  /* the mark */
-	point_t b_point;          /* the point */
-	point_t b_page;           /* start of page */
-	point_t b_epage;          /* end of page */
-	wchar_t *b_buf;            /* start of buffer */
-	wchar_t *b_ebuf;           /* end of buffer */
-	wchar_t *b_gap;            /* start of gap */
-	wchar_t *b_egap;           /* end of gap */
-	int b_row;                /* cursor row */
-	int b_col;                /* cursor col */
-	char b_fname[MAX_FNAME + 1]; /* filename */
-} buffer_t;
+@ @<Global...@>=
+point_t b_point = 0;          /* the point */
+point_t b_page = 0;           /* start of page */
+point_t b_epage = 0;          /* end of page */
+wchar_t *b_buf = NULL;            /* start of buffer */
+wchar_t *b_ebuf = NULL;           /* end of buffer */
+wchar_t *b_gap = NULL;            /* start of gap */
+wchar_t *b_egap = NULL;           /* end of gap */
+int b_row;                /* cursor row */
+int b_col;                /* cursor col */
+char b_fname[MAX_FNAME + 1] = {'\0'}; /* filename */
 
 @ @<Global variables@>=
 int done;
 int msgflag;
-buffer_t *curbp;
 point_t nscrap = 0;
 wchar_t *scrap = NULL;
-
-@ @<Procedures@>=
-buffer_t* new_buffer()
-{
-	buffer_t *bp = malloc(sizeof(buffer_t));
-	assert(bp != NULL);
-
-	bp->b_point = 0;
-	bp->b_page = 0;
-	bp->b_epage = 0;
-	bp->b_buf = NULL;
-	bp->b_ebuf = NULL;
-	bp->b_gap = NULL;
-	bp->b_egap = NULL;
-	bp->b_fname[0] = '\0';
-	return bp;
-}
 
 @ @<Procedures@>=
 void fatal(wchar_t *msg, ...)
@@ -141,19 +120,19 @@ void msg(wchar_t *msg, ...)
 @ Given a buffer offset, convert it to a pointer into the buffer.
 
 @<Procedures@>=
-wchar_t * ptr(buffer_t *bp, register point_t offset)
+wchar_t * ptr(register point_t offset)
 {
-	if (offset < 0) return (bp->b_buf);
-	return (bp->b_buf+offset + (bp->b_buf + offset < bp->b_gap ? 0 : bp->b_egap-bp->b_gap));
+	if (offset < 0) return b_buf;
+	return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
 }
 
 @ Given a pointer into the buffer, convert it to a buffer offset.
 
 @<Procedures@>=
-point_t pos(buffer_t *bp, register wchar_t *cp)
+point_t pos(register wchar_t *cp)
 {
-	assert(bp->b_buf <= cp && cp <= bp->b_ebuf);
-	return (cp - bp->b_buf - (cp < bp->b_egap ? 0 : bp->b_egap - bp->b_gap));
+	assert(b_buf <= cp && cp <= b_ebuf);
+	return (cp - b_buf - (cp < b_egap ? 0 : b_egap - b_gap));
 }
 
 @ Enlarge gap by n chars, position of gap cannot change.
@@ -161,18 +140,18 @@ TODO: check that |(size_t)newlen*sizeof(wchar_t)| does not cause overflow.
 @^TODO@>
 
 @<Procedures@>=
-int growgap(buffer_t *bp, point_t n)
+int growgap(point_t n)
 {
 	wchar_t *new;
 	point_t buflen, newlen, xgap, xegap;
 		
-	assert(bp->b_buf <= bp->b_gap);
-	assert(bp->b_gap <= bp->b_egap);
-	assert(bp->b_egap <= bp->b_ebuf);
+	assert(b_buf <= b_gap);
+	assert(b_gap <= b_egap);
+	assert(b_egap <= b_ebuf);
 
-	xgap = bp->b_gap - bp->b_buf;
-	xegap = bp->b_egap - bp->b_buf;
-	buflen = bp->b_ebuf - bp->b_buf;
+	xgap = b_gap - b_buf;
+	xegap = b_egap - b_buf;
+	buflen = b_ebuf - b_buf;
     
 	@<Calculate new length |newlen| of gap@>@;
 
@@ -188,7 +167,7 @@ int growgap(buffer_t *bp, point_t n)
 			msg(L"Why this happened?"); /* non-fatal */
 			return (FALSE);
 		}
-		new = realloc(bp->b_buf, (size_t) newlen * sizeof(wchar_t));
+		new = realloc(b_buf, (size_t) newlen * sizeof(wchar_t));
 		if (new == NULL) {
 			msg(L"Failed to allocate required memory."); /* non-fatal */
 			return (FALSE);
@@ -198,10 +177,10 @@ int growgap(buffer_t *bp, point_t n)
 	@<Relocate pointers in new buffer and append the new
 	  extension to the end of the gap@>@;
 
-	assert(bp->b_buf < bp->b_ebuf);          /* buffer must exist */
-	assert(bp->b_buf <= bp->b_gap);
-	assert(bp->b_gap < bp->b_egap);          /* gap must grow only */
-	assert(bp->b_egap <= bp->b_ebuf);
+	assert(b_buf < b_ebuf);          /* buffer must exist */
+	assert(b_buf <= b_gap);
+	assert(b_gap < b_egap);          /* gap must grow only */
+	assert(b_egap <= b_ebuf);
 	return (TRUE);
 }
 
@@ -215,26 +194,26 @@ newlen = buflen + n;
 
 @ @<Relocate pointers in new buffer and append the new
     extension to the end of the gap@>=
-bp->b_buf = new;
-bp->b_gap = bp->b_buf + xgap;
-bp->b_ebuf = bp->b_buf + buflen;
-bp->b_egap = bp->b_buf + newlen;
+b_buf = new;
+b_gap = b_buf + xgap;
+b_ebuf = b_buf + buflen;
+b_egap = b_buf + newlen;
 while (xegap < buflen--)
-	*--bp->b_egap = *--bp->b_ebuf;
-bp->b_ebuf = bp->b_buf + newlen;
+	*--b_egap = *--b_ebuf;
+b_ebuf = b_buf + newlen;
 
 @ @<Procedures@>=
-point_t movegap(buffer_t *bp, point_t offset)
+point_t movegap(point_t offset)
 {
-	wchar_t *p = ptr(bp, offset);
-	while (p < bp->b_gap)
-		*--bp->b_egap = *--bp->b_gap;
-	while (bp->b_egap < p)
-		*bp->b_gap++ = *bp->b_egap++;
-	assert(bp->b_gap <= bp->b_egap);
-	assert(bp->b_buf <= bp->b_gap);
-	assert(bp->b_egap <= bp->b_ebuf);
-	return (pos(bp, bp->b_egap));
+	wchar_t *p = ptr(offset);
+	while (p < b_gap)
+		*--b_egap = *--b_gap;
+	while (b_egap < p)
+		*b_gap++ = *b_egap++;
+	assert(b_gap <= b_egap);
+	assert(b_buf <= b_gap);
+	assert(b_egap <= b_ebuf);
+	return (pos(b_egap));
 }
 
 @ @<Procedures@>=
@@ -243,10 +222,10 @@ void quit(void)
 	FILE *fp;
 	point_t length;
 
-	fp = fopen(curbp->b_fname, "w");
-	if (fp == NULL) msg(L"Failed to open file \"%s\".", curbp->b_fname);
-	movegap(curbp, 0);
-	length = (point_t) (curbp->b_ebuf - curbp->b_egap);
+	fp = fopen(b_fname, "w");
+	if (fp == NULL) msg(L"Failed to open file \"%s\".", b_fname);
+	movegap(0);
+	length = (point_t) (b_ebuf - b_egap);
         @<Write file@>@;
 	fclose(fp);
 	done = 1;
@@ -258,10 +237,10 @@ void quit(void)
 @<Write file@>=
 point_t n;
 for (n = 0; n < length; n++)
-  if (fputwc(*(curbp->b_egap + n), fp) == WEOF)
+  if (fputwc(*(b_egap + n), fp) == WEOF)
     break;
 if (n != length)
-  msg(L"Failed to write file \"%s\".", curbp->b_fname);
+  msg(L"Failed to write file \"%s\".", b_fname);
 
 @* Reading file into buffer at point.
 
@@ -314,10 +293,10 @@ while (1) {
 }
 
 @ @<Copy contents of |buf|...@>=
-if (curbp->b_egap - curbp->b_gap < buf_end-buf && !growgap(curbp, buf_end-buf))
+if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf))
   break;
 for (i = 0; i < buf_end-buf; i++)
-	*curbp->b_gap++ = buf[i];
+	*b_gap++ = buf[i];
 
 @ @<Get key@>=
 switch(input) {
@@ -396,26 +375,26 @@ switch(input) {
 @ Reverse scan for start of logical line containing offset.
 
 @<Procedures@>=
-point_t lnstart(buffer_t *bp, register point_t off)
+point_t lnstart(register point_t off)
 {
 	register wchar_t *p;
 	do
-		p = ptr(bp, --off);
-	while (bp->b_buf < p && *p != L'\n');
-	return (bp->b_buf < p ? ++off : 0);
+		p = ptr(--off);
+	while (b_buf < p && *p != L'\n');
+	return (b_buf < p ? ++off : 0);
 }
 
 @ Forward scan for start of logical line segment containing `finish'.
 
 @<Procedures@>=
-point_t segstart(buffer_t *bp, point_t start, point_t finish)
+point_t segstart(point_t start, point_t finish)
 {
 	wchar_t *p;
 	int c = 0;
 	point_t scan = start;
 
 	while (scan < finish) {
-		p = ptr(bp, scan);
+		p = ptr(scan);
 		if (*p == '\n') {
 			c = 0;
 			start = scan+1;
@@ -432,58 +411,58 @@ point_t segstart(buffer_t *bp, point_t start, point_t finish)
 @ Forward scan for start of logical line segment following `finish'.
 
 @<Procedures@>=
-point_t segnext(buffer_t *bp, point_t start, point_t finish)
+point_t segnext(point_t start, point_t finish)
 {
 	wchar_t *p;
 	int c = 0;
 
-	point_t scan = segstart(bp, start, finish);
+	point_t scan = segstart(start, finish);
 	for (;;) {
-		p = ptr(bp, scan);
-		if (bp->b_ebuf <= p || COLS <= c)
+		p = ptr(scan);
+		if (b_ebuf <= p || COLS <= c)
 			break;
 		++scan;
 		if (*p == L'\n')
 			break;
 		c += *p == L'\t' ? 8 - (c & 7) : 1;
 	}
-	return (p < bp->b_ebuf ? scan : pos(bp, bp->b_ebuf));
+	return (p < b_ebuf ? scan : pos(b_ebuf));
 }
 
 @ Move up one screen line.
 
 @<Procedures@>=
-point_t upup(buffer_t *bp, point_t off)
+point_t upup(point_t off)
 {
-	point_t curr = lnstart(bp, off);
-	point_t seg = segstart(bp, curr, off);
+	point_t curr = lnstart(off);
+	point_t seg = segstart(curr, off);
 	if (curr < seg)
-		off = segstart(bp, curr, seg-1);
+		off = segstart(curr, seg-1);
 	else
-		off = segstart(bp, lnstart(bp,curr-1), curr-1);
-	return (off);
+		off = segstart(lnstart(curr-1), curr-1);
+	return off;
 }
 
 @ Move down one screen line.
 
 @<Procedures@>=
-point_t dndn(buffer_t *bp, point_t off)
+point_t dndn(point_t off)
 {
-	return (segnext(bp, lnstart(bp,off), off));
+	return segnext(lnstart(off), off);
 }
 
 @ Return the offset of a column on the specified line.
 
 @<Procedures@>=
-point_t lncolumn(buffer_t *bp, point_t offset, int column)
+point_t lncolumn(point_t offset, int column)
 {
 	int c = 0;
 	wchar_t *p;
-	while ((p = ptr(bp, offset)) < bp->b_ebuf && *p != L'\n' && c < column) {
+	while ((p = ptr(offset)) < b_ebuf && *p != L'\n' && c < column) {
 		c += *p == L'\t' ? 8 - (c & 7) : 1;
 		++offset;
 	}
-	return (offset);
+	return offset;
 }
 
 @ @<Global variables@>=
@@ -588,43 +567,42 @@ void display()
 {
 	wchar_t *p;
 	int i, j, k;
-	buffer_t *bp = curbp;
 
 	@<Set number of rows@>@;
 	
 	/* find start of screen, handle scroll up off page or top of file  */
 	/* point is always within |b_page| and |b_epage| */
-	if (bp->b_point < bp->b_page)
-		bp->b_page = segstart(bp, lnstart(bp,bp->b_point), bp->b_point);
+	if (b_point < b_page)
+		b_page = segstart(lnstart(b_point), b_point);
 
 	/* reframe when scrolled off bottom */
-	if (bp->b_epage <= bp->b_point) {
-		bp->b_page = dndn(bp, bp->b_point); /* find end of screen plus one */
-		if (pos(bp, bp->b_ebuf) <= bp->b_page) { /* if we scoll to EOF we show 1
+	if (b_epage <= b_point) {
+		b_page = dndn(b_point); /* find end of screen plus one */
+		if (pos(b_ebuf) <= b_page) { /* if we scoll to EOF we show 1
                   blank line at bottom of screen */
-			bp->b_page = pos(bp, bp->b_ebuf);
+			b_page = pos(b_ebuf);
 			i = rows - 1;
-		} else {
-			i = rows - 0;
 		}
+		else
+			i = rows - 0;
 		while (0 < i--) /* scan backwards the required number of lines */
-			bp->b_page = upup(bp, bp->b_page);
+			b_page = upup(b_page);
 	}
 
 	move(0, 0); /* start from top of window */
 	i = 0;
 	j = 0;
-	bp->b_epage = bp->b_page;
+	b_epage = b_page;
 	
 	/* paint screen from top of page until we hit maxline */ 
 	while (1) {
 		/* reached point - store the cursor position */
-		if (bp->b_point == bp->b_epage) {
-			bp->b_row = i;
-			bp->b_col = j;
+		if (b_point == b_epage) {
+			b_row = i;
+			b_col = j;
 		}
-		p = ptr(bp, bp->b_epage);
-		if (rows <= i || bp->b_ebuf <= p) /* maxline */
+		p = ptr(b_epage);
+		if (rows <= i || b_ebuf <= p) /* maxline */
 			break;
 		if (*p != L'\r') {
 			cchar_t my_cchar;
@@ -645,9 +623,9 @@ void display()
 			j -= COLS;
 			if (j < 0)
 				j = 0;
-			++i;
+			i++;
 		}
-		++bp->b_epage;
+		b_epage++;
 	}
 
 	/* replacement for clrtobot() to bottom of window */
@@ -658,7 +636,7 @@ void display()
 	}
 
 	dispmsg();
-	move(bp->b_row, bp->b_col); /* set cursor */
+	move(b_row, b_col); /* set cursor */
 	refresh(); /* update the real screen */
 }
 
@@ -672,29 +650,28 @@ if (msgflag) rows = LINES - 1;
 else rows = LINES;
 
 @ @<Procedures@>=
-void top(void) {@+ curbp->b_point = 0; @+}
-void bottom(void) {@+ curbp->b_epage = curbp->b_point = pos(curbp, curbp->b_ebuf); @+}
-void left(void) {@+ if (0 < curbp->b_point) --curbp->b_point; @+}
-void right(void) {@+ if (curbp->b_point < pos(curbp, curbp->b_ebuf)) ++curbp->b_point; @+}
-void up(void) {@+ curbp->b_point = lncolumn(curbp, upup(curbp, curbp->b_point),curbp->b_col); @+}
-void down(void) {@+ curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point),curbp->b_col); @+}
-void lnbegin(void) {@+ curbp->b_point = segstart(curbp,
-  lnstart(curbp,curbp->b_point), curbp->b_point); @+}
+void top(void) {@+ b_point = 0; @+}
+void bottom(void) {@+ b_epage = b_point = pos(b_ebuf); @+}
+void left(void) {@+ if (0 < b_point) b_point--; @+}
+void right(void) {@+ if (b_point < pos(b_ebuf)) b_point++; @+}
+void up(void) {@+ b_point = lncolumn(upup(b_point), b_col); @+}
+void down(void) {@+ b_point = lncolumn(dndn(b_point), b_col); @+}
+void lnbegin(void) {@+ b_point = segstart(lnstart(b_point), b_point); @+}
 
 @ @<Procedures@>=
 void lnend(void)
 {
-	curbp->b_point = dndn(curbp, curbp->b_point);
+	b_point = dndn(b_point);
 	left();
 }
 
 @ @<Procedures@>=
 void pgdown(void)
 {
-	curbp->b_page = curbp->b_point = upup(curbp, curbp->b_epage);
-	while (0 < curbp->b_row--)
+	b_page = b_point = upup(b_epage);
+	while (0 < b_row--)
 		down();
-	curbp->b_epage = pos(curbp, curbp->b_ebuf);
+	b_epage = pos(b_ebuf);
 }
 
 @ @<Procedures@>=
@@ -702,7 +679,7 @@ void pgup(void)
 {
 	int i = LINES - 1;
 	while (0 < --i) {
-		curbp->b_page = upup(curbp, curbp->b_page);
+		b_page = upup(b_page);
 		up();
 	}
 }
@@ -710,28 +687,28 @@ void pgup(void)
 @ @<Procedures@>=
 void insert(wchar_t input)
 {
-	assert(curbp->b_gap <= curbp->b_egap);
-	if (curbp->b_gap == curbp->b_egap && !growgap(curbp, CHUNK)) return;
-	curbp->b_point = movegap(curbp, curbp->b_point);
-	*curbp->b_gap++ = input == L'\r' ? L'\n' : input;
-	curbp->b_point = pos(curbp, curbp->b_egap);
+	assert(b_gap <= b_egap);
+	if (b_gap == b_egap && !growgap(CHUNK)) return;
+	b_point = movegap(b_point);
+	*b_gap++ = input == L'\r' ? L'\n' : input;
+	b_point = pos(b_egap);
 }
 
 @ @<Procedures@>=
 void backsp(void)
 {
-	curbp->b_point = movegap(curbp, curbp->b_point);
-	if (curbp->b_buf < curbp->b_gap)
-		--curbp->b_gap;
-	curbp->b_point = pos(curbp, curbp->b_egap);
+	b_point = movegap(b_point);
+	if (b_buf < b_gap)
+		b_gap--;
+	b_point = pos(b_egap);
 }
 
 @ @<Procedures@>=
 void delete(void)
 {
-	curbp->b_point = movegap(curbp, curbp->b_point);
-	if (curbp->b_egap < curbp->b_ebuf)
-		curbp->b_point = pos(curbp, ++curbp->b_egap);
+	b_point = movegap(b_point);
+	if (b_egap < b_ebuf)
+		b_point = pos(++b_egap);
 }
 
 @ @<Procedures@>=
@@ -741,9 +718,9 @@ void open_line(void)
 }
 
 @ @<Procedures@>=
-point_t search_forward(buffer_t *bp, point_t start_p, wchar_t *stext)
+point_t search_forward(point_t start_p, wchar_t *stext)
 {
-	point_t end_p = pos(bp, bp->b_ebuf);
+	point_t end_p = pos(b_ebuf);
 	point_t p,pp;
 	wchar_t *s;
 
@@ -751,7 +728,7 @@ point_t search_forward(buffer_t *bp, point_t start_p, wchar_t *stext)
 		return start_p;
 
 	for (p=start_p; p < end_p; p++) {
-		for (s=stext, pp=p; *s == *ptr(bp, pp) && *s !=L'\0' && pp < end_p; s++, pp++)
+		for (s=stext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++)
 			;
 
 		if (*s == L'\0')
@@ -769,7 +746,7 @@ void search(void)
 {
 	int cpos = 0;	
 	wint_t c;
-	point_t o_point = curbp->b_point;
+	point_t o_point = b_point;
 	point_t found;
 
 	searchtext[0] = L'\0';
@@ -783,6 +760,7 @@ void search(void)
 	  if (c < L' ' && c != L'\x07' && c != L'\x08' && c != L'\x13'
             && c != L'\x12' && c != L'\x0a')
 	    continue; /* ignore control keys other than in |switch| below */
+/* FIXME: do this via |iswctrl| in |default| below */
 
 	  switch(c) {
 	    case
@@ -792,20 +770,20 @@ void search(void)
 			return;
 	    case
               L'\x07': /* ctrl-g */
-			curbp->b_point = o_point;
+			b_point = o_point;
 			return;
 	    case
 		L'\x13': /* ctrl-s, do the search */
-			found = search_forward(curbp, curbp->b_point, searchtext);
+			found = search_forward(b_point, searchtext);
 			if (found != -1 ) {
-				curbp->b_point = found;
+				b_point = found;
 				msg(L"Search: %ls", searchtext);
 				display();
 			}
 			else {
 				msg(L"Failing Search: %ls", searchtext);
 				dispmsg();
-				curbp->b_point = 0;
+				b_point = 0;
 			}
 			break;
 	    case
@@ -841,13 +819,10 @@ int main(int argc, char **argv)
 	raw();
 	noecho();
 
-	curbp = new_buffer();
-
 	@<Insert file@>@;
-	/* Save filename irregardless of load() success. */
-	strncpy(curbp->b_fname, argv[1], MAX_FNAME);
-	curbp->b_fname[MAX_FNAME] = '\0'; /* force truncation */
-	if (!growgap(curbp, CHUNK)) fatal(L"Failed to allocate required memory.\n");
+	strncpy(b_fname, argv[1], MAX_FNAME); /* save filename */
+	b_fname[MAX_FNAME] = '\0'; /* force truncation */
+	if (!growgap(CHUNK)) fatal(L"Failed to allocate required memory.\n");
 
 	while (!done) {
 		display();
@@ -856,7 +831,6 @@ int main(int argc, char **argv)
 	}
 
 	if (scrap != NULL) free(scrap);
-	if (curbp != NULL) free(curbp);
 
 	move(MSGLINE, 0);
 	refresh(); /* update the real screen */
