@@ -121,6 +121,98 @@ to examine the buffer because it is guarunteed to have two contiguous
 strings of valid data.  That's a good idea - I might have to adopt that
 approach.
 
+@* Gap Buffer Explained Again.
+
+     The buffer gap method for storing data in an editor is not very
+complicated.  The idea is to divide the file into two sections at the cursor
+point, the location at which the next change will take place.  These sections
+are placed at opposite ends of the buffer, with the "gap" in between them
+representing the cursor point.  For example, here's a sixteen-character
+buffer containing the words "The net", with the cursor on the letter 'n'.:
+
+			The ---------net
+
+(I'm using the '-' character to represent the spaces making up the gap.)
+
+     Now, if you wanted to insert a character, all you must do is to add it
+into one end or the other of the gap.  Conventional editors that move the
+cursor left as you type would insert at the top edge of the gap.  For example,
+if I wanted to change the word "net" to "Usenet", I would start by typing the
+letter 'U', and the editor would change the buffer to look like this:
+
+			The U--------net
+
+     This represents the string "The Unet", with the cursor still on the 'n'.
+Typing an 's' character would bring us to the following:
+
+			The Us-------net
+
+     And finally, the 'e' character brings us to this:
+
+			The Use------net
+
+     But now we decide that we want to completely change tack and change the
+phrase from "The Usenet" to "The Usenix".  To do this, we will first have to
+move our cursor to the right one spot, so we don't waste time retyping an
+'n'.  To move the cursor point up and down through the file, we must move
+letters "across" the gap.  In this case, we're moving the cursor toward the
+end of the phrase, so we move the 'n' across the gap, to the top end.
+
+			The Usen------et
+
+     Now we're ready to delete the 'e' and the 't'.  To do this, we just
+widen the gap at the bottom edge, wiping out the appropriate character.
+After deleting the 'e', the buffer looks like this:
+
+			The Usen-------t
+
+     And after deleting the 't', the buffer looks like this:
+
+			The Usen--------
+
+     (Note that the gap now extends all the way to the edge of the buffer.
+This means that the file now reads "The Usen", with the cursor at the very
+end.)
+
+     Backspacing works out to be something very similar to delete, with the
+gap is widening at the top instead of the bottom.
+
+     Now we add the letters 'i' and 'x', giving us the following buffer
+snapshots after each key is pressed:
+
+			The Useni-------
+
+			The Usenix------
+
+     Now we've made our changes.  Moving the cursor back to the top of the
+file means moving the characters across the buffer in the other direction,
+starting with the 'x', like this:
+
+			The Useni------x
+
+     Finally, after doing this once for each of the letters in the buffer,
+we're at the top of the file, and the buffer looks like this:
+
+			------The Usenix
+
+     Of course, there are many details yet to consider.  Real buffers will be
+much larger than this, probably starting at 64K and stopping at whatever size
+is appropriate for the machine at hand.  In a real implementation, line breaks
+have to be marked in some way.  My editor does this by simply inserting line
+feed (\.{'\\n'}) characters into the buffer, but other approaches might be useful.
+Moving the cursor up and down between lines can get complicated.  What about
+virtual memory, so that we can fit the 21-letter phrase "The Usenix
+Conference" in our 16-letter buffer? Then, of course, there's the question of
+making the screen reflect the contents of the buffer, which is what my
+original "Editor 102" post discussed.
+
+
+     Hope this clears up the question of what a buffer gap is, and why it's
+a convenient data structure to use in an editor.  There are, of course,
+other ways to structure an editor's memory, with no clear victor.  All have
+their strong points and weak points, so I picked the buffer gap for my
+editor because of its simplicity and efficient use of memory.
+
 @ This is the outline of our program.
 
 @d MAX_FNAME       256
