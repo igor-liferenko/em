@@ -443,7 +443,7 @@ wchar_t *buf_end; /* where the next char goes */
 
 @ @<Insert file@>=
 FILE *fp;
-if ((fp = fopen(argv[1], "r")) == NULL)
+if ((fp = fopen(argv[1], "a+")) == NULL)
 	fatal(L"Failed to open file \"%s\".\n", argv[1]);
 @<Create lock file@>@;
 @<Read file@>@;
@@ -473,6 +473,8 @@ for (int i = 0; i < buf_end-buf; i++)
 	*b_gap++ = buf[i];
 
 @ @<Add trailing newline...@>=
+/* TODO: check that at least one character has been read, i.e. the file is not empty */
+/* if it is empty, just insert L'\n' */
 if (*(b_gap-1) != L'\n')
 	if (b_egap - b_gap >= 1 || growgap(1))
 		*b_gap++ = L'\n';
