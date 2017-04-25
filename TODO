@@ -3,3 +3,5 @@ make second argument to be the line number to be shown when file is opened
 move each #include to the section where it is needed
 
 add C-r for backward search
+
+use BackSpace to insert special characters from extended character set for CWEB
