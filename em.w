@@ -43,7 +43,7 @@ cccccccc\par}
 \noindent Here we incremented the gap pointer on and put a Y in the new space when the gap
 has just moved from.
 
-When we paste we have to be a bigger clever and make sure the GAP is big enough to take the
+When we paste we have to be a bit clever and make sure the GAP is big enough to take the
 paste. This is where |growgap| comes into play.
 
 ----------------
