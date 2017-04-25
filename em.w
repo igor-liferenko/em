@@ -443,8 +443,9 @@ wchar_t *buf_end; /* where the next char goes */
 
 @ @<Insert file@>=
 FILE *fp;
-if ((fp = fopen(argv[1], "a+")) == NULL)
-	fatal(L"Failed to open file \"%s\".\n", argv[1]);
+if ((fp = fopen(argv[1], "r")) == NULL)
+  if ((fp = fopen(argv[1], "w")) == NULL)
+    fatal(L"Failed to open file \"%s\".\n", argv[1]);
 @<Create lock file@>@;
 @<Read file@>@;
 fclose(fp);
