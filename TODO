@@ -4,5 +4,5 @@ move each #include to the section where it is needed
 
 add C-r for backward search
 
-via xkb patch use BackSpace to insert "leftarrow" (U+2190, to set value to a variable) and "not_equal" (U+2260, to check for inequality) characters from extended character set for CWEB,
-and use = in its normal meaning of checking for equality, and uncomment "\let\K=\leftarrow" in cwebmaX.tex
+via xkb patch use BackSpace with Alt+Shift modifier to insert substitute for && and BackSlash with
+Alt+Shift modifier to insert substitute for || (characters from extended character set - see Appendix C of TeXbook), BackSpace with Alt modifier is free and may be used for something else; and uncomment "\let\K=\leftarrow" in cwebmaX.tex
