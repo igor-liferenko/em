@@ -218,7 +218,7 @@ editor because of its simplicity and efficient use of memory.
 @d MAX_FNAME       256
 @d MSGLINE         (LINES-1)
 @d TEMPBUF         512
-@d MIN_GAP_EXPAND  512
+@d CHUNK  512
 @d STRBUF_M        64
 
 @c
@@ -353,7 +353,7 @@ TODO: check that |buflen + n| does not cause overflow.
 @^TODO@>
 
 @<Calculate new length...@>=
-n = (n < MIN_GAP_EXPAND ? MIN_GAP_EXPAND : n);
+n = (n < CHUNK ? CHUNK : n);
 newlen = buflen + n;
 
 @ @<Relocate pointers in new buffer and append the new
@@ -445,7 +445,7 @@ from input file is stored in buffer |buf| before being copied
 to editing buffer.
 
 @ @<Global...@>=
-wchar_t buf[MIN_GAP_EXPAND]; /* we read the input into this array */
+wchar_t buf[CHUNK]; /* we read the input into this array */
 wchar_t *buf_end; /* where the next char goes */
 
 @ @<Insert file@>=
@@ -470,7 +470,7 @@ wint_t c;
 int i = 0;
 while (1) {
   buf_end = buf;
-  while (buf_end - buf < MIN_GAP_EXPAND && (c = fgetwc(fp)) != WEOF)
+  while (buf_end - buf < CHUNK && (c = fgetwc(fp)) != WEOF)
     *buf_end++ = (wchar_t) c;
   if (buf_end == buf) break; /* end of file */
   @<Copy contents of |buf| to editing buffer@>@;
@@ -883,7 +883,7 @@ void pgup(void)
 void insert(wchar_t input)
 {
 	assert(b_gap <= b_egap);
-	if (b_gap == b_egap && !growgap(MIN_GAP_EXPAND)) return; /* if gap size is zero,
+	if (b_gap == b_egap && !growgap(CHUNK)) return; /* if gap size is zero,
 		grow gap */
 	b_point = movegap(b_point); /* FIXME: does the assignment change anything? (see related
           FIXME in section~\fixmesec) */
