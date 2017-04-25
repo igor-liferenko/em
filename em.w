@@ -408,7 +408,7 @@ void quit(void)
 @ @<Add trailing newline to non-empty buffer...@>=
 movegap(pos(b_ebuf));
 if (b_buf < b_gap && *(b_gap-1) != L'\n')
-  if (b_gap != b_egap || growgap(1))
+  if (b_gap != b_egap || growgap(1)) /* if gap size is zero, grow gap */
     *b_gap++ = L'\n';
 
 @ We write file character-by-character for similar reasons which are explained in
@@ -481,7 +481,8 @@ while (1) {
 @<Add trailing newline to input from non-empty file if it is not present@>@;
 
 @ @<Copy contents of |buf|...@>=
-if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) {
+if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) { /* if gap size
+    is not sufficient, grow gap */
   fclose(fp);
   @<Remove lock file@>@;
   fatal(L"Failed to allocate required memory.\n");
@@ -885,7 +886,8 @@ void pgup(void)
 void insert(wchar_t input)
 {
 	assert(b_gap <= b_egap);
-	if (b_gap == b_egap && !growgap(MIN_GAP_EXPAND)) return;
+	if (b_gap == b_egap && !growgap(MIN_GAP_EXPAND)) return; /* if gap size is zero,
+		grow gap */
 	b_point = movegap(b_point); /* FIXME: does the assignment change anything? (see related
           FIXME in section~\fixmesec) */
 @^FIXME@>
@@ -1022,7 +1024,6 @@ int main(int argc, char **argv)
 	@<Insert file@>@;
 	strncpy(b_fname, argv[1], MAX_FNAME); /* save filename */
 	b_fname[MAX_FNAME] = '\0'; /* force truncation */
-	if (!growgap(CHUNK)) fatal(L"Failed to allocate required memory.\n");
 
 	while (!done) {
 		display();

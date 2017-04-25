@@ -5,4 +5,5 @@ move each #include to the section where it is needed
 add C-r for backward search
 
 via xkb patch use BackSpace with Alt+Shift modifier to insert substitute for && and BackSlash with
-Alt+Shift modifier to insert substitute for || (characters from extended character set - see Appendix C of TeXbook), BackSpace with Alt modifier is free and may be used for something else; and uncomment "\let\K=\leftarrow" in cwebmaX.tex
+Alt+Shift modifier to insert substitute for || (characters from extended character set - see Appendix C of TeXbook), BackSpace with Alt modifier is free and may be used for ↓; and uncomment "\let\K=\leftarrow" in cwebmaX.tex
+Also, put ≤ and ≥ to [ and ] with Alt modifier
