@@ -408,7 +408,7 @@ void quit(void)
 @ @<Add trailing newline to non-empty buffer...@>=
 movegap(pos(b_ebuf));
 if (b_buf < b_gap && *(b_gap-1) != L'\n')
-  if (b_gap != b_egap || growgap(MIN_GAP_EXPAND))
+  if (b_gap != b_egap || growgap(1))
     *b_gap++ = L'\n';
 
 @ We write file character-by-character for similar reasons which are explained in
