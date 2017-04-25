@@ -369,7 +369,9 @@ while (xegap < buflen--)
 	*--b_egap = *--b_ebuf;
 b_ebuf = b_buf + newlen;
 
-@ @<Procedures@>=
+@ \xdef\fixmesec{\secno}
+
+@<Procedures@>=
 point_t movegap(point_t offset)
 {
 	wchar_t *p = ptr(offset);
@@ -380,6 +382,10 @@ point_t movegap(point_t offset)
 	assert(b_gap <= b_egap);
 	assert(b_buf <= b_gap);
 	assert(b_egap <= b_ebuf);
+	point_t x = pos(b_egap); /* FIXME: do we need to return value? (see related
+          FIXME in the declaration of |insert|) */
+	if (x!=offset) fatal(L"gotcha\n");
+@^FIXME@>
 	return (pos(b_egap));
 }
 
@@ -391,6 +397,7 @@ void quit(void)
 
 	fp = fopen(b_fname, "w");
 	if (fp == NULL) msg(L"Failed to open file \"%s\".", b_fname);
+	@<Add trailing newline to non-empty buffer if it is not present@>@;
 	movegap(0);
 	length = (point_t) (b_ebuf - b_egap);
         @<Write file@>@;
@@ -398,11 +405,18 @@ void quit(void)
 	done = 1;
 }
 
+@ @<Add trailing newline to non-empty buffer...@>=
+movegap(pos(b_ebuf));
+if (b_buf < b_gap && *(b_gap-1) != L'\n')
+  if (b_gap != b_egap || growgap(MIN_GAP_EXPAND))
+    *b_gap++ = L'\n';
+
 @ We write file character-by-character for similar reasons which are explained in
 |@<Read file@>|.
 Writing files is done in two chunks, the data to the left of
-	  the gap and then the data to the right.(is it true? it was taken from
+	  the gap and then the data to the right.(FIXME: is it true? it was taken from
 references on page about ZEP)
+@^FIXME@>
 
 @<Write file@>=
 point_t n;
@@ -411,10 +425,6 @@ for (n = 0; n < length; n++)
     break;
 if (n != length)
   msg(L"Failed to write file \"%s\".", b_fname);
-else
-  if (*(b_egap+n-1) != L'\n')
-    if (fputwc(L'\n',fp) == WEOF)
-	msg(L"Failed to write file \"%s\".", b_fname);
 
 @* Reading file into buffer at point.
 
@@ -466,7 +476,7 @@ while (1) {
   if (buf_end == buf) break; /* end of file */
   @<Copy contents of |buf| to editing buffer@>@;
 }
-@<Add trailing newline if it is not present@>@;
+@<Add trailing newline to input from non-empty file if it is not present@>@;
 
 @ @<Copy contents of |buf|...@>=
 if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) {
@@ -477,7 +487,7 @@ if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) {
 for (i = 0; i < buf_end-buf; i++)
   *b_gap++ = buf[i];
 
-@ @<Add trailing newline...@>=
+@ @<Add trailing newline to input...@>=
 if (i && buf[i-1] != L'\n') {
   *buf_end++ = L'\n';
   @<Copy contents of |buf|...@>@;
@@ -873,10 +883,13 @@ void pgup(void)
 void insert(wchar_t input)
 {
 	assert(b_gap <= b_egap);
-	if (b_gap == b_egap && !growgap(CHUNK)) return;
-	b_point = movegap(b_point);
+	if (b_gap == b_egap && !growgap(MIN_GAP_EXPAND)) return;
+	b_point = movegap(b_point); /* FIXME: does the assignment change anything? (see related
+          FIXME in section~\fixmesec) */
+@^FIXME@>
 	*b_gap++ = input == L'\r' ? L'\n' : input;
-	b_point = pos(b_egap);
+	b_point = pos(b_egap); /* FIXME: is it needed? */
+@^FIXME@>
 }
 
 @ @<Procedures@>=
