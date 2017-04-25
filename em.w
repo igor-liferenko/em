@@ -458,6 +458,7 @@ This is the necessary price to pay for using wide-character buffer.
 
 @<Read file@>=
 wint_t c;
+int i = 0;
 while (1) {
   buf_end = buf;
   while (buf_end - buf < MIN_GAP_EXPAND && (c = fgetwc(fp)) != WEOF)
@@ -468,17 +469,19 @@ while (1) {
 @<Add trailing newline if it is not present@>@;
 
 @ @<Copy contents of |buf|...@>=
-if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf))
-  break;
-for (int i = 0; i < buf_end-buf; i++)
-	*b_gap++ = buf[i];
+if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) {
+  fclose(fp);
+  @<Remove lock file@>@;
+  fatal(L"Failed to allocate required memory.\n");
+}
+for (i = 0; i < buf_end-buf; i++)
+  *b_gap++ = buf[i];
 
 @ @<Add trailing newline...@>=
-/* TODO: check that at least one character has been read, i.e. the file is not empty */
-/* if it is empty, just insert L'\n' */
-if (*(b_gap-1) != L'\n')
-	if (b_egap - b_gap >= 1 || growgap(1))
-		*b_gap++ = L'\n';
+if (i && buf[i-1] != L'\n') {
+  *buf_end++ = L'\n';
+  @<Copy contents of |buf|...@>@;
+}
 
 @ @<Get key@>=
 switch(input) {
