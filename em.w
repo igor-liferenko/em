@@ -457,6 +457,8 @@ if ((fp = fopen(argv[1], "r")) == NULL)
   if ((fp = fopen(argv[1], "w")) == NULL)
     fatal(L"Failed to open file \"%s\".\n", argv[1]);
 @<Create lock file@>@;
+/* FIXME: if file is read-only, or we do not have writing ownership, do not create lock file */
+@^FIXME@>
 @<Read file@>@;
 fclose(fp);
 
@@ -545,7 +547,7 @@ switch(input) {
 		break;
 	case
 		L'\x7f': /* BackSpace */
-		backsp();
+		insert(L'\u2190'); /* leftwards arrow */
 		break;
 	case
 		L'\x08': /* C-h */
