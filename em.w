@@ -217,11 +217,8 @@ editor because of its simplicity and efficient use of memory.
 
 @d MAX_FNAME       256
 @d MSGLINE         (LINES-1)
-@d CHUNK           8096L
-@d K_BUFFER_LENGTH 256
 @d TEMPBUF         512
 @d MIN_GAP_EXPAND  512
-@d NOMARK          -1
 @d STRBUF_M        64
 
 @c
