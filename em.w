@@ -402,7 +402,11 @@ void quit(void)
 	done = 1;
 }
 
-@ @<Add trailing newline to non-empty buffer...@>=
+@ If necessary, insert trailing newline into editing buffer before writing it to the file.
+If gap size is zero and no more memory can be allocated, do not append the
+newline.
+
+@<Add trailing newline to non-empty buffer...@>=
 movegap(pos(b_ebuf));
 if (b_buf < b_gap && *(b_gap-1) != L'\n')
   if (b_gap != b_egap || growgap(1)) /* if gap size is zero, grow gap */
@@ -487,7 +491,10 @@ if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) { /* if gap size
 for (i = 0; i < buf_end-buf; i++)
   *b_gap++ = buf[i];
 
-@ @<Add trailing newline to input...@>=
+@ If necessary, append newline to editing buffer after reading the file.
+If the file has zero length, newline is not appended.
+
+@<Add trailing newline to input...@>=
 if (i && buf[i-1] != L'\n') {
   *buf_end++ = L'\n';
   @<Copy contents of |buf|...@>@;
