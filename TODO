@@ -5,5 +5,6 @@ move each #include to the section where it is needed
 add C-r for backward search
 
 via xkb patch use [ with Alt modifier to insert substitute for <= (≤) and ] with
-Alt modifier to insert substitute for >= (≥); and uncomment "\let\K=\leftarrow" in cwebmaX.tex
-do not use substitute for && and || because substitute for || looks like v, and it is better to use non of them than only one of them, because they constitute a pair
+Alt modifier to insert substitute for >= (≥); and remove "\let\K=\leftarrow" workaround in cwebmaX.tex when you will make ← work natively (+ consider that it is UTF-8 sequence)
+And use Alt modifier with key "1" to use ¬ instead of !
+NOTE: do not use substitute for && and || because substitute for || looks like v, and it is better to use non of them than only one of them, because they constitute a pair
