@@ -215,7 +215,6 @@ editor because of its simplicity and efficient use of memory.
 
 @ This is the outline of our program.
 
-@d MAX_FNAME       256
 @d MSGLINE         (LINES-1)
 @d TEMPBUF         512
 @d CHUNK  512
@@ -244,7 +243,6 @@ wchar_t *b_gap = NULL;            /* start of gap */
 wchar_t *b_egap = NULL;           /* end of gap */
 int b_row;                /* cursor row */
 int b_col;                /* cursor col */
-char b_fname[MAX_FNAME + 1] = {'\0'}; /* filename */
 
 @ @<Global variables@>=
 int done;
@@ -386,22 +384,25 @@ point_t movegap(point_t offset)
 	return (pos(b_egap));
 }
 
-@ @<Procedures@>=
-void quit(void)
-{
-	@<Save buffer@>@;
-	@<Remove lock-file@>@;
-	done = 1;
-}
+@ @<Quit@>=
+@<Save buffer@>@;
+@<Remove lock-file@>@;
+done = 1;
 
-@ We check if the file is writable (i.e., if lock file exists) before writing to it.
+@* File input/output.
+
+@*1 Saving buffer into file.
+We check if the file is writable (i.e., if lock file exists) before writing to it.
+TODO: if the file is not writable, create temporary file, write to it, and print its name
+to stdout on exit.
+@^TODO@>
 
 @<Save buffer@>=
 FILE *fp;
 point_t length;
 if (lockfp != NULL) {
-  fp = fopen(b_fname, "w");
-  if (fp == NULL) msg(L"Failed to open file \"%s\".", b_fname);
+  fp = fopen(argv[1], "w");
+  if (fp == NULL) msg(L"Failed to open file \"%s\".", argv[1]);
   @<Add trailing newline to non-empty buffer if it is not present@>@;
   movegap(0);
   length = (point_t) (b_ebuf - b_egap);
@@ -432,9 +433,9 @@ for (n = 0; n < length; n++)
   if (fputwc(*(b_egap + n), fp) == WEOF)
     break;
 if (n != length)
-  msg(L"Failed to write file \"%s\".", b_fname);
+  msg(L"Failed to write file \"%s\".", argv[1]);
 
-@* Reading file into buffer at point.
+@*1 Reading file into buffer.
 
 In this program we use wide-character editing buffer.
 UTF-8 sequences from input file stream are automatically converted
@@ -505,6 +506,46 @@ if (i && buf[i-1] != L'\n') {
   @<Copy contents of |buf|...@>@;
 }
 
+@*1 Lock-file. Lock file is necessary to indicate that this file is already
+opened. For the name of the lock file we use the same name as opened file,
+and add |LOCK_EXT|. When we open a file, lock file is created. Upon exiting
+the editor, lock-file is removed.
+
+@d LOCK_EXT ".lock~"
+@d MAX_FNAME 256
+
+@<Global...@>=
+char lockfn[MAX_FNAME+sizeof(LOCK_EXT)+1];
+FILE *lockfp;
+
+@ @<Header files@>=
+#include <stdio.h> /* |fopen|, |fclose| */
+#include <unistd.h> /* |unlink| */
+
+@ Lock file only has sense when the opened file is writable.
+To check if the opened file is writable, we use the facilities
+provided by OS, via |fopen| call.
+
+@<Create lock-file@>=
+if ((lockfp = fopen(argv[1], "r+")) != NULL) {
+  fclose(lockfp);
+  strncpy(lockfn, argv[1], MAX_FNAME);
+  lockfn[MAX_FNAME]='\0';
+  strcat(lockfn, LOCK_EXT);
+  if ((lockfp = fopen(lockfn, "r")) != NULL) {
+    fclose(lockfp);
+    fatal(L"Lock file exists.\n");
+  }
+  if ((lockfp = fopen(lockfn, "w")) == NULL)
+    fatal(L"Cannot create lock file.\n");
+}
+
+@ @<Remove lock-file@>=
+if (lockfp != NULL) {
+  fclose(lockfp);
+  unlink(lockfn);
+}
+
 @ @<Get key@>=
 switch(input) {
 	case
@@ -572,8 +613,8 @@ switch(input) {
 		pgdown();
 		break;
 	case
-		L'\x1a': /* C-z */
-		quit();
+		L'\x1a': ; /* C-z */
+		@<Quit@>@;
 		break;
 	default:
 		insert((wchar_t) input);
@@ -1030,8 +1071,6 @@ int main(int argc, char **argv)
 	noecho();
 
 	@<Insert file@>@;
-	strncpy(b_fname, argv[1], MAX_FNAME); /* save filename */
-	b_fname[MAX_FNAME] = '\0'; /* force truncation */
 
 	while (!done) {
 		display();
@@ -1079,45 +1118,6 @@ if (get_wch(&input) == KEY_CODE_YES)
 @ Utility macros.
 
 @d ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-
-@* Lock file. Lock file is necessary to indicate that this file is already
-opened. For the name of the lock file we use the same name as opened file,
-and add |LOCK_EXT|. When we open a file, lock file is created. Upon exiting
-the editor, lock-file is removed.
-
-@d LOCK_EXT ".lock~"
-
-@<Global...@>=
-char lockfn[MAX_FNAME+sizeof(LOCK_EXT)+1];
-FILE *lockfp;
-
-@ @<Header files@>=
-#include <stdio.h> /* |fopen|, |fclose| */
-#include <unistd.h> /* |unlink| */
-
-@ Lock file only has sense when the opened file is writable.
-To check if the opened file is writable, we use the facilities
-provided by OS, via |fopen| call.
-
-@<Create lock-file@>=
-if ((lockfp = fopen(argv[1], "r+")) != NULL) {
-  fclose(lockfp);
-  strncpy(lockfn, argv[1], MAX_FNAME);
-  lockfn[MAX_FNAME]='\0';
-  strcat(lockfn, LOCK_EXT);
-  if ((lockfp = fopen(lockfn, "r")) != NULL) {
-    fclose(lockfp);
-    fatal(L"Lock file exists.\n");
-  }
-  if ((lockfp = fopen(lockfn, "w")) == NULL)
-    fatal(L"Cannot create lock file.\n");
-}
-
-@ @<Remove lock-file@>=
-if (lockfp != NULL) {
-  fclose(lockfp);
-  unlink(lockfn);
-}
 
 @ @<Header files@>=
 #include <stdlib.h>
