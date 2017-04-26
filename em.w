@@ -554,6 +554,7 @@ switch(input) {
 		break;
 	case
 		L'\x18': /* C-x */
+		@<Remove lock-file@>@;
 		done = 1; /* quit without saving */
 		break;
 	case
