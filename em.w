@@ -389,17 +389,24 @@ point_t movegap(point_t offset)
 @ @<Procedures@>=
 void quit(void)
 {
-	FILE *fp;
-	point_t length;
-
-	fp = fopen(b_fname, "w");
-	if (fp == NULL) msg(L"Failed to open file \"%s\".", b_fname);
-	@<Add trailing newline to non-empty buffer if it is not present@>@;
-	movegap(0);
-	length = (point_t) (b_ebuf - b_egap);
-        @<Write file@>@;
-	fclose(fp);
+	@<Save buffer@>@;
+	@<Remove lock-file@>@;
 	done = 1;
+}
+
+@ We check if the file is writable (i.e., if lock file exists) before writing to it.
+
+@<Save buffer@>=
+FILE *fp;
+point_t length;
+if (lockfp != NULL) {
+  fp = fopen(b_fname, "w");
+  if (fp == NULL) msg(L"Failed to open file \"%s\".", b_fname);
+  @<Add trailing newline to non-empty buffer if it is not present@>@;
+  movegap(0);
+  length = (point_t) (b_ebuf - b_egap);
+  @<Write file@>@;
+  fclose(fp);
 }
 
 @ If necessary, insert trailing newline into editing buffer before writing it to the file.
@@ -455,11 +462,9 @@ wchar_t *buf_end; /* where the next char goes */
 @ @<Insert file@>=
 FILE *fp;
 if ((fp = fopen(argv[1], "r")) == NULL)
-  if ((fp = fopen(argv[1], "w")) == NULL)
+  if ((fp = fopen(argv[1], "w")) == NULL) /* create file if it does not exist */
     fatal(L"Failed to open file \"%s\".\n", argv[1]);
-@<Create lock file@>@;
-/* FIXME: if file is read-only, or we do not have writing ownership, do not create lock file */
-@^FIXME@>
+@<Create lock-file@>@;
 @<Read file@>@;
 fclose(fp);
 
@@ -485,7 +490,7 @@ while (1) {
 if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) { /* if gap size
     is not sufficient, grow gap */
   fclose(fp);
-  @<Remove lock file@>@;
+  @<Remove lock-file@>@;
   fatal(L"Failed to allocate required memory.\n");
 }
 for (i = 0; i < buf_end-buf; i++)
@@ -1041,8 +1046,6 @@ int main(int argc, char **argv)
 	noraw();
 	endwin(); /* end curses mode */
 
-        @<Remove lock file@>@;
-
 	return 0;
 }
 
@@ -1079,33 +1082,42 @@ if (get_wch(&input) == KEY_CODE_YES)
 
 @* Lock file. Lock file is necessary to indicate that this file is already
 opened. For the name of the lock file we use the same name as opened file,
-and add |LOCK_EXT|. When we open a file, lock file is created. When we
-finish editing the file, lock file is removed.
+and add |LOCK_EXT|. When we open a file, lock file is created. Upon exiting
+the editor, lock-file is removed.
 
 @d LOCK_EXT ".lock~"
 
 @<Global...@>=
 char lockfn[MAX_FNAME+sizeof(LOCK_EXT)+1];
+FILE *lockfp;
 
 @ @<Header files@>=
 #include <stdio.h> /* |fopen|, |fclose| */
 #include <unistd.h> /* |unlink| */
 
-@ @<Create lock file@>=
-FILE *lockfp;
-strncpy(lockfn, argv[1], MAX_FNAME);
-lockfn[MAX_FNAME]='\0';
-strcat(lockfn, LOCK_EXT);
-if ((lockfp=fopen(lockfn, "r"))!=NULL) {
-  fclose(lockfp);
-  fatal(L"Lock file exists.\n");
-}
-if ((lockfp = fopen(lockfn, "w"))==NULL)
-  fatal(L"Cannot create lock file.\n");
-fclose(lockfp);
+@ Lock file only has sense when the opened file is writable.
+To check if the opened file is writable, we use the facilities
+provided by OS, via |fopen| call.
 
-@ @<Remove lock file@>=
-unlink(lockfn);
+@<Create lock-file@>=
+if ((lockfp = fopen(argv[1], "r+")) != NULL) {
+  fclose(lockfp);
+  strncpy(lockfn, argv[1], MAX_FNAME);
+  lockfn[MAX_FNAME]='\0';
+  strcat(lockfn, LOCK_EXT);
+  if ((lockfp = fopen(lockfn, "r")) != NULL) {
+    fclose(lockfp);
+    fatal(L"Lock file exists.\n");
+  }
+  if ((lockfp = fopen(lockfn, "w")) == NULL)
+    fatal(L"Cannot create lock file.\n");
+}
+
+@ @<Remove lock-file@>=
+if (lockfp != NULL) {
+  fclose(lockfp);
+  unlink(lockfn);
+}
 
 @ @<Header files@>=
 #include <stdlib.h>
