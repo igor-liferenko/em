@@ -896,8 +896,7 @@ void insert(wchar_t input)
           FIXME in section~\fixmesec) */
 @^FIXME@>
 	*b_gap++ = input == L'\r' ? L'\n' : input;
-	b_point = pos(b_egap); /* FIXME: is it needed? */
-@^FIXME@>
+	b_point++;
 }
 
 @ @<Procedures@>=
