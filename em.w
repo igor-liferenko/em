@@ -387,12 +387,23 @@ point_t movegap(point_t offset)
 	return (pos(b_egap));
 }
 
-@ @<Quit@>=
-@<Save buffer@>@;
-@<Remove lock-file@>@;
-done = 1;
+@ @<Procedures@>=
+void quit(void)
+{
+  @<Save buffer@>@;
+  @<Remove lock-file@>@;
+  done = 1;
+}
 
 @* File input/output.
+
+@ Save file name into global variable for easier usage in procedures.
+
+@<Global...@>=
+char *b_fname;
+
+@ @<Save file name@>=
+b_fname = argv[1];
 
 @*1 Saving buffer into file.
 We check if the file is writable (i.e., if lock file exists) before writing to it.
@@ -404,8 +415,8 @@ to stdout on exit.
 FILE *fp;
 point_t length;
 if (lockfp != NULL) {
-  fp = fopen(argv[1], "w");
-  if (fp == NULL) msg(L"Failed to open file \"%s\".", argv[1]);
+  fp = fopen(b_fname, "w");
+  if (fp == NULL) msg(L"Failed to open file \"%s\".", b_fname);
   @<Add trailing newline to non-empty buffer if it is not present@>@;
   movegap(0);
   length = (point_t) (b_ebuf - b_egap);
@@ -436,7 +447,7 @@ for (n = 0; n < length; n++)
   if (fputwc(*(b_egap + n), fp) == WEOF)
     break;
 if (n != length)
-  msg(L"Failed to write file \"%s\".", argv[1]);
+  msg(L"Failed to write file \"%s\".", b_fname);
 
 @*1 Reading file into buffer.
 
@@ -465,9 +476,9 @@ wchar_t *buf_end; /* where the next char goes */
 
 @ @<Insert file@>=
 FILE *fp;
-if ((fp = fopen(argv[1], "r")) == NULL)
-  if ((fp = fopen(argv[1], "w")) == NULL) /* create file if it does not exist */
-    fatal(L"Failed to open file \"%s\".\n", argv[1]);
+if ((fp = fopen(b_fname, "r")) == NULL)
+  if ((fp = fopen(b_fname, "w")) == NULL) /* create file if it does not exist */
+    fatal(L"Failed to open file \"%s\".\n", b_fname);
 @<Create lock-file@>@;
 @<Read file@>@;
 fclose(fp);
@@ -515,10 +526,9 @@ and add |LOCK_EXT|. When we open a file, lock file is created. Upon exiting
 the editor, lock-file is removed.
 
 @d LOCK_EXT ".lock~"
-@d MAX_FNAME 256
 
 @<Global...@>=
-char lockfn[MAX_FNAME+sizeof(LOCK_EXT)+1];
+char *lockfn;
 FILE *lockfp;
 
 @ @<Header files@>=
@@ -529,24 +539,35 @@ FILE *lockfp;
 To check if the opened file is writable, we use the facilities
 provided by OS, via |fopen| call.
 
+Note, that lock file is created right after the wanted file is opened.
+
 @<Create lock-file@>=
-if ((lockfp = fopen(argv[1], "r+")) != NULL) {
+if ((lockfp = fopen(b_fname, "r+")) != NULL) {
   fclose(lockfp);
-  strncpy(lockfn, argv[1], MAX_FNAME);
-  lockfn[MAX_FNAME]='\0';
-  strcat(lockfn, LOCK_EXT);
+  lockfn = malloc(strlen(b_fname)+sizeof(LOCK_EXT)+1); /* |+1| for |'\0'| */
+  if (lockfn == NULL) {
+    fclose(fp);
+    fatal(L"Failed to allocate memory.\n");
+  }
+  strcat(strcpy(lockfn, b_fname), LOCK_EXT);
   if ((lockfp = fopen(lockfn, "r")) != NULL) {
     fclose(lockfp);
+    free(lockfn);
+    fclose(fp);
     fatal(L"Lock file exists.\n");
   }
-  if ((lockfp = fopen(lockfn, "w")) == NULL)
+  if ((lockfp = fopen(lockfn, "w")) == NULL) {
+    free(lockfn);
+    fclose(fp);
     fatal(L"Cannot create lock file.\n");
+  }
 }
 
 @ @<Remove lock-file@>=
 if (lockfp != NULL) {
   fclose(lockfp);
   unlink(lockfn);
+  free(lockfn);
 }
 
 @ @<Get key@>=
@@ -617,8 +638,8 @@ switch(input) {
 		pgdown();
 		break;
 	case
-		L'\x1a': ; /* C-z */
-		@<Quit@>@;
+		L'\x1a': /* C-z */
+		quit();
 		break;
 	default:
 		insert((wchar_t) input);
@@ -1069,6 +1090,7 @@ int main(int argc, char **argv)
         wint_t input;
 	setlocale(LC_CTYPE, "C.UTF-8");
 	if (argc != 2) fatal(L"usage: em filename\n");
+	@<Save file name@>@;
 
 	initscr(); /* start curses mode */
 	raw();
