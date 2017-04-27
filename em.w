@@ -281,9 +281,16 @@ void msg(wchar_t *msg, ...)
 
 @ Given a buffer offset, convert it to a pointer into the buffer.
 
+FIXME: for what is |register|?
+@^FIXME@>
+
 @<Procedures@>=
-wchar_t * ptr(register point_t offset)
+wchar_t *ptr(register point_t offset)
 {
+	assert(offset >= 0);
+/* TODO: use |size_t| typedef for |point_t| if this |assert| will not fail - some testing is
+needed */
+@^TODO@>
 	if (offset < 0) return b_buf;
 	return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
 }
@@ -294,6 +301,7 @@ wchar_t * ptr(register point_t offset)
 point_t pos(register wchar_t *cp)
 {
 	assert(b_buf <= cp && cp <= b_ebuf);
+	assert(cp < b_gap || cp >= b_egap);
 	return (cp - b_buf - (cp < b_egap ? 0 : b_egap - b_gap));
 }
 
@@ -319,34 +327,11 @@ int growgap(point_t n)
 	buflen = b_ebuf - b_buf;
     
 	@<Calculate new length |newlen| of gap@>@;
-
-	if (buflen == 0) {
-		if (newlen < 0)
-                  fatal(L"Why this happened?\n"); /* fatal */
-		new = malloc((size_t) newlen * sizeof(wchar_t));
-		if (new == NULL)
-		  fatal(L"Failed to allocate required memory.\n"); /* fatal */
-	}
-        else {
-		if (newlen < 0) {
-			msg(L"Why this happened?"); /* non-fatal */
-			return (FALSE);
-		}
-		new = realloc(b_buf, (size_t) newlen * sizeof(wchar_t));
-		if (new == NULL) {
-			msg(L"Failed to allocate required memory."); /* non-fatal */
-			return (FALSE);
-		}
-	}
-
+	@<Allocate memory for editing buffer@>@;
 	@<Relocate pointers in new buffer and append the new
 	  extension to the end of the gap@>@;
 
-	assert(b_buf < b_ebuf);          /* buffer must exist */
-	assert(b_buf <= b_gap);
-	assert(b_gap < b_egap);          /* gap must grow only */
-	assert(b_egap <= b_ebuf);
-	return (TRUE);
+	return TRUE;
 }
 
 @ Reduce number of reallocs by growing by a minimum amount.
@@ -357,22 +342,47 @@ TODO: check that |buflen + n| does not cause overflow.
 n = (n < CHUNK ? CHUNK : n);
 newlen = buflen + n;
 
-@ @<Relocate pointers in new buffer and append the new
+@ @<Header files@>=
+#include <stdlib.h> /* |malloc| */
+#include <string.h> /* |strerror| */
+#include <errno.h> /* |errno| */
+
+@ @<Allocate memory for editing buffer@>=
+assert(newlen >= 0);
+if (buflen == 0) /* if buffer is empty */
+  new = malloc((size_t) newlen * sizeof(wchar_t));
+else
+  new = realloc(b_buf, (size_t) newlen * sizeof(wchar_t));
+if (new == NULL) {
+  msg(L"malloc: %s\n", strerror(errno));
+  return FALSE;
+}
+
+@ Below we consider the fact that the buffer-gap can only grow, i.e., |newlen|
+is always greater than |buflen|.
+In the |while| loop we move along the rightmost part of the ``old'' buffer, from right to
+left, and move each element to the ``new'' buffer, also from right
+to left. This can be regarded as ``shifting'' the rightmost part of the ``old'' buffer
+to the right side of the ``new'' buffer.
+
+@<Relocate pointers in new buffer and append the new
     extension to the end of the gap@>=
 b_buf = new;
 b_gap = b_buf + xgap;
-b_ebuf = b_buf + buflen;
 b_egap = b_buf + newlen;
 while (xegap < buflen--)
 	*--b_egap = *--b_ebuf;
 b_ebuf = b_buf + newlen;
+assert(b_buf <= b_gap);
+assert(b_gap < b_egap);          /* gap must exist */
+assert(b_egap <= b_ebuf);
 
-@ \xdef\fixmesec{\secno}
-
-@<Procedures@>=
-point_t movegap(point_t offset)
+@ @<Procedures@>=
+void movegap(offset)
+	point_t offset; /* number of characters before the gap */
 {
 	wchar_t *p = ptr(offset);
+	assert(p <= b_ebuf);
 	while (p < b_gap)
 		*--b_egap = *--b_gap;
 	while (b_egap < p)
@@ -380,11 +390,6 @@ point_t movegap(point_t offset)
 	assert(b_gap <= b_egap);
 	assert(b_buf <= b_gap);
 	assert(b_egap <= b_ebuf);
-	point_t x = pos(b_egap); /* FIXME: do we need to return value? (see related
-          FIXME in the declaration of |insert|) */
-	if (x!=offset) fatal(L"gotcha\n");
-@^FIXME@>
-	return (pos(b_egap));
 }
 
 @ @<Procedures@>=
@@ -411,6 +416,9 @@ TODO: if the file is not writable, create temporary file, write to it, and print
 to stdout on exit.
 @^TODO@>
 
+We do |movegap(0)| before writing to file, so we only need to write data to the right of
+the gap.
+
 @<Save buffer@>=
 FILE *fp;
 point_t length;
@@ -436,10 +444,6 @@ if (b_buf < b_gap && *(b_gap-1) != L'\n')
 
 @ We write file character-by-character for similar reasons which are explained in
 |@<Read file@>|.
-Writing files is done in two chunks, the data to the left of
-	  the gap and then the data to the right.(FIXME: is it true? it was taken from
-references on page about ZEP)
-@^FIXME@>
 
 @<Write file@>=
 point_t n;
@@ -963,9 +967,7 @@ void insert(wchar_t input)
 	assert(b_gap <= b_egap);
 	if (b_gap == b_egap && !growgap(CHUNK)) return; /* if gap size is zero,
 		grow gap */
-	b_point = movegap(b_point); /* FIXME: does the assignment change anything? (see related
-          FIXME in section~\fixmesec) */
-@^FIXME@>
+	movegap(b_point);
 	*b_gap++ = input == L'\r' ? L'\n' : input;
 	b_point++;
 }
@@ -973,7 +975,7 @@ void insert(wchar_t input)
 @ @<Procedures@>=
 void backsp(void)
 {
-	b_point = movegap(b_point);
+	movegap(b_point);
 	if (b_buf < b_gap)
 		b_gap--;
 	b_point = pos(b_egap);
@@ -982,7 +984,7 @@ void backsp(void)
 @ @<Procedures@>=
 void delete(void)
 {
-	b_point = movegap(b_point);
+	movegap(b_point);
 	if (b_egap < b_ebuf)
 		b_point = pos(++b_egap);
 }
