@@ -1090,6 +1090,11 @@ int main(int argc, char **argv)
         wint_t input;
 	setlocale(LC_CTYPE, "C.UTF-8");
 	if (argc != 2) fatal(L"usage: em filename\n");
+	/* TODO: if no arg specified, create temporary file in
+	/tex\_tmp/ (like it is done in "bin/tmp") and upon exiting em,
+	print the file name to stdout,
+	and remove "bin/tmp" */
+@^TODO@>
 	@<Save file name@>@;
 
 	initscr(); /* start curses mode */
