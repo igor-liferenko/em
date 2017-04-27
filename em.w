@@ -291,7 +291,6 @@ wchar_t *ptr(register point_t offset)
 /* TODO: use |size_t| typedef for |point_t| if this |assert| will not fail - some testing is
 needed */
 @^TODO@>
-	if (offset < 0) return b_buf;
 	return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
 }
 
@@ -654,6 +653,8 @@ switch(input) {
 @<Procedures@>=
 point_t lnstart(register point_t off)
 {
+	assert(off >= 0);
+	if (off == 0) return 0;
 	register wchar_t *p;
 	do
 		p = ptr(--off);
@@ -716,7 +717,7 @@ point_t upup(point_t off)
 	if (curr < seg)
 		off = segstart(curr, seg-1);
 	else
-		off = segstart(lnstart(curr-1), curr-1);
+		off = segstart(lnstart(curr-1>=0?curr-1:0), curr-1);
 	return off;
 }
 
