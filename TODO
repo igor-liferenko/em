@@ -1,8 +1,4 @@
-make second argument to be the line number to be shown when file is opened
-
 move each #include to the section where it is needed
-
-add C-r for backward search
 
 via xkb patch use [ with Alt modifier to insert substitute for <= (≤) and ] with
 Alt modifier to insert substitute for >= (≥); and remove "\let\K=\leftarrow" workaround in cwebmaX.tex when you will make ← work natively (+ consider that it is UTF-8 sequence)

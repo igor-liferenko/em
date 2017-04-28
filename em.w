@@ -588,6 +588,8 @@ switch(input) {
 		L'\x13': /* C-s */
 		search();
 		break;
+/* TODO: add C-r for backward search */
+@^TODO@>
 	case
 		L'\x1b': /* C-[ */
 		top();
@@ -1099,6 +1101,8 @@ int main(int argc, char **argv)
 	and remove "bin/tmp" */
 @^TODO@>
 	@<Save file name@>@;
+/* TODO: make second argument to be the line number to be shown when file is opened */
+@^TODO@>
 
 	initscr(); /* start curses mode */
 	raw();
