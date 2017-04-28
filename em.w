@@ -1127,6 +1127,9 @@ int main(int argc, char **argv)
 	return 0;
 }
 
+@ @<Header files@>=
+#include "/usr/local/uniweb/uniweb.h"
+
 @ DB file cannot have null char, so use |fgetws|.
 We always use wide-char API, so we will not use
 |fgets| in this case, even though the conversion
