@@ -1145,14 +1145,15 @@ wchar_t *pat = malloc((mostowcs(b_fname,NULL)+1)*sizeof(wchar_t));
 if (pat==NULL) fatal(L"Failed to allocate memory.\n");
 mostowcs(b_fname, pat);
 while (fgetws(db_line, DB_LINE_SIZE+1, db) != NULL) {
-  if (db_line[DB_LINE_SIZE-1]==L'\n') db_line[DB_LINE_SIZE-1]=L'\0'; /* suppress trailing newline */
+  if (db_line[DB_LINE_SIZE-1]==L'\n') db_line[DB_LINE_SIZE-1]=L'\0';
+    /* suppress trailing newline */
   if (wcsncmp(db_line, pat, wcslen(pat)) == 0) {
     /* get point */
     if (strcmp(point,"lock")==0) { fclose(db); fatal(L"file is locked\n"); }
     b_point = point;
     continue;
   }
-  /* append db_line to linked list */
+  /* append |db_line| to linked list */
 }
 fclose(db);
 if ((db=fopen(DB_FILE,"w"))==NULL)
