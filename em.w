@@ -1128,13 +1128,12 @@ int main(int argc, char **argv)
 }
 
 @ @<Header files@>=
-#include "/usr/local/uniweb/uniweb.h"
+#include <stdio.h> /* |fgets| */
 
-@ DB file cannot have null char, so use |fgetws|.
-We always use wide-char API, so we will not use
-|fgets| in this case, even though the conversion
+@ DB file cannot have null char, so use |fgets|.
+We will not use |fgetws| here, because the conversionon
 of file name from UTF-8 to unicode is not
-necessary here.
+necessary here and because it uses char*, not char, and char* is OK.
 
 @d DB_FILE "/tmp/em.db"
 @d DB_LINE_SIZE 100000
@@ -1144,15 +1143,11 @@ wchar_t db_line[DB_LINE_SIZE+1];
 FILE *db;
 if ((db=fopen(DB_FILE,"r"))==NULL)
   fatal(L"Could not open DB file: %s\n", strerror(errno));
-wchar_t *pat = malloc((mostowcs(b_fname,NULL)+1)*sizeof(wchar_t));
-if (pat==NULL) fatal(L"Failed to allocate memory.\n");
-mostowcs(b_fname, pat);
-while (fgetws(db_line, DB_LINE_SIZE+1, db) != NULL) {
-  if (db_line[DB_LINE_SIZE-1]==L'\n') db_line[DB_LINE_SIZE-1]=L'\0';
+while (fgets(db_line, DB_LINE_SIZE+1, db) != NULL) {
+  if (db_line[DB_LINE_SIZE-1]=='\n') db_line[DB_LINE_SIZE-1]='\0';
     /* suppress trailing newline */
-  if (wcsncmp(db_line, pat, wcslen(pat)) == 0) {
-    /* get point */
-    if (strcmp(point,"lock")==0) { fclose(db); fatal(L"file is locked\n"); }
+  if (strncmp(db_line, str, strlen(b_fname)) == 0) {
+    /* <get point> */
     b_point = point;
     continue;
   }
@@ -1162,8 +1157,7 @@ fclose(db);
 if ((db=fopen(DB_FILE,"w"))==NULL)
   fatal(L"Could not open DB file: %s\n", strerror(errno));
 for (<loop over linked list>)
-  fwprintf(db,L"%ls\n",cur_line);
-fwprintf(db, L"%ls lock\n", pat); /* lock opened file */
+  fprintf(db,"%s\n",cur_line);
 fclose(db);
 
 @ Here, besides reading user input, we handle resize event. We pass
