@@ -1128,37 +1128,48 @@ int main(int argc, char **argv)
 }
 
 @ @<Header files@>=
-#include <stdio.h> /* |fgets| */
+#include <stdio.h> /* |fgets|, |rewind| */
+#include <unistd.h> /* |unlink| */
+#include <stdlib.h> /* |strtol| */
 
 @ DB file cannot have null char, so use |fgets|.
 We will not use |fgetws| here, because the conversionon
 of file name from UTF-8 to unicode is not
 necessary here and because it uses char*, not char, and char* is OK.
 
+We use Linux, so just delete the file by |unlink| after we open it - then open a new file
+with the same name and write the modified lines into the new file. We'll have two |FILE *|
+variables.
+
 @d DB_FILE "/tmp/em.db"
 @d DB_LINE_SIZE 100000
 
 @<Restore cursor@>=
-wchar_t db_line[DB_LINE_SIZE+1];
-FILE *db;
-if ((db=fopen(DB_FILE,"r"))==NULL)
-  fatal(L"Could not open DB file: %s\n", strerror(errno));
-while (fgets(db_line, DB_LINE_SIZE+1, db) != NULL) {
-  if (db_line[DB_LINE_SIZE-1]=='\n') db_line[DB_LINE_SIZE-1]='\0';
-    /* suppress trailing newline */
-  if (strncmp(db_line, str, strlen(b_fname)) == 0) {
-    /* <get point> */
-    b_point = point;
+char db_line[DB_LINE_SIZE+1];
+FILE *db_in, *db_out;
+if ((db_in=fopen(DB_FILE,"a+"))==NULL) /* |"a+"| creates empty file if it does not exist */
+  fatal(L"Could not open DB file for reading: %s\n", strerror(errno));
+unlink(DB_FILE);
+if ((db_out=fopen(DB_FILE,"w"))==NULL) {
+  fclose(db_in);
+  fatal(L"Could not open DB file for writing: %s\n", strerror(errno));
+}
+while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
+  if (strncmp(db_line, b_fname, strlen(b_fname)) == 0) {
+    @<Get point@>@;
     continue;
   }
-  /* append |db_line| to linked list */
+  fprintf(db_out,"%s",db_line);
 }
-fclose(db);
-if ((db=fopen(DB_FILE,"w"))==NULL)
-  fatal(L"Could not open DB file: %s\n", strerror(errno));
-for (<loop over linked list>)
-  fprintf(db,"%s\n",cur_line);
-fclose(db);
+fclose(db_in);
+fclose(db_out);
+
+@ @<Get point@>=
+/* FIXME: check that |strlen(b_fname)<DB_LINE_SIZE);| */
+@^FIXME@>
+b_point = strtol(db_line+strlen(b_fname), NULL, 10);
+/* FIXME: check return value */
+@^FIXME@>
 
 @ Here, besides reading user input, we handle resize event. We pass
 reference to variable of type
