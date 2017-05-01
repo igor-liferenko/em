@@ -396,6 +396,7 @@ void quit(void)
 {
   @<Save buffer@>@;
   @<Remove lock-file@>@;
+  @<Save cursor@>@;
   done = 1;
 }
 
@@ -582,6 +583,7 @@ switch(input) {
 	case
 		L'\x18': /* C-x */
 		@<Remove lock-file@>@;
+		@<Save cursor@>@;
 		done = 1; /* quit without saving */
 		break;
 	case
@@ -1144,9 +1146,14 @@ variables.
 @d DB_FILE "/tmp/em.db"
 @d DB_LINE_SIZE 100000
 
-@<Restore cursor@>=
+@ This is necessary to store cursor upon exiting editor.
+
+@<Global...@>=
+FILE *db_out;
+
+@ @<Restore cursor@>=
 char db_line[DB_LINE_SIZE+1];
-FILE *db_in, *db_out;
+FILE *db_in;
 if ((db_in=fopen(DB_FILE,"a+"))==NULL) /* |"a+"| creates empty file if it does not exist */
   fatal(L"Could not open DB file for reading: %s\n", strerror(errno));
 unlink(DB_FILE);
@@ -1162,13 +1169,33 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   fprintf(db_out,"%s",db_line);
 }
 fclose(db_in);
-fclose(db_out);
 
 @ @<Get point@>=
 /* FIXME: check that |strlen(b_fname)<DB_LINE_SIZE);| */
 @^FIXME@>
 b_point = strtol(db_line+strlen(b_fname), NULL, 10);
 /* FIXME: check return value */
+@^FIXME@>
+/* FIXME: what is the difference between sscanf and strtol?
+   use sscanf instead of strtol with |"%ld"| modifier? */
+@^FIXME@>
+@<Ensure that |b_point| is inside buffer@>@;
+
+@ Consider this case: we open empty file, add string ``hello world'', then
+exit without saving. The saved cursor position will be 11. Next time we open this
+same empty file, |@<Restore cursor@>| will set |b_point| past the end of buffer.
+
+TODO: if file is closed without saving and it was changed after it was opened,
+save cursor position 0. For this revert removing B_MODIFIED via git lg em.w.
+@^TODO@>
+
+@<Ensure that |b_point|...@>=
+if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
+
+@ @<Save cursor@>=
+fprintf(db_out,"%s %ld\n", b_fname, b_point);
+fclose(db_out);
+/* FIXME: close db_out when fatal is called - revise all places */
 @^FIXME@>
 
 @ Here, besides reading user input, we handle resize event. We pass
