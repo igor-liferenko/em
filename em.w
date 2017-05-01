@@ -1147,17 +1147,14 @@ variables.
 @d DB_FILE "/tmp/em.db"
 @d DB_LINE_SIZE 100000
 
-@ This is necessary to store cursor upon exiting editor.
-
-@<Global...@>=
-FILE *db_out;
+@ @<Global...@>=
+FILE *db_in, *db_out;
+char db_line[DB_LINE_SIZE+1];
 
 @ We do this before |@<Insert file@>|, not after, because it is easier to
 abort if |DB_FILE| cannot be opened.
 
 @<Restore cursor@>=
-char db_line[DB_LINE_SIZE+1];
-FILE *db_in;
 if ((db_in=fopen(DB_FILE,"a+"))==NULL) /* |"a+"| creates empty file if it does not exist */
   fatal(L"Could not open DB file for reading: %s\n", strerror(errno));
 unlink(DB_FILE);
@@ -1202,7 +1199,24 @@ For this, revert removing B_MODIFIED (see \.{git lg em.w}).
 @<Ensure that restored...@>=
 if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
 
-@ @<Save cursor@>=
+@ See |@<Restore cursor@>| for the technique used here.
+
+@<Save cursor@>=
+if ((db_in=fopen(DB_FILE,"r"))==NULL)
+  fatal(L"Could not open DB file for reading: %s\n", strerror(errno));
+unlink(DB_FILE);
+if ((db_out=fopen(DB_FILE,"w"))==NULL) {
+  fclose(db_in);
+  fatal(L"Could not open DB file for writing: %s\n", strerror(errno));
+}
+while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
+  if (strncmp(db_line, b_fname, strlen(b_fname)) == 0)
+    continue;
+  fprintf(db_out,"%s",db_line);
+}
+fclose(db_in);
+fprintf(db_out,"%s %ld\n",b_fname,b_point);
+fclose(db_out);
 
 @ Here, besides reading user input, we handle resize event. We pass
 reference to variable of type
