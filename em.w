@@ -1112,6 +1112,7 @@ int main(int argc, char **argv)
 
 	@<Restore cursor@>@;
 	@<Insert file@>@;
+	@<Ensure that restored position is inside buffer@>@;
 
 	while (!done) {
 		display();
@@ -1179,17 +1180,20 @@ b_point = strtol(db_line+strlen(b_fname), NULL, 10);
 /* FIXME: what is the difference between sscanf and strtol?
    use sscanf instead of strtol with |"%ld"| modifier? */
 @^FIXME@>
-@<Ensure that |b_point| is inside buffer@>@;
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
 same empty file, |@<Restore cursor@>| will set |b_point| past the end of buffer.
 
-TODO: if file is closed without saving and it was changed after it was opened,
-save cursor position 0. For this revert removing B_MODIFIED via git lg em.w.
+But this check can only be done after the file is read, in order that the buffer
+is allocated.
+
+TODO: instead of this check do this: if file is closed without saving and it was
+changed after it was opened,
+saved cursor position must be 0. For this, revert removing B_MODIFIED (see \.{git lg em.w}).
 @^TODO@>
 
-@<Ensure that |b_point|...@>=
+@<Ensure that restored...@>=
 if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
 
 @ @<Save cursor@>=
