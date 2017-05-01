@@ -395,8 +395,7 @@ void movegap(offset)
 void quit(void)
 {
   @<Save buffer@>@;
-  @<Remove lock-file@>@;
-  @<Save cursor@>@;
+  @<Remove lock and save cursor@>@;
   done = 1;
 }
 
@@ -411,7 +410,9 @@ char *b_fname;
 b_fname = argv[1];
 
 @*1 Saving buffer into file.
-We check if the file is writable (i.e., if lock file exists) before writing to it.
+
+If the file is read-only, it is not written to.
+
 TODO: if the file is not writable, create temporary file, write to it, and print its name
 to stdout on exit.
 @^TODO@>
@@ -422,8 +423,7 @@ the gap.
 @<Save buffer@>=
 FILE *fp;
 point_t length;
-if (lockfp != NULL) {
-  fp = fopen(b_fname, "w");
+if ((fp = fopen(b_fname, "w")) != NULL) {
   if (fp == NULL) msg(L"Failed to open file \"%s\".", b_fname);
   @<Add trailing newline to non-empty buffer if it is not present@>@;
   movegap(0);
@@ -483,7 +483,6 @@ FILE *fp;
 if ((fp = fopen(b_fname, "r")) == NULL)
   if ((fp = fopen(b_fname, "w")) == NULL) /* create file if it does not exist */
     fatal(L"Failed to open file \"%s\".\n", b_fname);
-@<Create lock-file@>@;
 @<Read file@>@;
 fclose(fp);
 
@@ -509,7 +508,7 @@ while (1) {
 if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) { /* if gap size
     is not sufficient, grow gap */
   fclose(fp);
-  @<Remove lock-file@>@;
+  @<Remove lock and save cursor@>@;
   fatal(L"Failed to allocate required memory.\n");
 }
 for (i = 0; i < buf_end-buf; i++)
@@ -524,55 +523,11 @@ if (i && buf[i-1] != L'\n') {
   @<Copy contents of |buf|...@>@;
 }
 
-@*1 Lock-file. Lock file is necessary to indicate that this file is already
-opened. For the name of the lock file we use the same name as opened file,
-and add |LOCK_EXT|. When we open a file, lock file is created. Upon exiting
-the editor, lock-file is removed.
-
-@d LOCK_EXT ".lock~"
-
-@<Global...@>=
-char *lockfn;
-FILE *lockfp;
-
-@ @<Header files@>=
-#include <stdio.h> /* |fopen|, |fclose| */
-#include <unistd.h> /* |unlink| */
-
-@ Lock file only has sense when the opened file is writable.
-To check if the opened file is writable, we use the facilities
-provided by OS, via |fopen| call.
-
-Note, that lock file is created right after the wanted file is opened.
-
-@<Create lock-file@>=
-if ((lockfp = fopen(b_fname, "r+")) != NULL) {
-  fclose(lockfp);
-  lockfn = malloc(strlen(b_fname)+sizeof(LOCK_EXT)+1); /* |+1| for |'\0'| */
-  if (lockfn == NULL) {
-    fclose(fp);
-    fatal(L"Failed to allocate memory.\n");
-  }
-  strcat(strcpy(lockfn, b_fname), LOCK_EXT);
-  if ((lockfp = fopen(lockfn, "r")) != NULL) {
-    fclose(lockfp);
-    free(lockfn);
-    fclose(fp);
-    fatal(L"Lock file exists.\n");
-  }
-  if ((lockfp = fopen(lockfn, "w")) == NULL) {
-    free(lockfn);
-    fclose(fp);
-    fatal(L"Cannot create lock file.\n");
-  }
-}
-
-@ @<Remove lock-file@>=
-if (lockfp != NULL) {
-  fclose(lockfp);
-  unlink(lockfn);
-  free(lockfn);
-}
+@*1 File locking. Locking file is necessary to indicate that this file is already
+opened. Before we open a file, lock is created in |BD_FILE| in
+|@<Restore cursor@>| (which
+in turn is executed right before the wanted file is opened). Upon exiting
+the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
 
 @ @<Get key@>=
 switch(input) {
@@ -582,8 +537,7 @@ switch(input) {
 		break;
 	case
 		L'\x18': /* C-x */
-		@<Remove lock-file@>@;
-		@<Save cursor@>@;
+		@<Remove lock and save cursor@>@;
 		done = 1; /* quit without saving */
 		break;
 	case
@@ -1134,6 +1088,7 @@ int main(int argc, char **argv)
 #include <stdio.h> /* |fgets|, |rewind| */
 #include <unistd.h> /* |unlink| */
 #include <stdlib.h> /* |strtol| */
+#include <string.h> /* |strncmp| */
 
 @ DB file cannot have null char, so use |fgets|.
 We will not use |fgetws| here, because the conversionon
@@ -1145,7 +1100,7 @@ with the same name and write the modified lines into the new file. We'll have tw
 variables.
 
 @d DB_FILE "/tmp/em.db"
-@d DB_LINE_SIZE 100000
+@d DB_LINE_SIZE 10000
 
 @ @<Global...@>=
 FILE *db_in, *db_out;
@@ -1162,9 +1117,13 @@ if ((db_out=fopen(DB_FILE,"w"))==NULL) {
   fclose(db_in);
   fatal(L"Could not open DB file for writing: %s\n", strerror(errno));
 }
+int file_is_locked = 0;
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   if (strncmp(db_line, b_fname, strlen(b_fname)) == 0) {
-    @<Get point@>@;
+    if (strncmp(db_line+strlen(b_fname)+1,"lock",4)==0)
+        file_is_locked = 1;
+    else
+      @<Get point@>@;
     continue;
   }
   fprintf(db_out,"%s",db_line);
@@ -1172,8 +1131,10 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
 fclose(db_in);
 fprintf(db_out,"%s lock\n",b_fname);
 fclose(db_out);
+if (file_is_locked)
+  fatal(L"File is locked.\n");
 
-@ @<Get point@>=
+@ @<Get point@>= {
 /* FIXME: check that |strlen(b_fname)<DB_LINE_SIZE);| */
 @^FIXME@>
 b_point = strtol(db_line+strlen(b_fname), NULL, 10);
@@ -1182,6 +1143,7 @@ b_point = strtol(db_line+strlen(b_fname), NULL, 10);
 /* FIXME: what is the difference between sscanf and strtol?
    use sscanf instead of strtol with |"%ld"| modifier? */
 @^FIXME@>
+}
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
@@ -1201,7 +1163,7 @@ if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
 
 @ See |@<Restore cursor@>| for the technique used here.
 
-@<Save cursor@>=
+@<Remove lock and save cursor@>=
 if ((db_in=fopen(DB_FILE,"r"))==NULL)
   fatal(L"Could not open DB file for reading: %s\n", strerror(errno));
 unlink(DB_FILE);
