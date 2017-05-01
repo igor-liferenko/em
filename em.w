@@ -1152,7 +1152,10 @@ variables.
 @<Global...@>=
 FILE *db_out;
 
-@ @<Restore cursor@>=
+@ We do this before |@<Insert file@>|, not after, because it is easier to
+abort if |DB_FILE| cannot be opened.
+
+@<Restore cursor@>=
 char db_line[DB_LINE_SIZE+1];
 FILE *db_in;
 if ((db_in=fopen(DB_FILE,"a+"))==NULL) /* |"a+"| creates empty file if it does not exist */
