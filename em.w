@@ -1173,6 +1173,8 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   fprintf(db_out,"%s",db_line);
 }
 fclose(db_in);
+fprintf(db_out,"%s lock\n",b_fname);
+fclose(db_out);
 
 @ @<Get point@>=
 /* FIXME: check that |strlen(b_fname)<DB_LINE_SIZE);| */
@@ -1201,10 +1203,6 @@ For this, revert removing B_MODIFIED (see \.{git lg em.w}).
 if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
 
 @ @<Save cursor@>=
-fprintf(db_out,"%s %ld\n", b_fname, b_point);
-fclose(db_out);
-/* FIXME: close db_out when fatal is called - revise all places */
-@^FIXME@>
 
 @ Here, besides reading user input, we handle resize event. We pass
 reference to variable of type
