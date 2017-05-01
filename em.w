@@ -1190,7 +1190,8 @@ is allocated.
 
 TODO: instead of this check do this: if file is closed without saving and it was
 changed after it was opened,
-saved cursor position must be 0. For this, revert removing B_MODIFIED (see \.{git lg em.w}).
+saved cursor position must be the same as it was read from |DB_FILE|.
+For this, revert removing B_MODIFIED (see \.{git lg em.w}).
 @^TODO@>
 
 @<Ensure that restored...@>=
