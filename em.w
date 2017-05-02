@@ -1120,10 +1120,10 @@ if ((db_out=fopen(DB_FILE,"w"))==NULL) {
 int file_is_locked = 0;
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   if (strncmp(db_line, b_fname, strlen(b_fname)) == 0) {
-    if (strncmp(db_line+strlen(b_fname)+1,"lock",4)==0)
+    /* FIXME: check that |strlen(b_fname)<DB_LINE_SIZE);| */
+@^FIXME@>
+      if (sscanf(db_line+strlen(b_fname), "%ld", &b_point) != 1)
         file_is_locked = 1;
-    else
-      @<Get point@>@;
     continue;
   }
   fprintf(db_out,"%s",db_line);
@@ -1133,17 +1133,6 @@ fprintf(db_out,"%s lock\n",b_fname);
 fclose(db_out);
 if (file_is_locked)
   fatal(L"File is locked.\n");
-
-@ @<Get point@>= {
-/* FIXME: check that |strlen(b_fname)<DB_LINE_SIZE);| */
-@^FIXME@>
-b_point = strtol(db_line+strlen(b_fname), NULL, 10);
-/* FIXME: check return value */
-@^FIXME@>
-/* FIXME: what is the difference between sscanf and strtol?
-   use sscanf instead of strtol with |"%ld"| modifier? */
-@^FIXME@>
-}
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
