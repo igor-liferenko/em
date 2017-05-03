@@ -973,6 +973,31 @@ point_t search_forward(point_t start_p, wchar_t *stext)
 	}
 
 	return -1;
+/* TODO: do not use it as function (use it as section) in order that it will be possible
+not to pass status via |-1|; and the same for |search_backwards| */
+@^TODO@>
+}
+
+point_t search_backwards(point_t start_p, wchar_t *stext)
+{
+	point_t p,pp;
+	wchar_t *s;
+
+	if (0 == wcslen(stext))
+		return start_p;
+
+	for (p=start_p; p >= 0; p--) {
+		for (s=stext, pp=p; *s == *ptr(bp, pp) && *s != L'\0' && pp >= 0; s++, pp++)
+			;
+
+		if (*s == L'\0') {
+			if (p > 0)
+				p--;
+			return p;
+		}
+	}
+
+	return -1;
 }
 
 @ @<Global variables@>=
