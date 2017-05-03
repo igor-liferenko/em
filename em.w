@@ -987,7 +987,7 @@ point_t search_backwards(point_t start_p, wchar_t *stext)
 		return start_p;
 
 	for (p=start_p; p >= 0; p--) {
-		for (s=stext, pp=p; *s == *ptr(bp, pp) && *s != L'\0' && pp >= 0; s++, pp++)
+		for (s=stext, pp=p; *s == *ptr(pp) && *s != L'\0' && pp >= 0; s++, pp++)
 			;
 
 		if (*s == L'\0') {
@@ -1169,7 +1169,7 @@ is allocated.
 TODO: instead of this check do this: if file is closed without saving and it was
 changed after it was opened,
 saved cursor position must be the same as it was read from |DB_FILE|.
-For this, revert removing B_MODIFIED (see \.{git lg em.w}).
+For this, revert removing |B_MODIFIED| (see \.{git lg em.w}).
 @^TODO@>
 
 @<Ensure that restored...@>=
