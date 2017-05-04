@@ -13,14 +13,22 @@ While wide-character support is present in CWEB,
 unfortunately it is not complete. There are these two
 small issues:
 
-1. Spaces are removed before string literals, and
-the `L' wide-character string and character modifer
-sticks to previous token.
+1. Space is removed before `L' wide-character modifier by CTANGLE and CWEAVE.
+If previous token ends with
+a letter, a number, or `_', this causes compiler error.
 
-For CTANGLE, this can be worked around by prefixing the
-`L' modifier with a newline. Unfortunately, this does not
-always work for CWEAVE. I did not try to figure
-out the proper fix for this yet.
+Example 1. This can be fixed for CTANGLE by adding newline
+character before `L', but the space is always gobbled by CWEAVE:
+  \noinx
+  @ @c
+  wprintf(PROG_NAME L", version 0.1\n");
+
+Example 2. This can be fixed for CTANGLE by adding newline
+character before `L' (CWEAVE output is OK in any form):
+
+  \noinx
+  @ @c
+  return L'\0';
 
 2. There is only "wchar_t" type and no "wint_t" type in CWEB
 syntax parsing rules. This causes TeX output to be formatted
