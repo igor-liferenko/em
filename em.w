@@ -966,7 +966,7 @@ for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
           b_point = pp;
           msg(L"Search: %ls", searchtext);
           display();
-          goto restart_forward_search;
+          goto forward_search;
 	}
 }
 msg(L"Failing Forward Search: %ls", searchtext);
@@ -974,7 +974,7 @@ dispmsg();
 search_failed=1;
 search_point=b_point;
 b_point=0;
-restart_forward_search:
+@/@t\4@> forward_search:
 
 @ @<Search backwards@>=
 search_failed=0;
@@ -987,7 +987,7 @@ for (point_t p=b_point; p > 0;) {
           b_point = p;
           msg(L"Search: %ls", searchtext);
           display();
-          goto restart_backward_search;
+          goto backward_search;
 	}
 }
 msg(L"Failing Backward Search: %ls", searchtext);
@@ -995,7 +995,7 @@ dispmsg();
 search_failed=1;
 search_point=b_point;
 b_point=pos(b_ebuf);
-restart_backward_search:
+@/@t\4@> backward_search:
 
 @ @<Global variables@>=
 wchar_t searchtext[STRBUF_M];
