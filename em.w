@@ -962,38 +962,32 @@ void open_line(void)
 
 		if (*s == L'\0') {
                   b_point = pp;
-                  msg(L"Search: %ls", searchtext);
+                  msg(L"Forward Search: %ls", searchtext);
                   display();
 		  goto start_search;
                 }
 	}
-
-        msg(L"Failing Search: %ls", searchtext);
+        msg(L"Failing Forward Search: %ls", searchtext);
         dispmsg();
         b_point = 0;
 
-@ @<Procedures@>=
-point_t search_backwards(point_t start_p, wchar_t *stext)
-{
-	point_t p,pp;
-	wchar_t *s;
-
-	if (0 == wcslen(stext))
-		return start_p;
-
-	for (p=start_p; p >= 0; p--) {
-		for (s=stext, pp=p; *s == *ptr(pp) && *s != L'\0' && pp >= 0; s++, pp++)
+@ @<Search backwards@>=
+	for (point_t p=b_point; p >= 0; p--) {
+		point_t pp;
+                wchar_t *s;
+		for (s=searchtext, pp=p; *s == *ptr(pp) && *s != L'\0' && pp >= 0; s++, pp++)
 			;
 
 		if (*s == L'\0') {
-			if (p > 0)
-				p--;
-			return p;
+                  b_point = p;
+                  msg(L"Backward Search: %ls", searchtext);
+                  display();
+                  goto start_search;
 		}
 	}
-
-	return -1;
-}
+msg(L"Failing Backward Search: %ls", searchtext);
+dispmsg();
+b_point = pos(b_ebuf);
 
 @ @<Global variables@>=
 wchar_t searchtext[STRBUF_M];
@@ -1029,6 +1023,10 @@ void search(void)
               L'\x07': /* C-g */
 			b_point = o_point;
 			return;
+	    case
+		L'\x12': /* C-r */
+			@<Search backwards@>@;
+			break;
 	    case
 		L'\x13': /* C-s */
 			@<Search forward@>@;
