@@ -957,6 +957,7 @@ void open_line(void)
 }
 
 @ @<Search forward@>=
+	search_failed = 0;
 	for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
                 point_t pp;
 		wchar_t *s;
@@ -972,9 +973,12 @@ void open_line(void)
 	}
         msg(L"Failing Forward Search: %ls", searchtext);
         dispmsg();
+search_failed=1;
+search_point=b_point;
         b_point = 0;
 
 @ @<Search backwards@>=
+	search_failed = 0;
 	if (b_point==0) goto fail_search;
 	for (point_t p=b_point-1; p >= 0; p--) {
 		point_t pp;
@@ -992,17 +996,25 @@ void open_line(void)
 fail_search:
 msg(L"Failing Backward Search: %ls", searchtext);
 dispmsg();
+search_failed=1;
+search_point=b_point;
 b_point = pos(b_ebuf);
 
 @ @<Global variables@>=
 wchar_t searchtext[STRBUF_M];
 
-@ @<Procedures@>=
+@ Variable |search_failed| is a flag to leave cursor on last successful search
+position when we press C-m right after failed search. And |search_point| is
+the variable to hold that position.
+
+@<Procedures@>=
 void search(void)
 {
 	int cpos = 0;	
 	wint_t c;
 	point_t o_point = b_point;
+	int search_failed = 0;
+	point_t search_point = b_point;
 
 	searchtext[0] = L'\0';
 	msg(L"Search: ");
@@ -1021,8 +1033,7 @@ void search(void)
 	  switch(c) {
 	    case
               L'\x0a': /* C-m */
-			searchtext[cpos] = L'\0';
-			flushinp(); /* discard any escape sequence without writing in buffer */
+			if (search_failed) b_point = search_point;
 			return;
 	    case
               L'\x07': /* C-g */
