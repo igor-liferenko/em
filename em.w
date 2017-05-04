@@ -953,30 +953,26 @@ void open_line(void)
   msg(L"open_line() not implemented yet");
 }
 
-@ @<Procedures@>=
-point_t search_forward(point_t start_p, wchar_t *stext)
-{
-	point_t end_p = pos(b_ebuf);
-	point_t p,pp;
-	wchar_t *s;
-
-	if (0 == wcslen(stext))
-		return start_p;
-
-	for (p=start_p; p < end_p; p++) {
-		for (s=stext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++)
+@ @<Search forward@>=
+	for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
+                point_t pp;
+		wchar_t *s;
+		for (s=searchtext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++)
 			;
 
-		if (*s == L'\0')
-			return pp;
+		if (*s == L'\0') {
+                  b_point = pp;
+                  msg(L"Search: %ls", searchtext);
+                  display();
+		  goto start_search;
+                }
 	}
 
-	return -1;
-/* TODO: do not use it as function (use it as section) in order that it will be possible
-not to pass status via |-1|; and the same for |search_backwards| */
-@^TODO@>
-}
+        msg(L"Failing Search: %ls", searchtext);
+        dispmsg();
+        b_point = 0;
 
+@ @<Procedures@>=
 point_t search_backwards(point_t start_p, wchar_t *stext)
 {
 	point_t p,pp;
@@ -1008,14 +1004,14 @@ void search(void)
 	int cpos = 0;	
 	wint_t c;
 	point_t o_point = b_point;
-	point_t found;
 
 	searchtext[0] = L'\0';
 	msg(L"Search: ");
 	dispmsg();
 	cpos = (int) wcslen(searchtext);
 
-	for (;;) {
+	start_search:
+	while (1) {
 	  refresh(); /* update the real screen */
 	  get_wch(&c);
 	  if (c < L' ' && c != L'\x07' && c != L'\x08' && c != L'\x13'
@@ -1025,27 +1021,17 @@ void search(void)
 
 	  switch(c) {
 	    case
-              L'\x0a': /* ctrl-m */
+              L'\x0a': /* C-m */
 			searchtext[cpos] = L'\0';
 			flushinp(); /* discard any escape sequence without writing in buffer */
 			return;
 	    case
-              L'\x07': /* ctrl-g */
+              L'\x07': /* C-g */
 			b_point = o_point;
 			return;
 	    case
-		L'\x13': /* ctrl-s, do the search */
-			found = search_forward(b_point, searchtext);
-			if (found != -1 ) {
-				b_point = found;
-				msg(L"Search: %ls", searchtext);
-				display();
-			}
-			else {
-				msg(L"Failing Search: %ls", searchtext);
-				dispmsg();
-				b_point = 0;
-			}
+		L'\x13': /* C-s */
+			@<Search forward@>@;
 			break;
 	    case
                 L'\x7f': /* BackSpace */
