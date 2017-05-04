@@ -1025,10 +1025,6 @@ void search(void)
 	while (1) {
 	  refresh(); /* update the real screen */
 	  get_wch(&c);
-	  if (c < L' ' && c != L'\x07' && c != L'\x08' && c != L'\x13'
-            && c != L'\x12' && c != L'\x0a')
-	    continue; /* ignore control keys other than in |switch| below */
-/* FIXME: do this via |iswctrl| in |default| below */
 
 	  switch(c) {
 	    case
@@ -1059,15 +1055,15 @@ void search(void)
 			dispmsg();
 			break;
 	    default:
+			if (iswcntrl(c)) break; /* ignore non-assigned control keys */
 			if (cpos < STRBUF_M - 1) {
 				searchtext[cpos++] = (wchar_t) c;
 				searchtext[cpos] = L'\0';
 				msg(L"Search: %ls", searchtext);
 				dispmsg();
 			}
-			break;
-		}
 	}
+    }
 }
 
 @ @<Main program@>=
