@@ -584,8 +584,7 @@ switch(input) {
 		break;
 	case
 		L'\x7f': /* BackSpace */
-		insert(L'\u2190'); /* leftwards arrow */
-		break;
+	@t\4@>
 	case
 		L'\x08': /* C-h */
 		backsp();
@@ -1049,9 +1048,10 @@ void search(void)
 			}
 			break;
 	    case
-		L'\x7f': /* del, erase */
+                L'\x7f': /* BackSpace */
+	    @t\4@>
 	    case
-              L'\x08': /* backspace */
+		L'\x08': /* C-h */
 			if (cpos == 0)
 				continue;
 			searchtext[--cpos] = L'\0';
