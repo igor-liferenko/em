@@ -957,47 +957,43 @@ void open_line(void)
 }
 
 @ @<Search forward@>=
-	search_failed = 0;
-	for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
-                point_t pp;
-		wchar_t *s;
-		for (s=searchtext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++)
-			;
-
-		if (*s == L'\0') {
-                  b_point = pp;
-                  msg(L"Search: %ls", searchtext);
-                  display();
-		  goto forward_search_ok;
-                }
+search_failed = 0;
+for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
+	point_t pp;
+	wchar_t *s;
+	for (s=searchtext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++) ;
+	if (*s == L'\0') {
+          b_point = pp;
+          msg(L"Search: %ls", searchtext);
+          display();
+          goto restart_forward_search;
 	}
+}
 msg(L"Failing Forward Search: %ls", searchtext);
 dispmsg();
 search_failed=1;
 search_point=b_point;
-forward_search_ok:
+restart_forward_search:
 
 @ @<Search backwards@>=
-	search_failed = 0;
-	for (point_t p=b_point; p > 0;) {
-		p--;
-		point_t pp;
-                wchar_t *s;
-		for (s=searchtext, pp=p; *s == *ptr(pp) && *s != L'\0' && pp >= 0; s++, pp++)
-			;
-
-		if (*s == L'\0') {
-                  b_point = p;
-                  msg(L"Search: %ls", searchtext);
-                  display();
-                  goto backward_search_ok;
-		}
+search_failed = 0;
+for (point_t p=b_point; p > 0;) {
+	p--;
+	point_t pp;
+        wchar_t *s;
+	for (s=searchtext, pp=p; *s == *ptr(pp) && *s != L'\0' && pp >= 0; s++, pp++) ;
+	if (*s == L'\0') {
+          b_point = p;
+          msg(L"Search: %ls", searchtext);
+          display();
+          goto restart_backward_search;
 	}
+}
 msg(L"Failing Backward Search: %ls", searchtext);
 dispmsg();
 search_failed=1;
 search_point=b_point;
-backward_search_ok:
+restart_backward_search:
 
 @ @<Global variables@>=
 wchar_t searchtext[STRBUF_M];
