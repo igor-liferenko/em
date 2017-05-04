@@ -968,19 +968,19 @@ void open_line(void)
                   b_point = pp;
                   msg(L"Search: %ls", searchtext);
                   display();
-		  goto start_search;
+		  goto forward_search_ok;
                 }
 	}
-        msg(L"Failing Forward Search: %ls", searchtext);
-        dispmsg();
+msg(L"Failing Forward Search: %ls", searchtext);
+dispmsg();
 search_failed=1;
 search_point=b_point;
-        b_point = 0;
+forward_search_ok:
 
 @ @<Search backwards@>=
 	search_failed = 0;
-	if (b_point==0) goto fail_search;
-	for (point_t p=b_point-1; p >= 0; p--) {
+	for (point_t p=b_point; p > 0;) {
+		p--;
 		point_t pp;
                 wchar_t *s;
 		for (s=searchtext, pp=p; *s == *ptr(pp) && *s != L'\0' && pp >= 0; s++, pp++)
@@ -990,15 +990,14 @@ search_point=b_point;
                   b_point = p;
                   msg(L"Search: %ls", searchtext);
                   display();
-                  goto start_search;
+                  goto backward_search_ok;
 		}
 	}
-fail_search:
 msg(L"Failing Backward Search: %ls", searchtext);
 dispmsg();
 search_failed=1;
 search_point=b_point;
-b_point = pos(b_ebuf);
+backward_search_ok:
 
 @ @<Global variables@>=
 wchar_t searchtext[STRBUF_M];
@@ -1021,7 +1020,6 @@ void search(void)
 	dispmsg();
 	cpos = (int) wcslen(searchtext);
 
-	start_search:
 	while (1) {
 	  refresh(); /* update the real screen */
 	  get_wch(&c);
