@@ -401,7 +401,12 @@ void quit(void)
 
 @* File input/output.
 
-@ Save file name into global variable for easier usage in procedures.
+@ Save file name into global variable |b_fname| in order that it will be
+visible from procedures.
+
+Also get absolute name of opened file to use it in |DB_FILE|. For this we
+use facilities provided by the OS---via |fopen| call. Then we use
+|readlink| to get full path from \.{proc} filesystem by file descriptor.
 
 @<Header files@>=
 #include <stdio.h> /* |snprintf|, |fopen|, |fclose|, |fileno| */
@@ -1019,6 +1024,9 @@ wchar_t searchtext[STRBUF_M];
 @ Variable |search_failed| is a flag to leave cursor on last successful search
 position when we press C-m right after failed search. And |search_point| is
 the variable to hold that position.
+
+/* TODO: make search case-insensitive */
+@^TODO@>
 
 @<Procedures@>=
 void search(void)
