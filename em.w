@@ -1215,7 +1215,7 @@ if ((db_out=fopen(DB_FILE,"w"))==NULL) {
   fatal(L"Could not open DB file for writing: %s\n", strerror(errno));
 }
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
-  if (strncmp(db_line, b_absname, strlen(b_fname)) == 0)
+  if (strncmp(db_line, b_absname, strlen(b_absname)) == 0)
     continue;
   fprintf(db_out,"%s",db_line);
 }
