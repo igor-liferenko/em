@@ -982,6 +982,7 @@ void open_line(void)
 }
 
 @ @<Search forward@>=
+if (!search_failed) search_point=b_point;
 search_failed=0;
 for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
 	point_t pp;
@@ -997,11 +998,11 @@ for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
 msg(L"Failing Forward Search: %ls", searchtext);
 dispmsg();
 search_failed=1;
-search_point=b_point;
 b_point=0;
 @/@t\4@> forward_search:
 
-@ @<Search backwards@>=
+@ @<Search backward@>=
+if (!search_failed) search_point=b_point;
 search_failed=0;
 for (point_t p=b_point; p > 0;) {
 	p--;
@@ -1018,7 +1019,6 @@ for (point_t p=b_point; p > 0;) {
 msg(L"Failing Backward Search: %ls", searchtext);
 dispmsg();
 search_failed=1;
-search_point=b_point;
 b_point=pos(b_ebuf);
 @/@t\4@> backward_search:
 
@@ -1039,7 +1039,7 @@ void search(void)
 	wint_t c;
 	point_t o_point = b_point;
 	int search_failed = 0;
-	point_t search_point = b_point;
+	point_t search_point;
 
 	searchtext[0] = L'\0';
 	msg(L"Search: ");
@@ -1061,7 +1061,7 @@ void search(void)
 			return;
 	    case
 		L'\x12': /* C-r */
-			@<Search backwards@>@;
+			@<Search backward@>@;
 			break;
 	    case
 		L'\x13': /* C-s */
