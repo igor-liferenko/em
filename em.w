@@ -982,7 +982,8 @@ void open_line(void)
 }
 
 @ @<Search forward@>=
-if (!search_failed) search_point=b_point;
+if (!search_failed) search_point=b_point; /* do not save point on further attempts to search if
+  we already failed */
 search_failed=0;
 for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
 	point_t pp;
@@ -1002,7 +1003,8 @@ b_point=0;
 @/@t\4@> forward_search:
 
 @ @<Search backward@>=
-if (!search_failed) search_point=b_point;
+if (!search_failed) search_point=b_point; /* do not save point on further attempts to search if
+  we already failed */
 search_failed=0;
 for (point_t p=b_point; p > 0;) {
 	p--;
