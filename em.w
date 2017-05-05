@@ -1118,6 +1118,7 @@ int main(int argc, char **argv)
         initscr(); /* start curses mode */
         raw();
         noecho();
+	nonl(); /* pass proper value (|0x0d|) for C-m and ENTER keypresses from |get_wch| */
 
 	while (!done) {
 		display();
