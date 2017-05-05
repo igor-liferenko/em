@@ -552,7 +552,6 @@ the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
 
 @ @<Get key@>=
 switch(input) {
-	@<Scan control sequences@>@;
 	case
 		L'\x0f': /* C-o */
 		open_line();
@@ -624,6 +623,7 @@ switch(input) {
 		L'\x0d': /* C-m */
 		insert(L'\x0a');
 		break;
+	@t\4@> @<Scan control sequences@>@;
 	default:
 		insert((wchar_t) input);
 }
@@ -644,6 +644,8 @@ sequences and keyboard buttons by which they are generated:
 |0x1B 0x4F 0x36 == PageDown|
 }
 \medskip
+
+This section is used at the end of |switch| statement, because fallthrough is used in \CEE/.
 
 @<Scan control sequences@>=
         case
