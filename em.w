@@ -404,7 +404,13 @@ void quit(void)
 @ Save file name into global variable |b_fname| in order that it will be
 visible from procedures.
 
-Also get absolute name of opened file to use it in |DB_FILE|. For this we
+@<Global...@>=
+char *b_fname;
+
+@ @<Save file name@>=
+b_fname=argv[1];
+
+@ Get absolute name of opened file to use it in |DB_FILE|. For this we
 use facilities provided by the OS---via |fopen| call. Then we use
 |readlink| to get full path from \.{proc} filesystem by file descriptor.
 
@@ -414,21 +420,23 @@ use facilities provided by the OS---via |fopen| call. Then we use
 #include <unistd.h> /* |readlink| */
 
 @ @<Global...@>=
-char *b_fname;
-char flink[PATH_MAX+1];
 char b_absname[PATH_MAX+1];
 
-@ @<Save file name@>=
-FILE *absfp;
+@ @<Get absolute file name@>=
+char tmpfname[PATH_MAX+1];
 ssize_t r;
-b_fname=argv[1];
-if ((absfp = fopen(b_fname, "r")) == NULL)
-  fatal(L"Cannot open file.\x0a");
-snprintf(flink, ARRAY_SIZE(flink), "/proc/self/fd/%d", fileno(absfp));
-if ((r=readlink(flink, b_absname, ARRAY_SIZE(b_absname)-1))==-1)
+snprintf(tmpfname, ARRAY_SIZE(tmpfname), "/proc/self/fd/%d", fileno(fp));
+if ((r=readlink(tmpfname, b_absname, ARRAY_SIZE(b_absname)-1))==-1)
   fatal(L"Could not get absolute path.\x0a");
-b_fname[r]='\0';
-fclose(absfp);
+b_absname[r]='\0';
+
+@ @<Open file@>=
+if ((fp = fopen(b_fname, "r")) == NULL)
+  if ((fp = fopen(b_fname, "w")) == NULL) /* create file if it does not exist */
+    fatal(L"Failed to open file \"%s\".\x0a", b_fname);
+
+@ @<Close file@>=
+fclose(fp);
 
 @*1 Saving buffer into file.
 
@@ -498,14 +506,6 @@ to editing buffer.
 @ @<Global...@>=
 wchar_t buf[CHUNK]; /* we read the input into this array */
 wchar_t *buf_end; /* where the next char goes */
-
-@ @<Insert file@>=
-FILE *fp;
-if ((fp = fopen(b_fname, "r")) == NULL)
-  if ((fp = fopen(b_fname, "w")) == NULL) /* create file if it does not exist */
-    fatal(L"Failed to open file \"%s\".\n", b_fname);
-@<Read file@>@;
-fclose(fp);
 
 @ We read file byte-by-byte, instead of reading the entire file
 into memory in one go (which is faster), because UTF-8 data must be
@@ -1104,10 +1104,13 @@ int main(int argc, char **argv)
 
 	/* TODO: make second argument to be the line number to be shown when file is opened */
 @^TODO@>
-
+	FILE *fp;
 	@<Save file name@>@;
+	@<Open file@>@;
+	@<Get absolute...@>@;
 	@<Restore cursor@>@;
-	@<Insert file@>@;
+	@<Read file@>@;
+	@<Close file@>@;
 	@<Ensure that restored position is inside buffer@>@;
 
         initscr(); /* start curses mode */
@@ -1152,7 +1155,7 @@ variables.
 FILE *db_in, *db_out;
 char db_line[DB_LINE_SIZE+1];
 
-@ We do this before |@<Insert file@>|, not after, because it is easier to
+@ We do this before |@<Read file@>|, not after, because it is easier to
 abort if |DB_FILE| cannot be opened.
 
 @<Restore cursor@>=
