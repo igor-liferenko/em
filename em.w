@@ -737,7 +737,18 @@ void dispmsg()
 	if (msgflag) {
 		standout();
 		move(MSGLINE, 0);
-		addwstr(msgline);
+		for(wchar_t *k=msgline; *k!=L'\0'; k++) {
+                        cchar_t my_cchar;
+                        memset(&my_cchar, 0, sizeof(my_cchar));
+                        my_cchar.chars[0] = *k;
+                        my_cchar.chars[1] = L'\0';
+                        if (iswprint((wint_t) *k))
+                                add_wch(&my_cchar);
+                        else {
+                                wchar_t *ctrl = wunctrl(&my_cchar);
+                                addwstr(ctrl);
+                        }
+		}
 		standend();
 		clrtoeol();
 		msgflag = FALSE;
@@ -1054,7 +1065,7 @@ void search(void)
 
 	  switch(c) {
 	    case
-              L'\x0a': /* C-m */
+              L'\x0d': /* C-m */
 			if (search_failed) b_point = search_point;
 			return;
 	    case
@@ -1081,7 +1092,6 @@ void search(void)
 			dispmsg();
 			break;
 	    default:
-			if (iswcntrl(c)) break; /* ignore non-assigned control keys */
 			if (cpos < STRBUF_M - 1) {
 				searchtext[cpos++] = (wchar_t) c;
 				searchtext[cpos] = L'\0';
