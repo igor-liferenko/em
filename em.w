@@ -403,11 +403,27 @@ void quit(void)
 
 @ Save file name into global variable for easier usage in procedures.
 
-@<Global...@>=
+@<Header files@>=
+#include <stdio.h> /* |snprintf|, |fopen|, |fclose|, |fileno| */
+#include <limits.h> /* |PATH_MAX| */
+#include <unistd.h> /* |readlink| */
+
+@ @<Global...@>=
 char *b_fname;
+char flink[PATH_MAX+1];
+char b_absname[PATH_MAX+1];
 
 @ @<Save file name@>=
-b_fname = argv[1];
+FILE *absfp;
+ssize_t r;
+b_fname=argv[1];
+if ((absfp = fopen(b_fname, "r")) == NULL)
+  fatal(L"Cannot open file.\x0a");
+snprintf(flink, ARRAY_SIZE(flink), "/proc/self/fd/%d", fileno(absfp));
+if ((r=readlink(flink, b_absname, ARRAY_SIZE(b_absname)-1))==-1)
+  fatal(L"Could not get absolute path.\x0a");
+b_fname[r]='\0';
+fclose(absfp);
 
 @*1 Saving buffer into file.
 
@@ -1073,17 +1089,18 @@ int main(int argc, char **argv)
 	print the file name to stdout,
 	and remove "bin/tmp" */
 @^TODO@>
-	@<Save file name@>@;
-/* TODO: make second argument to be the line number to be shown when file is opened */
+
+	/* TODO: make second argument to be the line number to be shown when file is opened */
 @^TODO@>
 
-	initscr(); /* start curses mode */
-	raw();
-	noecho();
-
+	@<Save file name@>@;
 	@<Restore cursor@>@;
 	@<Insert file@>@;
 	@<Ensure that restored position is inside buffer@>@;
+
+        initscr(); /* start curses mode */
+        raw();
+        noecho();
 
 	while (!done) {
 		display();
@@ -1136,17 +1153,17 @@ if ((db_out=fopen(DB_FILE,"w"))==NULL) {
 }
 int file_is_locked = 0;
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
-  if (strncmp(db_line, b_fname, strlen(b_fname)) == 0) {
-    /* FIXME: check that |strlen(b_fname)<DB_LINE_SIZE);| */
+  if (strncmp(db_line, b_absname, strlen(b_absname)) == 0) {
+    /* FIXME: check that |strlen(b_absname)<DB_LINE_SIZE);| */
 @^FIXME@>
-      if (sscanf(db_line+strlen(b_fname), "%ld", &b_point) != 1)
+      if (sscanf(db_line+strlen(b_absname), "%ld", &b_point) != 1)
         file_is_locked = 1;
     continue;
   }
   fprintf(db_out,"%s",db_line);
 }
 fclose(db_in);
-fprintf(db_out,"%s lock\n",b_fname);
+fprintf(db_out,"%s lock\n",b_absname);
 fclose(db_out);
 if (file_is_locked)
   fatal(L"File is locked.\n");
@@ -1178,12 +1195,12 @@ if ((db_out=fopen(DB_FILE,"w"))==NULL) {
   fatal(L"Could not open DB file for writing: %s\n", strerror(errno));
 }
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
-  if (strncmp(db_line, b_fname, strlen(b_fname)) == 0)
+  if (strncmp(db_line, b_absname, strlen(b_fname)) == 0)
     continue;
   fprintf(db_out,"%s",db_line);
 }
 fclose(db_in);
-fprintf(db_out,"%s %ld\n",b_fname,b_point);
+fprintf(db_out,"%s %ld\n",b_absname,b_point);
 fclose(db_out);
 
 @ Here, besides reading user input, we handle resize event. We pass
