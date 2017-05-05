@@ -625,6 +625,10 @@ switch(input) {
 		L'\x1a': /* C-z */
 		quit();
 		break;
+	case
+		L'\x0d': /* C-m */
+		insert(L'\x0a');
+		break;
 	default:
 		insert((wchar_t) input);
 }
@@ -950,7 +954,7 @@ void insert(wchar_t input)
 	if (b_gap == b_egap && !growgap(CHUNK)) return; /* if gap size is zero,
 		grow gap */
 	movegap(b_point);
-	*b_gap++ = input == L'\r' ? L'\n' : input;
+	*b_gap++ = input;
 	b_point++;
 }
 
