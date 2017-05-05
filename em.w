@@ -1157,14 +1157,17 @@ variables.
 FILE *db_in, *db_out;
 char db_line[DB_LINE_SIZE+1];
 
-@ We do this before |@<Read file@>|, not after, because it is easier to
-abort if |DB_FILE| cannot be opened.
+@ We do this before |@<Read file@>|, not after, because it is not necessary to free memory
+before the call to |fatal|.
 
 @<Restore cursor@>=
-if ((db_in=fopen(DB_FILE,"a+"))==NULL) /* |"a+"| creates empty file if it does not exist */
+if ((db_in=fopen(DB_FILE,"a+"))==NULL) { /* |"a+"| creates empty file if it does not exist */
+  fclose(fp);
   fatal(L"Could not open DB file for reading: %s\n", strerror(errno));
+}
 unlink(DB_FILE);
 if ((db_out=fopen(DB_FILE,"w"))==NULL) {
+  fclose(fp);
   fclose(db_in);
   fatal(L"Could not open DB file for writing: %s\n", strerror(errno));
 }
