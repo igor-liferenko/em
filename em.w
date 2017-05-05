@@ -655,14 +655,29 @@ sequences and keyboard buttons by which they are generated:
                 L'\x5b':
                 if (scanning) break; /* continue scanning */
 	case
-		L'\x33':
+		L'\x4f':
                 if (scanning) break; /* continue scanning */
+	case
+		L'\x33':
+                if (scanning) {
+			delete();
+			scanning=0; /* match found */
+			break;
+		}
 	case
 		L'\x35':
-                if (scanning) break; /* continue scanning */
-	case
-		L'\x36':
-                if (scanning) break; /* continue scanning */
+                if (scanning) {
+			pgup();
+			scanning=0; /* match found */
+			break;
+		}
+        case
+                L'\x36':
+                if (scanning) {
+			pgdown();
+			scanning=0; /* match found */
+			break;
+		}
         case
                 L'\x41':
                 if (scanning) {
