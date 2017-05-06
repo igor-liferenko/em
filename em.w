@@ -550,80 +550,6 @@ opened. Before we open a file, lock is created in |BD_FILE| in
 in turn is executed right before the wanted file is opened). Upon exiting
 the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
 
-@ @<Get key@>=
-switch(input) {
-	case
-		L'\x0f': /* C-o */
-		open_line();
-		break;
-	case
-		L'\x18': /* C-x */
-		@<Remove lock and save cursor@>@;
-		done = 1; /* quit without saving */
-		break;
-	case
-		L'\x12': /* C-r */
-	@t\4@>
-	case
-		L'\x13': /* C-s */
-		search();
-		break;
-	case
-		L'\x1d': /* C-] */
-		bottom();
-		break;
-	case
-		L'\x10': /* C-p */
-		up();
-		break;
-	case
-		L'\x0e': /* C-n */
-		down();
-		break;
-	case
-		L'\x02': /* C-b */
-		left();
-		break;
-	case
-		L'\x06': /* C-f */
-		right();
-		break;
-	case
-		L'\x05': /* C-e */
-		lnend();
-		break;
-	case
-		L'\x01': /* C-a */
-		lnbegin();
-		break;
-	case
-		L'\x04': /* C-d */
-		delete();
-		break;
-	case
-		L'\x08': /* C-h */
-		backsp();
-		break;
-	case
-		L'\x1e': /* C-6 */
-		pgup();
-		break;
-	case
-		L'\x16': /* C-v */
-		pgdown();
-		break;
-	case
-		L'\x1a': /* C-z */
-		quit();
-		break;
-	case
-		L'\x0d': /* C-m */
-		insert(L'\x0a');
-		break;
-	default:
-		insert((wchar_t) input);
-}
-
 @ Reverse scan for start of logical line containing offset.
 
 @<Procedures@>=
@@ -1124,7 +1050,7 @@ int main(int argc, char **argv)
 
 	while (!done) {
 		display();
-		@<Read and record one char@>@;
+		@<Get key@>@;
 	}
 
 	if (scrap != NULL) free(scrap);
@@ -1248,7 +1174,7 @@ if |get_wch| passed a signal or a char. The return value is
 In our case, only one signal is used---|KEY_RESIZE|.
 So, we do not check |input| for this; we just do resize by default if a signal is passed.
 
-@<Read and record one char@>=
+@<Get key@>=
 if (get_wch(&input) == KEY_CODE_YES) {
   switch(input) {
     case KEY_RESIZE:
@@ -1286,7 +1212,78 @@ if (get_wch(&input) == KEY_CODE_YES) {
   }
 }
 else {
-  @<Get key@>@;
+switch(input) {
+	case
+		L'\x0f': /* C-o */
+		open_line();
+		break;
+	case
+		L'\x18': /* C-x */
+		@<Remove lock and save cursor@>@;
+		done = 1; /* quit without saving */
+		break;
+	case
+		L'\x12': /* C-r */
+	@t\4@>
+	case
+		L'\x13': /* C-s */
+		search();
+		break;
+	case
+		L'\x1d': /* C-] */
+		bottom();
+		break;
+	case
+		L'\x10': /* C-p */
+		up();
+		break;
+	case
+		L'\x0e': /* C-n */
+		down();
+		break;
+	case
+		L'\x02': /* C-b */
+		left();
+		break;
+	case
+		L'\x06': /* C-f */
+		right();
+		break;
+	case
+		L'\x05': /* C-e */
+		lnend();
+		break;
+	case
+		L'\x01': /* C-a */
+		lnbegin();
+		break;
+	case
+		L'\x04': /* C-d */
+		delete();
+		break;
+	case
+		L'\x08': /* C-h */
+		backsp();
+		break;
+	case
+		L'\x1e': /* C-6 */
+		pgup();
+		break;
+	case
+		L'\x16': /* C-v */
+		pgdown();
+		break;
+	case
+		L'\x1a': /* C-z */
+		quit();
+		break;
+	case
+		L'\x0d': /* C-m */
+		insert(L'\x0a');
+		break;
+	default:
+		insert((wchar_t) input);
+}
 }
 
 @ Utility macros.
