@@ -1222,7 +1222,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   fprintf(db_out,"%s",db_line);
 }
 fclose(db_in);
-if (strstr(b_absname,"COMMIT_EDITMSG")!=NULL) fprintf(db_out,"%s %ld\n",b_absname,b_point);
+if (strstr(b_absname,"COMMIT_EDITMSG")==NULL) fprintf(db_out,"%s %ld\n",b_absname,b_point);
 fclose(db_out);
 
 @ Here, besides reading user input, we handle resize event. We pass
