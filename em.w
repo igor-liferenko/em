@@ -601,9 +601,6 @@ switch(input) {
 		delete();
 		break;
 	case
-		L'\x7f': /* BackSpace */
-	@t\4@>
-	case
 		L'\x08': /* C-h */
 		backsp();
 		break;
@@ -1282,6 +1279,9 @@ if (get_wch(&input) == KEY_CODE_YES) {
         break;
     case KEY_DC:
         delete();
+        break;
+    case KEY_BACKSPACE:
+        backsp();
         break;
   }
 }
