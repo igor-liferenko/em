@@ -1,11 +1,11 @@
 \let\lheader\rheader
 \datethis
 
-@s delete normal
-@s new normal
-@s cchar_t int
 @s wint_t int @q this is an exception to make it work with original CWEB @>
 @s ssize_t int @q this is an exception to make it work with original CWEB @>
+@s delete normal @q this is an exception to make it work with original CWEB @>
+@s new normal @q this is an exception to make it work with original CWEB @>
+@s cchar_t int
 
 @* Buffer-gap algorithm. EM is a text editor. It is implemented
 using wide-character API and ncurses library. EM uses ``buffer-gap''
@@ -1347,7 +1347,7 @@ else {
   |KEY_BACKSPACE|, |KEY_RESIZE|, |KEY_LEFT|, |KEY_RIGHT|, |KEY_UP|, |KEY_DOWN|, |KEY_HOME|,
   |KEY_END|, |KEY_NPAGE|, |KEY_PPAGE|, |KEY_DC|, |KEY_BACKSPACE|, |LINES|, |move|, |noecho|,
   |nonl|, |noraw|, |OK|, |raw|, |refresh|, |standend|, |standout|, |stdscr|, |TRUE|, |wunctrl|,
-  |KEY_CODE_YES| */
+  |KEY_CODE_YES|, |cchar_t| */
 #include <stdio.h> /* |fclose|, |fgets|, |fileno|, |snprintf|, |fopen|, |fprintf|, |sscanf| */
 #include <locale.h> /* |LC_CTYPE|, |setlocale| */
 #include <wchar.h> /* |fgetwc|, |fputwc|, |vswprintf|, |vwprintf|, |wcslen|, |WEOF| */
