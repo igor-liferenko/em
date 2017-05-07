@@ -919,7 +919,7 @@ for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
 	for (s=searchtext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = pp;
-          msg(L"Search: %ls", searchtext);
+          msg(L"Search Forward: %ls", searchtext);
           display();
           goto forward_search;
 	}
@@ -941,7 +941,7 @@ for (point_t p=b_point; p > 0;) {
 	for (s=searchtext, pp=p; *s == *ptr(pp) && *s != L'\0' && pp >= 0; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = p;
-          msg(L"Search: %ls", searchtext);
+          msg(L"Search Backward: %ls", searchtext);
           display();
           goto backward_search;
 	}
@@ -972,8 +972,6 @@ void search(void)
 	point_t search_point;
 
 	searchtext[0] = L'\0';
-	msg(L"Search: ");
-	dispmsg();
 	cpos = (int) wcslen(searchtext);
 
 	while (1) {
@@ -1248,9 +1246,14 @@ switch(input) {
 		break;
 	case
 		L'\x12': /* C-r */
-	@t\4@>
+		msg(L"Search Backward: ");
+		dispmsg();
+		search();
+		break;
 	case
 		L'\x13': /* C-s */
+	        msg(L"Search Forward: ");
+	        dispmsg();
 		search();
 		break;
 	case
