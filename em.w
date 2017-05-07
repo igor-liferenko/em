@@ -939,7 +939,7 @@ for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
           goto forward_search;
 	}
 }
-if (search_failed) msg(L"There are no occurrences of this text: %ls", searchtext);
+if (search_failed) msg(L"No occurrences: %ls", searchtext);
 else {
   msg(L"Failing Forward Search: %ls", searchtext);
   search_failed=1;
@@ -965,7 +965,7 @@ for (point_t p=b_point; p > 0;) {
           goto backward_search;
 	}
 }
-if (search_failed) msg(L"There are no occurrences of this text: %ls", searchtext);
+if (search_failed) msg(L"No occurrences: %ls", searchtext);
 else {
   msg(L"Failing Backward Search: %ls", searchtext);
   search_failed=1;
