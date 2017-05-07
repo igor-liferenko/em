@@ -219,7 +219,8 @@ editor because of its simplicity and efficient use of memory.
 @ This is the outline of our program.
 
 @d MSGLINE         (LINES-1)
-@d CHUNK  8096L /* TODO: when it was 512 and I pasted copied text of ~600 characters,
+@d CHUNK  8096L /* TODO: when it was 512 and I pasted from clipboard
+  (or typed manually in one go) text of ~600 characters,
   program segfaulted; reproduce this again and determine the cause */
 @^TODO@>
 
@@ -863,13 +864,13 @@ void pgup(void)
 }
 
 @ @<Procedures@>=
-void insert(wchar_t input)
+void insert(wchar_t c)
 {
 	assert(b_gap <= b_egap);
 	if (b_gap == b_egap && !growgap(CHUNK)) return; /* if gap size is zero,
 		grow gap */
 	movegap(b_point);
-	*b_gap++ = input;
+	*b_gap++ = c;
 	b_point++;
 }
 
@@ -896,6 +897,8 @@ void open_line(void)
   msg(L"open_line() not implemented yet");
 }
 
+@* Searching text.
+
 @ Searching is wrapped. This works by simply resetting cursor position to the beginning of
 buffer when search fails. Next time when search button is pressed, |b_point| will
 hold value 0, thus search will start from the beginning of buffer. (Initially, |b_point|
@@ -915,11 +918,10 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 	for (s=searchtext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = pp;
-          msg(L"Search Forward: %ls", searchtext); /* FIXME: is this necessary? */
-@^FIXME@>
+          msg(L"Search Forward: %ls", searchtext);
           display();
 	  search_failed=0;
-          goto forward_search;
+          goto search_forward;
 	}
 }
 if (search_failed) msg(L"No occurrences: %ls", searchtext);
@@ -930,7 +932,7 @@ else {
 }
 dispmsg();
 b_point=0;
-@/@t\4@> forward_search:
+@/@t\4@> search_forward:
 
 @ The logic is analogous to |@<Search forward@>|.
 
@@ -942,11 +944,10 @@ for (point_t p=b_point; p > 0;) {
 	for (s=searchtext, pp=p; *s == *ptr(pp) && *s != L'\0' && pp >= 0; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = p;
-          msg(L"Search Backward: %ls", searchtext); /* FIXME: is this necessary? */
-@^FIXME@>
+          msg(L"Search Backward: %ls", searchtext);
           display();
 	  search_failed=0;
-          goto backward_search;
+          goto search_backward;
 	}
 }
 if (search_failed) msg(L"No occurrences: %ls", searchtext);
@@ -957,7 +958,7 @@ else {
 }
 dispmsg();
 b_point=pos(b_ebuf);
-@/@t\4@> backward_search:
+@/@t\4@> search_backward:
 
 @ @d STRBUF_M 64
 
@@ -1044,7 +1045,6 @@ void search(direction)
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
-        wint_t input;
 	setlocale(LC_CTYPE, "C.UTF-8");
 	if (argc != 2) fatal(L"usage: em filename\n");
 	/* TODO: if no arg specified, create temporary file in
@@ -1072,7 +1072,7 @@ int main(int argc, char **argv)
 
 	while (!done) {
 		display();
-		@<Get key@>@;
+		@<Handle key@>@;
 	}
 
 	if (scrap != NULL) free(scrap);
@@ -1164,7 +1164,7 @@ is allocated.
 TODO: instead of this check do this: if file is closed without saving and it was
 changed after it was opened,
 saved cursor position must be the same as it was read from |DB_FILE|.
-For this, revert removing |B_MODIFIED| (see \.{git lg em.w}).
+For this, revert removing \\{B_MODIFIED} flag (see \.{git lg em.w}).
 @^TODO@>
 
 @<Ensure that restored...@>=
@@ -1210,11 +1210,12 @@ if |get_wch| passed a signal or a char. The return value is
 |KEY_CODE_YES| if a signal is passed in the argument, |OK| if a char is passed, and
 |ERR| otherwise.
 In our case, only one signal is used---|KEY_RESIZE|.
-So, we do not check |input| for this; we just do resize by default if a signal is passed.
+So, we do not check |c| for this; we just do resize by default if a signal is passed.
 
-@<Get key@>=
-if (get_wch(&input) == KEY_CODE_YES) {
-  switch(input) {
+@<Handle key@>=
+wint_t c;
+if (get_wch(&c) == KEY_CODE_YES) {
+  switch(c) {
     case KEY_RESIZE:
 	continue;
     case KEY_LEFT:
@@ -1252,7 +1253,7 @@ if (get_wch(&input) == KEY_CODE_YES) {
   }
 }
 else {
-  switch(input) {
+  switch(c) {
 	case
 		L'\x0f': /* C-o */
 		open_line();
@@ -1327,7 +1328,7 @@ else {
 		insert(L'\x0a');
 		break;
 	default:
-		insert((wchar_t) input);
+		insert((wchar_t) c);
   }
 }
 
@@ -1345,7 +1346,8 @@ else {
   |ERR|, |FALSE|, |get_wch|, |initscr|, |keypad|, |KEY_BACKSPACE|, |KEY_RESIZE|,
   |KEY_BACKSPACE|, |KEY_RESIZE|, |KEY_LEFT|, |KEY_RIGHT|, |KEY_UP|, |KEY_DOWN|, |KEY_HOME|,
   |KEY_END|, |KEY_NPAGE|, |KEY_PPAGE|, |KEY_DC|, |KEY_BACKSPACE|, |LINES|, |move|, |noecho|,
-  |nonl|, |noraw|, |OK|, |raw|, |refresh|, |standend|, |standout|, |stdscr|, |TRUE|, |wunctrl| */
+  |nonl|, |noraw|, |OK|, |raw|, |refresh|, |standend|, |standout|, |stdscr|, |TRUE|, |wunctrl|,
+  |KEY_CODE_YES| */
 #include <stdio.h> /* |fclose|, |fgets|, |fileno|, |snprintf|, |fopen|, |fprintf|, |sscanf| */
 #include <locale.h> /* |LC_CTYPE|, |setlocale| */
 #include <wchar.h> /* |fgetwc|, |fputwc|, |vswprintf|, |vwprintf|, |wcslen|, |WEOF| */
