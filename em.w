@@ -216,8 +216,7 @@ editor because of its simplicity and efficient use of memory.
 @ This is the outline of our program.
 
 @d MSGLINE         (LINES-1)
-@d TEMPBUF         512
-@d CHUNK  512
+@d CHUNK  8096L
 @d STRBUF_M        64
 
 @c
@@ -266,8 +265,10 @@ void fatal(wchar_t *msg, ...)
 	exit(EXIT_FAILURE);
 }
 
-@ @<Global variables@>=
-wchar_t msgline[TEMPBUF];
+@ @d MSGBUF 512
+
+@<Global variables@>=
+wchar_t msgline[MSGBUF];
 
 @ @<Procedures@>=
 void msg(wchar_t *msg, ...)
@@ -645,9 +646,6 @@ point_t lncolumn(point_t offset, int column)
 	return offset;
 }
 
-@ @<Global variables@>=
-wchar_t temp[TEMPBUF];
-
 @ @<Procedures@>=
 void dispmsg()
 {
@@ -909,10 +907,26 @@ void open_line(void)
   msg(L"open_line() not implemented yet");
 }
 
-@ @<Search forward@>=
-if (!search_failed) search_point=b_point; /* do not save point on further attempts to search
-  if they will fail again */
-search_failed=0;
+@ Searching is wrapped. This works by simply resetting cursor position to the beginning of
+buffer when search fails. Next time when search button is pressed, |b_point| will
+hold value 0, thus search will start from the beginning of buffer. (Initially, |b_point|
+holds current cursor position, so searching is started from this point.)
+
+Besides, here we keep last successful search (or initial---see below) position
+in |search_point|---to
+leave cursor there when we exit after failed search.
+It may seem at first glance that
+it is sufficient to remember previous cursor position before resetting the search 
+point to the beginning of buffer. But this is not so simple: It may also happen that 
+there are no occurrences of search text. So, what will happen is: 1) for the first time
+the search fails, we save |b_point| (which will hold initial cursor position) to |search_point|;
+2) we reset |b_point| to the beginning of buffer; 3) in hope that the search text may occur
+before cursor we press search button again---this saves |b_point| (which is reset to the
+beginning) to |search_point| as in case 1). So, when we exit the search, the cursor is reset
+to the beginning in this case. To prevent this, save |b_point| only when we fail for the
+first time. Use |search_failed| to track this.
+
+@<Search forward@>=
 for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
 	point_t pp;
 	wchar_t *s;
@@ -921,19 +935,23 @@ for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
           b_point = pp;
           msg(L"Search Forward: %ls", searchtext);
           display();
+	  search_failed=0; /* reset */
           goto forward_search;
 	}
 }
-msg(L"Failing Forward Search: %ls", searchtext);
+if (search_failed) msg(L"There are no occurrences of this text: %ls", searchtext);
+else {
+  msg(L"Failing Forward Search: %ls", searchtext);
+  search_failed=1;
+  search_point=b_point;
+}
 dispmsg();
-search_failed=1;
 b_point=0;
 @/@t\4@> forward_search:
 
-@ @<Search backward@>=
-if (!search_failed) search_point=b_point; /* do not save point on further attempts to search
-  if they will fail again */
-search_failed=0;
+@ The logic is analogous to |@<Search forward@>|.
+
+@<Search backward@>=
 for (point_t p=b_point; p > 0;) {
 	p--;
 	point_t pp;
@@ -943,23 +961,24 @@ for (point_t p=b_point; p > 0;) {
           b_point = p;
           msg(L"Search Backward: %ls", searchtext);
           display();
+	  search_failed=0; /* reset */
           goto backward_search;
 	}
 }
-msg(L"Failing Backward Search: %ls", searchtext);
+if (search_failed) msg(L"There are no occurrences of this text: %ls", searchtext);
+else {
+  msg(L"Failing Backward Search: %ls", searchtext);
+  search_failed=1;
+  search_point=b_point;
+}
 dispmsg();
-search_failed=1;
 b_point=pos(b_ebuf);
 @/@t\4@> backward_search:
 
 @ @<Global variables@>=
 wchar_t searchtext[STRBUF_M];
 
-@ Variable |search_failed| is a flag to leave cursor on last successful search
-position when we press C-m right after failed search. And |search_point| is
-the variable to hold that position.
-
-/* TODO: make search case-insensitive */
+@ /* TODO: make search case-insensitive */
 @^TODO@>
 
 @<Procedures@>=
@@ -985,6 +1004,9 @@ void search(void)
 			return;
 	    case
               L'\x07': /* C-g */
+	    @t\4@>
+	    case
+              L'\x1B': /* ESC */
 			b_point = o_point;
 			return;
 	    case
