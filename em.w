@@ -4,8 +4,8 @@
 @s delete normal
 @s new normal
 @s wint_t int @q this is an exception to make it work with original CWEB @>
-@s cchar_t int @q this is an exception to make it work with original CWEB @>
 @s ssize_t int @q this is an exception to make it work with original CWEB @>
+@s cchar_t int
 
 @* Buffer-gap algorithm. EM is a text editor. It is implemented
 using wide-character API and ncurses library. EM uses ``buffer-gap''
