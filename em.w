@@ -3,9 +3,9 @@
 
 @s delete normal
 @s new normal
+@s cchar_t int
 @s wint_t int @q this is an exception to make it work with original CWEB @>
 @s ssize_t int @q this is an exception to make it work with original CWEB @>
-@s cchar_t int
 
 @* Buffer-gap algorithm. EM is a text editor. It is implemented
 using wide-character API and ncurses library. EM uses ``buffer-gap''
@@ -411,6 +411,7 @@ b_fname=argv[1];
 @ Get absolute name of opened file to use it in |DB_FILE|. For this we
 use facilities provided by the OS---via |fopen| call. Then we use
 |readlink| to get full path from \.{proc} filesystem by file descriptor.
+@^system dependencies@>
 
 @<Global...@>=
 char b_absname[PATH_MAX+1];
@@ -644,12 +645,12 @@ void dispmsg()
 	if (msgflag) {
 		standout();
 		move(MSGLINE, 0);
-		for(wchar_t *k=msgline; *k!=L'\0'; k++) {
+		for(wchar_t *p=msgline; *p!=L'\0'; p++) {
                         cchar_t my_cchar;
                         memset(&my_cchar, 0, sizeof(my_cchar));
-                        my_cchar.chars[0] = *k;
+                        my_cchar.chars[0] = *p;
                         my_cchar.chars[1] = L'\0';
-                        if (iswprint((wint_t) *k))
+                        if (iswprint((wint_t) *p))
                                 add_wch(&my_cchar);
                         else
                                 addwstr(wunctrl(&my_cchar));
@@ -973,8 +974,8 @@ void search(direction)
   int cpos = 0;
   wint_t c;
   point_t o_point = b_point;
-  int search_failed = 1;
-  point_t search_point = b_point;
+  int search_failed = 0;
+  point_t search_point;
 
   msg(L"Search %ls:", direction==1?L"Forward":L"Backward");
   dispmsg();
@@ -1246,10 +1247,12 @@ if (get_wch(&input) == KEY_CODE_YES) {
     case KEY_BACKSPACE:
         backsp();
         break;
+    default:
+	msg(L"Not bound");
   }
 }
 else {
-switch(input) {
+  switch(input) {
 	case
 		L'\x0f': /* C-o */
 		open_line();
@@ -1266,6 +1269,10 @@ switch(input) {
 	case
 		L'\x13': /* C-s */
 		search(1);
+		break;
+	case
+		L'\x1B': /* C-[ */
+		top();
 		break;
 	case
 		L'\x1d': /* C-] */
@@ -1321,7 +1328,7 @@ switch(input) {
 		break;
 	default:
 		insert((wchar_t) input);
-}
+  }
 }
 
 @ Utility macros.
@@ -1331,7 +1338,7 @@ switch(input) {
 @ @<Header files@>=
 /* TODO: sort alphabetically */
 @^TODO@>
-#include <stdlib.h> /* |malloc|, |exit|, |EXIT_FAILURE|, |strtol|, |free|, |realloc| */
+#include <stdlib.h> /* |malloc|, |exit|, |EXIT_FAILURE|, |free|, |realloc| */
 #include <stdarg.h> /* |va_end|, |va_start| */
 #include <assert.h> /* |assert| */
 #include <ncursesw/curses.h> /* |add_wch|, |addwstr|, |chars|, |clrtoeol|, |COLS|, |endwin|,
