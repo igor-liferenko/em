@@ -911,7 +911,15 @@ Also, if there are no occurrences of search text, we do not change cursor positi
 which the search was started. To make this work, we save |b_point| only when we fail for the
 first time. Use |search_failed| to track this.
 
+And if the direction of search changes, |search_failed| must be reset.
+If we did not handle this condition, there could appear, for example, this situation:
+we start backward search at the beginning of buffer, get a
+warning that backward search failed, then press forward search button with the same
+search text (which we suppose does exist in the buffer), and immediately get a
+warning that no occurrences were found.
+
 @<Search forward@>=
+if (direction==0) search_failed=0; /* direction changed */
 for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 	point_t pp;
 	wchar_t *s;
@@ -937,6 +945,7 @@ b_point=0;
 @ The logic is analogous to |@<Search forward@>|.
 
 @<Search backward@>=
+if (direction==1) search_failed=0; /* direction changed */
 for (point_t p=b_point; p > 0;) {
 	p--;
 	point_t pp;
@@ -986,7 +995,7 @@ void search(direction)
 
   while (1) {
     refresh(); /* update the real screen */
-    if (get_wch(&c) == KEY_CODE_YES) {
+    if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
 	switch(c) {
 	  case KEY_RESIZE:
 		msg(L"Search %ls: %ls",
@@ -1070,7 +1079,7 @@ int main(int argc, char **argv)
         initscr(); /* start curses mode */
         raw();
         noecho();
-	nonl(); /* pass proper value (|0x0d|) for C-m and ENTER keypresses from |get_wch| */
+	nonl(); /* return proper value (|0x0d|) from \\{get\_wch} for C-m and ENTER keys */
 	@<Automatically interpret ANSI control sequences@>@;
 
 	while (!done) {
@@ -1194,7 +1203,7 @@ fclose(db_out);
 
 @ Here, besides reading user input, we handle resize event. We pass
 reference to variable of type
-|wint_t| to |get_wch| instead of type |wchar_t|, because |get_wch| takes
+\\{wint\_t} to \\{get\_wch} instead of type |wchar_t|, because |get_wch| takes
 |wint_t *| argument. While this would have been possible to typecast
 |wchar_t| to |wint_t|, this is impossible to typecast pointer. So, we
 have to use the variable of type |wint_t|. Why ncurses authors decided to use |wint_t *|
