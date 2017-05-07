@@ -661,10 +661,8 @@ void dispmsg()
                         my_cchar.chars[1] = L'\0';
                         if (iswprint((wint_t) *k))
                                 add_wch(&my_cchar);
-                        else {
-                                wchar_t *ctrl = wunctrl(&my_cchar);
-                                addwstr(ctrl);
-                        }
+                        else
+                                addwstr(wunctrl(&my_cchar));
 		}
 		standend();
 		clrtoeol();
