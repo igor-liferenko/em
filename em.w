@@ -914,18 +914,11 @@ buffer when search fails. Next time when search button is pressed, |b_point| wil
 hold value 0, thus search will start from the beginning of buffer. (Initially, |b_point|
 holds current cursor position, so searching is started from this point.)
 
-Besides, here we keep last successful search (or initial---see below) position
-in |search_point|---to
+Besides, here we keep cursor position of last successful search in |search_point|---to
 leave cursor there when we exit after failed search.
-It may seem at first glance that
-it is sufficient to remember previous cursor position before resetting the search 
-point to the beginning of buffer. But this is not so simple: It may also happen that 
-there are no occurrences of search text. So, what will happen is: 1) for the first time
-the search fails, we save |b_point| (which will hold initial cursor position) to |search_point|;
-2) we reset |b_point| to the beginning of buffer; 3) in hope that the search text may occur
-before cursor we press search button again---this saves |b_point| (which is reset to the
-beginning) to |search_point| as in case 1). So, when we exit the search, the cursor is reset
-to the beginning in this case. To prevent this, save |b_point| only when we fail for the
+
+Also, if there are no occurrences of search text, we do not change cursor position from
+which the search was started. To make this work, we save |b_point| only when we fail for the
 first time. Use |search_failed| to track this.
 
 @<Search forward@>=
@@ -935,7 +928,8 @@ for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
 	for (s=searchtext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = pp;
-          msg(L"Search Forward: %ls", searchtext);
+          msg(L"Search Forward: %ls", searchtext); /* FIXME: is this necessary? */
+@^FIXME@>
           display();
 	  search_failed=0;
           goto forward_search;
@@ -961,7 +955,8 @@ for (point_t p=b_point; p > 0;) {
 	for (s=searchtext, pp=p; *s == *ptr(pp) && *s != L'\0' && pp >= 0; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = p;
-          msg(L"Search Backward: %ls", searchtext);
+          msg(L"Search Backward: %ls", searchtext); /* FIXME: is this necessary? */
+@^FIXME@>
           display();
 	  search_failed=0;
           goto backward_search;
@@ -986,13 +981,17 @@ wchar_t searchtext[STRBUF_M];
 @^TODO@>
 
 @<Procedures@>=
-void search(void)
+void search(direction)
+   int direction; /* 1 = forward; 0 = backward */
 {
 	int cpos = 0;	
 	wint_t c;
 	point_t o_point = b_point;
 	int search_failed = 1;
 	point_t search_point = b_point;
+
+        msg(L"Search %ls:", direction==1?L"Forward":L"Backward");
+        dispmsg();
 
 	searchtext[0] = L'\0';
 	cpos = (int) wcslen(searchtext);
@@ -1015,10 +1014,12 @@ void search(void)
 			return;
 	    case
 		L'\x12': /* C-r */
+			direction=0;
 			@<Search backward@>@;
 			break;
 	    case
 		L'\x13': /* C-s */
+			direction=1;
 			@<Search forward@>@;
 			break;
 	    case
@@ -1029,14 +1030,15 @@ void search(void)
 			if (cpos == 0)
 				continue;
 			searchtext[--cpos] = L'\0';
-			msg(L"Search: %ls", searchtext);
+			msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
 			dispmsg();
 			break;
 	    default:
 			if (cpos < STRBUF_M - 1) {
 				searchtext[cpos++] = (wchar_t) c;
 				searchtext[cpos] = L'\0';
-				msg(L"Search: %ls", searchtext);
+				msg(L"Search %ls: %ls",
+                                  direction==1?L"Forward":L"Backward",searchtext);
 				dispmsg();
 			}
 	}
@@ -1268,15 +1270,11 @@ switch(input) {
 		break;
 	case
 		L'\x12': /* C-r */
-		msg(L"Search Backward: ");
-		dispmsg();
-		search();
+		search(0);
 		break;
 	case
 		L'\x13': /* C-s */
-	        msg(L"Search Forward: ");
-	        dispmsg();
-		search();
+		search(1);
 		break;
 	case
 		L'\x1d': /* C-] */
