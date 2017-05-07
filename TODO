@@ -1,7 +1,9 @@
-via xkb patch use [ with Alt modifier to insert substitute for <= (≤) and ] with
-Alt modifier to insert substitute for >= (≥); and remove "\let\K=\leftarrow" workaround in cwebmaX.tex when you will make ← work natively (+ consider that it is UTF-8 sequence)
-And use Alt modifier with key "1" to use ¬ instead of !
-NOTE: do not use substitute for && and || because substitute for || looks like v, and it is better to use non of them than only one of them, because they constitute a pair
+For curiosity: make ≠ work as said in point 1 of "Additional features and caveats"
+section of cwebman (+ consider that it is UTF-8 sequence)
+(it can be typed with Shift+BackSpace - for this to work this setting was added to xkb keymap:
+"key <BKSP> { [ BackSpace, U2260 ] };")
+For this you will need to understand what means "@s not_eq normal" line in cweave.w,
+ctangle.w and common.w
 
 implement proper job control as said here:
   http://web.archive.org/web/20160329140839/http://www.cons.org/cracauer/sigint.html
