@@ -290,8 +290,9 @@ FIXME: for what is |register|?
 wchar_t *ptr(register point_t offset)
 {
 	assert(offset >= 0);
-/* TODO: use |size_t| typedef for |point_t| if this |assert| will not fail - some testing is
-needed */
+/* TODO: use |size_t| typedef for |point_t| when you will find out why this |assert| fails
+   sometimes; for this check all places where this function is called and see if wrong
+   value can sneak in */
 @^TODO@>
 	return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
 }
@@ -1091,15 +1092,11 @@ on certain buttons. Here are some examples of the identity between control code
 sequences and keyboard buttons by which they are generated (for ``xterm'' terminal type):
 \medskip
 {\tt\obeylines\obeyspaces
-|0x1B 0x5B 0x41 == Up|
-|0x1B 0x5B 0x42 == Down|
-|0x1B 0x5B 0x44 == Left|
-|0x1B 0x5B 0x43 == Right|
 |0x1B 0x5B 0x46 == End|
 |0x1B 0x5B 0x48 == Home|
-|0x1B 0x4F 0x33 == Delete|
-|0x1B 0x4F 0x35 == PageUp|
-|0x1B 0x4F 0x36 == PageDown|
+
+|0x1B 0x4F 0x35 == Home|
+|0x1B 0x4F 0x36 == End|
 }
 \medskip
 
