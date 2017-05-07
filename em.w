@@ -3,7 +3,9 @@
 
 @s delete normal
 @s new normal
-@s wint_t wchar_t @q this is an exception to support standard CWEB @>
+@s wint_t int @q this is an exception to make it work with original CWEB @>
+@s cchar_t int @q this is an exception to make it work with original CWEB @>
+@s ssize_t int @q this is an exception to make it work with original CWEB @>
 
 @* Buffer-gap algorithm. EM is a text editor. It is implemented
 using wide-character API and ncurses library. EM uses ``buffer-gap''
@@ -228,10 +230,7 @@ editor because of its simplicity and efficient use of memory.
 @<Procedures@>@;
 @<Main program@>@;
 
-@ @s point_t int
-@s buffer_t int
-
-@<Typedef declarations@>=
+@ @<Typedef declarations@>=
 typedef ssize_t point_t;
 
 @ @<Global...@>=
@@ -751,8 +750,6 @@ a quick scan down the list of lines from the previous redisplay looking
 for a line which began with that position after the last redisplay.  When
 that's the case, you can just copy that layout info into the new line,
 instead of recalculating it.
-
-@s cchar_t int
 
 @<Procedures@>=
 void display()
