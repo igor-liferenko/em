@@ -1089,7 +1089,7 @@ int main(int argc, char **argv)
         initscr(); /* start curses mode */
         raw();
         noecho();
-	nonl(); /* return proper value (|0x0d|) from \\{get\_wch} for C-m and ENTER keys */
+	nonl(); /* return proper value (|0x0d|) from |get_wch| for C-m and ENTER keys */
 	@<Automatically interpret ANSI control sequences@>@;
 
 	while (!done) {
@@ -1213,7 +1213,7 @@ fclose(db_out);
 
 @ Here, besides reading user input, we handle resize event. We pass
 reference to variable of type
-\\{wint\_t} to \\{get\_wch} instead of type |wchar_t|, because |get_wch| takes
+|wint_t| to |get_wch| instead of type |wchar_t|, because |get_wch| takes
 |wint_t *| argument. While this would have been possible to typecast
 |wchar_t| to |wint_t|, this is impossible to typecast pointer. So, we
 have to use the variable of type |wint_t|. Why ncurses authors decided to use |wint_t *|
