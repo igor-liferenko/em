@@ -989,7 +989,10 @@ void search(direction)
     if (get_wch(&c) == KEY_CODE_YES) {
 	switch(c) {
 	  case KEY_RESIZE:
-		break;
+		msg(L"Search %ls: %ls",
+                  direction==1?L"Forward":L"Backward",searchtext);
+		display();
+		continue;
 	  case KEY_BACKSPACE:
 		@<BackSpace in search@>@;
 		break;
