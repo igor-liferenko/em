@@ -918,8 +918,11 @@ warning that backward search failed, then press forward search button with the s
 search text (which we suppose does exist in the buffer), and immediately get a
 warning that no occurrences were found.
 
+On the other hand, if we already know that there are no occurrences, no need to
+reset |search_failed| when direction is changed. Use |no_occurrences| to track this.
+
 @<Search forward@>=
-if (direction==0) search_failed=0; /* direction changed */
+if (direction==0&&!no_occurrences) search_failed=0; /* direction changed */
 for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 	point_t pp;
 	wchar_t *s;
@@ -932,7 +935,10 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
           goto search_forward;
 	}
 }
-if (search_failed) msg(L"No occurrences: %ls", searchtext);
+if (search_failed) {
+  msg(L"No occurrences: %ls", searchtext);
+  no_occurrences=1;
+}
 else {
   msg(L"Failing Forward Search: %ls", searchtext);
   search_failed=1;
@@ -945,7 +951,7 @@ b_point=0;
 @ The logic is analogous to |@<Search forward@>|.
 
 @<Search backward@>=
-if (direction==1) search_failed=0; /* direction changed */
+if (direction==1&&!no_occurrences) search_failed=0; /* direction changed */
 for (point_t p=b_point; p > 0;) {
 	p--;
 	point_t pp;
@@ -959,7 +965,10 @@ for (point_t p=b_point; p > 0;) {
           goto search_backward;
 	}
 }
-if (search_failed) msg(L"No occurrences: %ls", searchtext);
+if (search_failed) {
+  msg(L"No occurrences: %ls", searchtext);
+  no_occurrences=1;
+}
 else {
   msg(L"Failing Backward Search: %ls", searchtext);
   search_failed=1;
@@ -986,6 +995,7 @@ void search(direction)
   point_t o_point = b_point;
   int search_failed = 0;
   point_t search_point;
+  int no_occurrences=0;
 
   msg(L"Search %ls:", direction==1?L"Forward":L"Backward");
   dispmsg();
