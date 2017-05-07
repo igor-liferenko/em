@@ -17,14 +17,14 @@ small issues:
 If previous token ends with
 a letter, a number, or `_', this causes compiler error.
 
-Example 1. This can be fixed for CTANGLE by adding newline
-character before `L', but the space is always gobbled by CWEAVE:
+Example 1. This can be fixed for CTANGLE by adding character
+with code 0x0A before `L', but the space is always gobbled by CWEAVE:
   \noinx
   @ @c
   wprintf(PROG_NAME L", version 0.1\n");
 
-Example 2. This can be fixed for CTANGLE by adding newline
-character before `L' (CWEAVE output is OK in any form):
+Example 2. This can be fixed for CTANGLE by adding character
+with code 0x0A before `L' (CWEAVE output is OK in any form):
 
   \noinx
   @ @c
