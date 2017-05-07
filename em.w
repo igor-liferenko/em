@@ -55,7 +55,7 @@ Buffer gap is just one way to store a bunch of characters you wish to
 edit.  (Another way is having a linked list of lines.)  Emacs uses the
 buffer gap mechanism, and here is what a buffer looks like in emacs.
 
-|<----- first half -----><----- gap -----><------ second half ------>|
+\.{<-----{ }first half{ }-----><-----{ }gap{ }-----><------{ }second half{ }------>}
 
 An emacs buffer is just one huge array of characters, with a gap in the
 middle.  There are no characters in the gap.  So at any given time the
@@ -344,11 +344,6 @@ TODO: check that |buflen + n| does not cause overflow.
 n = (n < CHUNK ? CHUNK : n);
 newlen = buflen + n;
 
-@ @<Header files@>=
-#include <stdlib.h> /* |malloc| */
-#include <string.h> /* |strerror| */
-#include <errno.h> /* |errno| */
-
 @ @<Allocate memory for editing buffer@>=
 assert(newlen >= 0);
 if (buflen == 0) /* if buffer is empty */
@@ -417,12 +412,7 @@ b_fname=argv[1];
 use facilities provided by the OS---via |fopen| call. Then we use
 |readlink| to get full path from \.{proc} filesystem by file descriptor.
 
-@<Header files@>=
-#include <stdio.h> /* |snprintf|, |fopen|, |fclose|, |fileno| */
-#include <limits.h> /* |PATH_MAX| */
-#include <unistd.h> /* |readlink| */
-
-@ @<Global...@>=
+@<Global...@>=
 char b_absname[PATH_MAX+1];
 
 @ @<Get absolute file name@>=
@@ -548,7 +538,7 @@ if (i && buf[i-1] != L'\n') {
 }
 
 @*1 File locking. Locking file is necessary to indicate that this file is already
-opened. Before we open a file, lock is created in |BD_FILE| in
+opened. Before we open a file, lock is created in |DB_FILE| in
 |@<Restore cursor@>| (which
 in turn is executed right before the wanted file is opened). Upon exiting
 the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
@@ -918,7 +908,7 @@ which the search was started. To make this work, we save |b_point| only when we 
 first time. Use |search_failed| to track this.
 
 @<Search forward@>=
-for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
+for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 	point_t pp;
 	wchar_t *s;
 	for (s=searchtext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++) ;
@@ -1099,35 +1089,31 @@ on certain buttons. Here are some examples of the identity between control code
 sequences and keyboard buttons by which they are generated (for ``xterm'' terminal type):
 \medskip
 {\tt\obeylines\obeyspaces
-|0x1B 0x5B 0x46 == End|
-|0x1B 0x5B 0x48 == Home|
+|0x1B 0x5B 0x46 ==| End
+|0x1B 0x5B 0x48 ==| Home
 
-|0x1B 0x4F 0x35 == Home|
-|0x1B 0x4F 0x36 == End|
+|0x1B 0x4F 0x35 ==| Home
+|0x1B 0x4F 0x36 ==| End
 }
 \medskip
 
-These mappings are defined by terminfo settings which are selected via |TERM|
+These mappings are defined by terminfo settings which are selected via \.{TERM}
 environment variable. They can be automatically translated to ``one-character'' codes by
 {\sl ncurses}, which frees us from doing this manually in the application.
+@^system dependencies@>
 
 @<Automatically interpret ANSI control sequences@>=
 keypad(stdscr,TRUE);
 
-@ @<Header files@>=
-#include <stdio.h> /* |fgets|, |rewind| */
-#include <unistd.h> /* |unlink| */
-#include <stdlib.h> /* |strtol| */
-#include <string.h> /* |strncmp| */
-
 @ DB file cannot have null char, so use |fgets|.
-We will not use |fgetws| here, because the conversionon
+We will not use \\{fgetws} here, because the conversion
 of file name from UTF-8 to unicode is not
 necessary here and because it uses char*, not char, and char* is OK.
 
 We use Linux, so just delete the file by |unlink| after we open it - then open a new file
 with the same name and write the modified lines into the new file. We'll have two |FILE *|
 variables.
+@^system dependencies@>
 
 @d DB_FILE "/tmp/em.db"
 @d DB_LINE_SIZE 10000
@@ -1213,11 +1199,11 @@ sets |wchar_t| values to its argument (no |wint_t|), |wint_t| type is used becau
 same variable which is passed to |get_wch| may be used for reading
 the file, where |wint_t| type is necessary, because of WEOF.
 For |get_wch| it was
-decided not to use |wint_t| to store the signal (contrary to |getch|)
+decided not to use |wint_t| to store the signal (contrary to \\{getch})
 because each implementation has its own sizes for |wint_t| and |wchar_t|, so
 it is impossible to have a constant to store the signal.
 And it is good to keep the same values for |KEY_RESIZE| etc which are used for
-|getch| anyway.
+\\{getch} anyway.
 So, they decided to distinguish via the return value
 if |get_wch| passed a signal or a char. The return value is
 |KEY_CODE_YES| if a signal is passed in the argument, |OK| if a char is passed, and
@@ -1343,20 +1329,23 @@ switch(input) {
 @d ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 @ @<Header files@>=
-#include <stdlib.h>
-#include <stdarg.h>
-#include <assert.h>
-#include <ncursesw/curses.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <ctype.h>
-#include <limits.h>
-#include <string.h>
-#include <unistd.h>
-#include <termios.h>
-#include <locale.h>
-#include <wchar.h>
-#include <errno.h>
+/* TODO: sort alphabetically */
+@^TODO@>
+#include <stdlib.h> /* |malloc|, |exit|, |EXIT_FAILURE|, |strtol|, |free|, |realloc| */
+#include <stdarg.h> /* |va_end|, |va_start| */
+#include <assert.h> /* |assert| */
+#include <ncursesw/curses.h> /* |add_wch|, |addwstr|, |chars|, |clrtoeol|, |COLS|, |endwin|,
+  |ERR|, |FALSE|, |get_wch|, |initscr|, |keypad|, |KEY_BACKSPACE|, |KEY_RESIZE|,
+  |KEY_BACKSPACE|, |KEY_RESIZE|, |KEY_LEFT|, |KEY_RIGHT|, |KEY_UP|, |KEY_DOWN|, |KEY_HOME|,
+  |KEY_END|, |KEY_NPAGE|, |KEY_PPAGE|, |KEY_DC|, |KEY_BACKSPACE|, |LINES|, |move|, |noecho|,
+  |nonl|, |noraw|, |OK|, |raw|, |refresh|, |standend|, |standout|, |stdscr|, |TRUE|, |wunctrl| */
+#include <stdio.h> /* |fclose|, |fgets|, |fileno|, |snprintf|, |fopen|, |fprintf|, |sscanf| */
+#include <locale.h> /* |LC_CTYPE|, |setlocale| */
+#include <wchar.h> /* |fgetwc|, |fputwc|, |vswprintf|, |vwprintf|, |wcslen|, |WEOF| */
+#include <wctype.h> /* |iswprint| */
+#include <string.h> /* |strerror|, |strncmp|, |memset|, |strlen|, |strstr| */
+#include <errno.h> /* |errno| */
+#include <limits.h> /* |PATH_MAX| */
+#include <unistd.h> /* |unlink|, |readlink| */
 
 @* Index.
