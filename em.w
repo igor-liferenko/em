@@ -980,23 +980,31 @@ wchar_t searchtext[STRBUF_M];
 void search(direction)
    int direction; /* 1 = forward; 0 = backward */
 {
-	int cpos = 0;	
-	wint_t c;
-	point_t o_point = b_point;
-	int search_failed = 1;
-	point_t search_point = b_point;
+  int cpos = 0;
+  wint_t c;
+  point_t o_point = b_point;
+  int search_failed = 1;
+  point_t search_point = b_point;
 
-        msg(L"Search %ls:", direction==1?L"Forward":L"Backward");
-        dispmsg();
+  msg(L"Search %ls:", direction==1?L"Forward":L"Backward");
+  dispmsg();
 
-	searchtext[0] = L'\0';
-	cpos = (int) wcslen(searchtext);
+  searchtext[0] = L'\0';
+  cpos = (int) wcslen(searchtext);
 
-	while (1) {
-	  refresh(); /* update the real screen */
-	  get_wch(&c);
-
-	  switch(c) {
+  while (1) {
+    refresh(); /* update the real screen */
+    if (get_wch(&c) == KEY_CODE_YES) {
+	switch(c) {
+	  case KEY_RESIZE:
+		break;
+	  case KEY_BACKSPACE:
+		@<BackSpace in search@>@;
+		break;
+	}
+    }
+    else {
+	switch(c) {
 	    case
               L'\x0d': /* C-m */
 			if (search_failed) b_point = search_point;
@@ -1019,16 +1027,9 @@ void search(direction)
 			@<Search forward@>@;
 			break;
 	    case
-                L'\x7f': /* BackSpace */
-	    @t\4@>
-	    case
 		L'\x08': /* C-h */
-			if (cpos == 0)
-				continue;
-			searchtext[--cpos] = L'\0';
-			msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
-			dispmsg();
-			break;
+		@<BackSpace in search@>@;
+		break;
 	    default:
 			if (cpos < STRBUF_M - 1) {
 				searchtext[cpos++] = (wchar_t) c;
@@ -1039,7 +1040,15 @@ void search(direction)
 			}
 	}
     }
+  }
 }
+
+@ @<BackSpace in search@>=
+                        if (cpos == 0)
+                                continue;
+                        searchtext[--cpos] = L'\0';
+                        msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
+                        dispmsg();
 
 @ @<Main program@>=
 int main(int argc, char **argv)
