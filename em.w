@@ -216,8 +216,9 @@ editor because of its simplicity and efficient use of memory.
 @ This is the outline of our program.
 
 @d MSGLINE         (LINES-1)
-@d CHUNK  8096L
-@d STRBUF_M        64
+@d CHUNK  8096L /* TODO: when it was 512 and I pasted copied text of ~600 characters,
+  program segfaulted; reproduce this again and determine the cause */
+@^TODO@>
 
 @c
 @<Header files@>@;
@@ -935,7 +936,7 @@ for (point_t p=b_point, end_p=pos(b_ebuf); p < end_p; p++) {
           b_point = pp;
           msg(L"Search Forward: %ls", searchtext);
           display();
-	  search_failed=0; /* reset */
+	  search_failed=0;
           goto forward_search;
 	}
 }
@@ -961,7 +962,7 @@ for (point_t p=b_point; p > 0;) {
           b_point = p;
           msg(L"Search Backward: %ls", searchtext);
           display();
-	  search_failed=0; /* reset */
+	  search_failed=0;
           goto backward_search;
 	}
 }
@@ -975,7 +976,9 @@ dispmsg();
 b_point=pos(b_ebuf);
 @/@t\4@> backward_search:
 
-@ @<Global variables@>=
+@ @d STRBUF_M 64
+
+@<Global variables@>=
 wchar_t searchtext[STRBUF_M];
 
 @ /* TODO: make search case-insensitive */
@@ -987,8 +990,8 @@ void search(void)
 	int cpos = 0;	
 	wint_t c;
 	point_t o_point = b_point;
-	int search_failed = 0;
-	point_t search_point;
+	int search_failed = 1;
+	point_t search_point = b_point;
 
 	searchtext[0] = L'\0';
 	cpos = (int) wcslen(searchtext);
