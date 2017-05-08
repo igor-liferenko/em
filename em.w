@@ -651,7 +651,7 @@ void modeline(void)
 {
        standout();
        move(LINES - 1, 0);
-       swprintf(temp, ARRAY_SIZE(temp), L"\u2500\u2500 em \u2500\u2500 %s ", b_fname);
+       swprintf(temp, ARRAY_SIZE(temp), L"\u2500\u2500 %s ", b_fname);
        addwstr(temp);
 
        for (int i = (int)(wcslen(temp) + 1); i <= COLS; i++)
