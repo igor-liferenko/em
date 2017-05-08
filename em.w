@@ -650,16 +650,18 @@ wchar_t temp[TEMPBUF];
 @ @<Procedures@>=
 void modeline(void)
 {
-       int i;
        wchar_t mch;
-       
+
        standout();
+       move(MSGLINE, 0);
+       for (int i = 1; i <= COLS; i++)
+		addwstr(L" ");
        move(LINES - 1, 0);
        mch = ((b_flags & (char)B_MODIFIED) ? L'\u25cf' : L'\u2500');
        swprintf(temp, ARRAY_SIZE(temp), L"\u2500%lc em \u2500\u2500 %s ", mch, b_fname);
        addwstr(temp);
 
-       for (i = (int)(wcslen(temp) + 1); i <= COLS; i++)
+       for (int i = (int)(wcslen(temp) + 1); i <= COLS; i++)
                addwstr(L"\u2500");
        standend();
 }
@@ -669,6 +671,9 @@ void dispmsg()
 {
 	if (msgflag) {
 		standout();
+		move(MSGLINE, 0);
+		for (int i = 1; i <= COLS; i++)
+			addwstr(L" ");
 		move(MSGLINE, 0);
 		for(wchar_t *p=msgline; *p!=L'\0'; p++) {
                         cchar_t my_cchar;
