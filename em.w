@@ -1224,22 +1224,18 @@ reference to variable of type
 |wint_t *| argument. While this would have been possible to typecast
 |wchar_t| to |wint_t|, this is impossible to typecast pointer. So, we
 have to use the variable of type |wint_t|. Why ncurses authors decided to use |wint_t *|
-instead of |wchar_t *| as the argument? Answer: for uniformity. Although |get_wch| only
-sets |wchar_t| values to its argument (no |wint_t|), |wint_t| type is used because this
-same variable which is passed to |get_wch| may be used for reading
-the file, where |wint_t| type is necessary, because of WEOF.
+instead of |wchar_t *| as the argument? Answer:
+because |wchar_t| may be |typedef| for |char|, and we need to store the special code,
+which will not fit into |wchar_t| in such case. So, |wint_t| is necassary.
 For |get_wch| it was
-decided not to use |wint_t| to store the signal (contrary to \\{getch})
+decided not to use |wint_t| for return value to store the special code (like it is in \\{getch})
 because each implementation has its own sizes for |wint_t| and |wchar_t|, so
-it is impossible to have a constant to store the signal.
+it is impossible to have a constant to store the special code (except |WEOF|).
 And it is good to keep the same values for |KEY_RESIZE| etc which are used for
 \\{getch} anyway.
 So, they decided to distinguish via the return value
-if |get_wch| passed a signal or a char. The return value is
-|KEY_CODE_YES| if a signal is passed in the argument, |OK| if a char is passed, and
-|ERR| otherwise.
-In our case, only one signal is used---|KEY_RESIZE|.
-So, we do not check |c| for this; we just do resize by default if a signal is passed.
+if |get_wch| passed a special code or a char, for which |int| is good. The return value is
+|KEY_CODE_YES| if a special code is passed in the argument.
 
 @<Handle key@>=
 wint_t c;
