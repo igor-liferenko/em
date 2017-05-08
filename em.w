@@ -219,7 +219,6 @@ editor because of its simplicity and efficient use of memory.
 @ This is the outline of our program.
 
 @d B_MODIFIED 0x01 /* modified buffer */
-@d MSGLINE (LINES-1)
 @d CHUNK 8096L /* TODO: when it was 512 and I pasted from clipboard
   (or typed manually in one go) text of ~600 characters,
   program segfaulted; reproduce this again and determine the cause */
@@ -650,15 +649,9 @@ wchar_t temp[TEMPBUF];
 @ @<Procedures@>=
 void modeline(void)
 {
-       wchar_t mch;
-
        standout();
-       move(MSGLINE, 0);
-       for (int i = 1; i <= COLS; i++)
-		addwstr(L" ");
        move(LINES - 1, 0);
-       mch = ((b_flags & (char)B_MODIFIED) ? L'\u25cf' : L'\u2500');
-       swprintf(temp, ARRAY_SIZE(temp), L"\u2500%lc em \u2500\u2500 %s ", mch, b_fname);
+       swprintf(temp, ARRAY_SIZE(temp), L"\u2500\u2500 em \u2500\u2500 %s ", b_fname);
        addwstr(temp);
 
        for (int i = (int)(wcslen(temp) + 1); i <= COLS; i++)
@@ -671,10 +664,10 @@ void dispmsg()
 {
 	if (msgflag) {
 		standout();
-		move(MSGLINE, 0);
+		move(LINES - 1, 0);
 		for (int i = 1; i <= COLS; i++)
 			addwstr(L" ");
-		move(MSGLINE, 0);
+		move(LINES - 1, 0);
 		for(wchar_t *p=msgline; *p!=L'\0'; p++) {
                         cchar_t my_cchar;
                         memset(&my_cchar, 0, sizeof(my_cchar));
@@ -686,7 +679,6 @@ void dispmsg()
                                 addwstr(wunctrl(&my_cchar));
 		}
 		standend();
-		clrtoeol();
 		msgflag = FALSE;
 	}
 }
@@ -1013,7 +1005,7 @@ void search(direction)
   point_t search_point;
   int no_occurrences=0;
 
-  msg(L"Search %ls:", direction==1?L"Forward":L"Backward");
+  msg(L"Search %ls: ", direction==1?L"Forward":L"Backward");
   dispmsg();
 
   searchtext[0] = L'\0';
@@ -1115,7 +1107,7 @@ int main(int argc, char **argv)
 
 	if (scrap != NULL) free(scrap);
 
-	move(MSGLINE, 0);
+	move(LINES - 1, 0);
 	refresh(); /* update the real screen */
 	noraw();
 	endwin(); /* end curses mode */
