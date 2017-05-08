@@ -611,7 +611,8 @@ point_t segnext(point_t start, point_t finish)
 	return (p < b_ebuf ? scan : pos(b_ebuf));
 }
 
-@ Move up one screen line.
+@ Find the beginning of previous line.
+In other words, move up one screen line.
 
 @<Procedures@>=
 point_t upup(point_t off)
@@ -619,13 +620,16 @@ point_t upup(point_t off)
 	point_t curr = lnstart(off);
 	point_t seg = segstart(curr, off);
 	if (curr < seg)
-		off = segstart(curr, seg-1);
+		off = segstart(curr, seg-1); /* previous line (is considered the case that
+			current line may be wrapped) */
 	else
-		off = segstart(lnstart(curr-1>=0?curr-1:0), curr-1);
+		off = segstart(lnstart(curr-1>=0?curr-1:0), curr-1); /* previous line (is
+			considered the case that previous line may be wrapped) */
 	return off;
 }
 
-@ Move down one screen line.
+@ Find the beginning of next line.
+In other words, move down one screen line.
 
 @<Procedures@>=
 point_t dndn(point_t off)
@@ -661,8 +665,8 @@ void modeline(void)
 void dispmsg()
 {
 	if (msgflag) {
-		standout();
 		move(LINES - 1, 0);
+		standout();
 		for(wchar_t *p=msgline; *p!=L'\0'; p++) {
                         cchar_t my_cchar;
                         memset(&my_cchar, 0, sizeof(my_cchar));
