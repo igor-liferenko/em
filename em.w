@@ -891,12 +891,6 @@ void delete(void)
 		b_point = pos(++b_egap);
 }
 
-@ @<Procedures@>=
-void open_line(void)
-{
-  msg(L"open_line() not implemented yet");
-}
-
 @* Searching text.
 
 @ Searching is wrapped. This works by simply resetting cursor position to the beginning of
@@ -1006,7 +1000,7 @@ void search(direction)
   while (1) {
     refresh(); /* update the real screen */
     if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
-	switch(c) {
+	switch (c) {
 	  case KEY_RESIZE:
 		msg(L"Search %ls: %ls",
                   direction==1?L"Forward":L"Backward",searchtext);
@@ -1018,7 +1012,7 @@ void search(direction)
 	}
     }
     else {
-	switch(c) {
+	switch (c) {
 	    case
               L'\x0d': /* C-m */
 			if (search_failed) b_point = search_point;
@@ -1237,7 +1231,7 @@ So, we do not check |c| for this; we just do resize by default if a signal is pa
 @<Handle key@>=
 wint_t c;
 if (get_wch(&c) == KEY_CODE_YES) {
-  switch(c) {
+  switch (c) {
     case KEY_RESIZE:
 	continue;
     case KEY_LEFT:
@@ -1270,16 +1264,27 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_BACKSPACE:
         backsp();
         break;
+    case 0412: /* F2 */
+	bottom();
+	break;
+    case 0413: /* F3 */
+	done = 1; /* quit without saving */
+	break;
+    case 0415: /* F5 */
+	search(0);
+	break;
+    case 0416: /* F6 */
+	search(1);
+	break;
+    case 0422: /* F10 */
+	quit();
+	break;
     default:
 	msg(L"Not bound");
   }
 }
 else {
-  switch(c) {
-	case
-		L'\x0f': /* C-o */
-		open_line();
-		break;
+  switch (c) {
 	case
 		L'\x18': /* C-x */
 		@<Remove lock and save cursor@>@;
