@@ -1277,19 +1277,19 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_BACKSPACE:
         backsp();
         break;
-    case 0412: /* F2 */
+    case KEY_F(2):
 	bottom();
 	break;
-    case 0413: /* F3 */
+    case KEY_F(3):
 	done = 1; /* quit without saving */
 	break;
-    case 0415: /* F5 */
+    case KEY_F(5):
 	search(0);
 	break;
-    case 0416: /* F6 */
+    case KEY_F(6):
 	search(1);
 	break;
-    case 0422: /* F10 */
+    case KEY_F(10):
 	quit();
 	break;
     default:
