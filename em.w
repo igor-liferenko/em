@@ -562,6 +562,8 @@ point_t lnstart(register point_t off)
 }
 
 @ Forward scan for start of logical line segment containing `finish'.
+In other words, forward scan for start of part of line in intervals of |COLS|,
+which contains the point `finish'.
 
 @<Procedures@>=
 point_t segstart(point_t start, point_t finish)
@@ -586,6 +588,9 @@ point_t segstart(point_t start, point_t finish)
 }
 
 @ Forward scan for start of logical line segment following `finish'.
+In other words, forward scan for start of part of line in intervals of |COLS|,
+which goes right
+after that part of line, which contains the point `finish'.
 
 @<Procedures@>=
 point_t segnext(point_t start, point_t finish)
@@ -598,7 +603,7 @@ point_t segnext(point_t start, point_t finish)
 		p = ptr(scan);
 		if (b_ebuf <= p || COLS <= c)
 			break;
-		++scan;
+		scan++;
 		if (*p == L'\n')
 			break;
 		c += *p == L'\t' ? 8 - (c & 7) : 1;
@@ -642,21 +647,14 @@ point_t lncolumn(point_t offset, int column)
 	return offset;
 }
 
-@ @d TEMPBUF         512
-@<Global variables@>=
-wchar_t temp[TEMPBUF];
-
 @ @<Procedures@>=
 void modeline(void)
 {
        standout();
        move(LINES - 1, 0);
-       swprintf(temp, ARRAY_SIZE(temp), L"\u2500\u2500 %s ", b_fname);
-       addwstr(temp);
-
-       for (int i = (int)(wcslen(temp) + 1); i <= COLS; i++)
-               addwstr(L"\u2500");
+       addstr(b_fname);
        standend();
+       clrtoeol();
 }
 
 @ @<Procedures@>=
@@ -664,9 +662,6 @@ void dispmsg()
 {
 	if (msgflag) {
 		standout();
-		move(LINES - 1, 0);
-		for (int i = 1; i <= COLS; i++)
-			addwstr(L" ");
 		move(LINES - 1, 0);
 		for(wchar_t *p=msgline; *p!=L'\0'; p++) {
                         cchar_t my_cchar;
@@ -679,6 +674,7 @@ void dispmsg()
                                 addwstr(wunctrl(&my_cchar));
 		}
 		standend();
+		clrtoeol();
 		msgflag = FALSE;
 	}
 }
