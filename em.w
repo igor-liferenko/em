@@ -218,8 +218,9 @@ editor because of its simplicity and efficient use of memory.
 
 @ This is the outline of our program.
 
-@d MSGLINE         (LINES-1)
-@d CHUNK  8096L /* TODO: when it was 512 and I pasted from clipboard
+@d B_MODIFIED 0x01 /* modified buffer */
+@d MSGLINE (LINES-1)
+@d CHUNK 8096L /* TODO: when it was 512 and I pasted from clipboard
   (or typed manually in one go) text of ~600 characters,
   program segfaulted; reproduce this again and determine the cause */
 @^TODO@>
@@ -244,6 +245,7 @@ wchar_t *b_gap = NULL;            /* start of gap */
 wchar_t *b_egap = NULL;           /* end of gap */
 int b_row;                /* cursor row */
 int b_col;                /* cursor col */
+char b_flags = 0;             /* buffer flags */
 
 @ @<Global variables@>=
 int done;
@@ -519,6 +521,7 @@ while (1) {
   @<Copy contents of |buf| to editing buffer@>@;
 }
 @<Add trailing newline to input from non-empty file if it is not present@>@;
+b_flags = (char)~B_MODIFIED;
 
 @ @<Copy contents of |buf|...@>=
 if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) { /* if gap size
@@ -640,6 +643,27 @@ point_t lncolumn(point_t offset, int column)
 	return offset;
 }
 
+@ @d TEMPBUF         512
+@<Global variables@>=
+wchar_t temp[TEMPBUF];
+
+@ @<Procedures@>=
+void modeline(void)
+{
+       int i;
+       wchar_t mch;
+       
+       standout();
+       move(LINES - 1, 0);
+       mch = ((b_flags & (char)B_MODIFIED) ? L'\u25cf' : L'\u2500');
+       swprintf(temp, ARRAY_SIZE(temp), L"\u2500%lc em \u2500\u2500 %s ", mch, b_fname);
+       addwstr(temp);
+
+       for (i = (int)(wcslen(temp) + 1); i <= COLS; i++)
+               addwstr(L"\u2500");
+       standend();
+}
+
 @ @<Procedures@>=
 void dispmsg()
 {
@@ -747,8 +771,6 @@ void display()
 	wchar_t *p;
 	int i, j, k;
 
-	@<Set number of rows@>@;
-	
 	/* find start of screen, handle scroll up off page or top of file  */
 	/* point is always within |b_page| and |b_epage| */
 	if (b_point < b_page)
@@ -760,10 +782,10 @@ void display()
 		if (pos(b_ebuf) <= b_page) { /* if we scoll to EOF we show 1
                   blank line at bottom of screen */
 			b_page = pos(b_ebuf);
-			i = rows - 1;
+			i = LINES - 2;
 		}
 		else
-			i = rows - 0;
+			i = LINES - 1;
 		while (0 < i--) /* scan backwards the required number of lines */
 			b_page = upup(b_page);
 	}
@@ -781,7 +803,7 @@ void display()
 			b_col = j;
 		}
 		p = ptr(b_epage);
-		if (rows <= i || b_ebuf <= p) /* maxline */
+		if (LINES - 1 <= i || b_ebuf <= p) /* maxline */
 			break;
 		if (*p != L'\r') {
 			cchar_t my_cchar;
@@ -808,25 +830,17 @@ void display()
 	}
 
 	/* replacement for clrtobot() to bottom of window */
-	for (k=i; k < rows; k++) {
+	for (k=i; k < LINES - 1; k++) {
 		move(k, j); /* clear from very last char not start of line */
 		clrtoeol();
 		j = 0; /* thereafter start of line */
 	}
 
+	modeline();
 	dispmsg();
 	move(b_row, b_col); /* set cursor */
 	refresh(); /* update the real screen */
 }
-
-@ The number of lines in window |LINES| is automatically set by {\sl ncurses\/}
-library. We maintain our own variable to be able to reduce number of lines if
-a message is to be displayed.
-
-@<Set number of rows@>=
-int rows;
-if (msgflag) rows = LINES - 1;
-else rows = LINES;
 
 @ @<Procedures@>=
 void top(void) {@+ b_point = 0; @+}
@@ -872,6 +886,7 @@ void insert(wchar_t c)
 	movegap(b_point);
 	*b_gap++ = c;
 	b_point++;
+	b_flags = (char)B_MODIFIED;
 }
 
 @ @<Procedures@>=
@@ -881,6 +896,7 @@ void backsp(void)
 	if (b_buf < b_gap)
 		b_gap--;
 	b_point = pos(b_egap);
+	b_flags = (char)B_MODIFIED;
 }
 
 @ @<Procedures@>=
@@ -889,6 +905,7 @@ void delete(void)
 	movegap(b_point);
 	if (b_egap < b_ebuf)
 		b_point = pos(++b_egap);
+	b_flags = (char)B_MODIFIED;
 }
 
 @* Searching text.
@@ -1178,9 +1195,8 @@ But this check can only be done after the file is read, in order that the buffer
 is allocated.
 
 TODO: instead of this check do this: if file is closed without saving and it was
-changed after it was opened,
+changed after it was opened (|if (b_flags&(char)B_MODIFIED)|),
 saved cursor position must be the same as it was read from |DB_FILE|.
-For this, revert removing \\{B\_MODIFIED} flag (see \.{git lg em.w}).
 @^TODO@>
 
 @<Ensure that restored...@>=
