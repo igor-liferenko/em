@@ -544,7 +544,7 @@ if (i && buf[i-1] != L'\n') {
 
 @*1 File locking. Locking file is necessary to indicate that this file is already
 opened. Before we open a file, lock is created in |DB_FILE| in
-|@<Restore cursor@>| (which
+|@<Restore cursor...@>| (which
 in turn is executed right before the wanted file is opened). Upon exiting
 the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
 
@@ -1086,23 +1086,24 @@ void search(direction)
 int main(int argc, char **argv)
 {
 	setlocale(LC_CTYPE, "C.UTF-8");
-	if (argc != 2) fatal(L"usage: em filename\n");
-	/* TODO: if no arg specified, create temporary file in
-	/tex\_tmp/ (like it is done in "bin/tmp") and upon exiting em,
-	print the file name to stdout,
-	and remove "bin/tmp" */
+	if (argc == 1) fatal(L"TODO: create temporary file in tex_tmp (see file tmp in my bin)"
+        "and upon exiting em, print the file contents to stdout, and remove file tmp in my bin\n");
 @^TODO@>
 
-	/* TODO: make second argument to be the line number to be shown when file is opened */
-@^TODO@>
+	int lineno;
+	if (argc == 3) /* second argument is the line number to be shown when file is opened */
+		if (sscanf (argv[2], "%d", &lineno) != 1)
+		    fatal(L"error - line number not an integer\n");
+
 	FILE *fp;
 	@<Save file name@>@;
 	@<Open file@>@;
 	@<Get absolute...@>@;
-	@<Restore cursor@>@;
+	@<Restore cursor from |DB_FILE|@>@;
 	@<Read file@>@;
 	@<Close file@>@;
-	@<Ensure that restored position is inside buffer@>@;
+	if (argc == 3) @<Move cursor to |lineno|@>@;
+	else @<Ensure that restored position is inside buffer@>@;
 
         initscr(); /* start curses mode */
         raw();
@@ -1166,7 +1167,7 @@ char db_line[DB_LINE_SIZE+1];
 @ We do this before |@<Read file@>|, not after, because it is not necessary to free memory
 before the call to |fatal|.
 
-@<Restore cursor@>=
+@<Restore cursor...@>=
 if ((db_in=fopen(DB_FILE,"a+"))==NULL) { /* |"a+"| creates empty file if it does not exist */
   fclose(fp);
   fatal(L"Could not open DB file for reading: %s\n", strerror(errno));
@@ -1196,7 +1197,7 @@ if (file_is_locked)
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
-same empty file, |@<Restore cursor@>| will set |b_point| past the end of buffer.
+same empty file, |@<Restore cursor...@>| will set |b_point| past the end of buffer.
 
 But this check can only be done after the file is read, in order that the buffer
 is allocated.
@@ -1209,7 +1210,7 @@ saved cursor position must be the same as it was read from |DB_FILE|.
 @<Ensure that restored...@>=
 if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
 
-@ See |@<Restore cursor@>| for the technique used here.
+@ See |@<Restore cursor...@>| for the technique used here.
 
 @<Remove lock and save cursor@>=
 if ((db_in=fopen(DB_FILE,"r"))==NULL)
@@ -1227,6 +1228,12 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
 fclose(db_in);
 if (strstr(b_absname,"COMMIT_EDITMSG")==NULL) fprintf(db_out,"%s %ld\n",b_absname,b_point);
 fclose(db_out);
+
+@ @<Move cursor to |lineno|@>=
+for (b_point=0,lineno--; lineno>0; lineno--) {
+  b_point = lnend(b_point);
+  right();
+}
 
 @ Here, besides reading user input, we handle resize event. We pass
 reference to variable of type
