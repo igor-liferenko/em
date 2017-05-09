@@ -853,7 +853,7 @@ void up(void) {@+ b_point = lncolumn(upup(b_point), b_col); @+}
 void down(void) {@+ b_point = lncolumn(dndn(b_point), b_col); @+}
 void lnbegin(void) {@+ b_point = lnstart(b_point); @+}
 
-@ Forward scan for end of real line containing offset.
+@ Forward scan for finish of real line containing offset.
 
 @<Procedures@>=
 void lnend(void)
