@@ -548,18 +548,31 @@ opened. Before we open a file, lock is created in |DB_FILE| in
 in turn is executed right before the wanted file is opened). Upon exiting
 the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
 
-@ Reverse scan for start of real line containing offset.
+@ Reverse scan for beginning of real line containing offset.
 
 @<Procedures@>=
-point_t lnstart(register point_t off)
+point_t lnbegin(register point_t off)
 {
 	assert(off >= 0);
-	if (off == 0) return 0;
+	if (off == 0) return off;
 	register wchar_t *p;
 	do
 		p = ptr(--off);
-	while (b_buf < p && *p != L'\n');
+	while (b_buf < p && *p != L'\x0A');
 	return (b_buf < p ? ++off : 0);
+}
+
+@ Forward scan for end of real line containing offset.
+
+@<Procedures@>=
+point_t lnend(point_t off)
+{
+  if (off == pos(b_ebuf)) return off;
+  wchar_t *p;
+  do
+    p = ptr(off++);
+  while (b_ebuf > p && *p != L'\x0A');
+  return (b_ebuf > p ? --off : pos(b_ebuf));
 }
 
 @ Forward scan for start of logical line segment containing `finish'.
@@ -618,7 +631,7 @@ In other words, move up one screen line.
 @<Procedures@>=
 point_t upup(point_t off)
 {
-	point_t curr = lnstart(off);
+	point_t curr = lnbegin(off);
 	point_t seg = segstart(curr, off);
 	if (curr < seg)
 		off = segstart(curr, seg-1>=0?seg-1:0); /* previous line (is considered the
@@ -626,7 +639,7 @@ point_t upup(point_t off)
 			current line may be wrapped) NOTE: this was done after TODO-XXX was
                         added */
 	else
-		off = segstart(lnstart(curr-1>=0?curr-1:0), curr-1>=0?curr-1:0); /* previous
+		off = segstart(lnbegin(curr-1>=0?curr-1:0), curr-1>=0?curr-1:0); /* previous
                   line (is
 			considered the case that previous line may be wrapped) NOTE: this was
                         done after TODO-XXX was added */
@@ -639,7 +652,7 @@ In other words, move down one screen line.
 @<Procedures@>=
 point_t dndn(point_t off)
 {
-	return segnext(lnstart(off), off);
+	return segnext(lnbegin(off), off);
 }
 
 @ Return the offset of a column on the specified line.
@@ -776,7 +789,7 @@ void display()
 	/* find start of screen, handle scroll up off page or top of file  */
 	/* point is always within |b_page| and |b_epage| */
 	if (b_point < b_page)
-		b_page = segstart(lnstart(b_point), b_point);
+		b_page = segstart(lnbegin(b_point), b_point);
 
 	/* reframe when scrolled off bottom */
 	if (b_epage <= b_point) {
@@ -851,20 +864,6 @@ void left(void) {@+ if (0 < b_point) b_point--; @+}
 void right(void) {@+ if (b_point < pos(b_ebuf)) b_point++; @+}
 void up(void) {@+ b_point = lncolumn(upup(b_point), b_col); @+}
 void down(void) {@+ b_point = lncolumn(dndn(b_point), b_col); @+}
-void lnbegin(void) {@+ b_point = lnstart(b_point); @+}
-
-@ Forward scan for finish of real line containing offset.
-
-@<Procedures@>=
-void lnend(void)
-{
-  if (ptr(b_point)==b_ebuf) return;
-  wchar_t *p;
-  do
-    p = ptr(b_point++);
-  while (b_ebuf > p && *p != L'\n');
-  if (b_ebuf > p) b_point--; else b_point = pos(b_ebuf);
-}
 
 @ @<Procedures@>=
 void pgdown(void)
@@ -1267,10 +1266,10 @@ if (get_wch(&c) == KEY_CODE_YES) {
         down();
         break;
     case KEY_HOME:
-        lnbegin();
+        b_point = lnbegin(b_point);
         break;
     case KEY_END:
-        lnend();
+        b_point = lnend(b_point);
         break;
     case KEY_NPAGE:
         pgdown();
@@ -1344,11 +1343,11 @@ else {
 		break;
 	case
 		L'\x05': /* C-e */
-		lnend();
+		b_point = lnend(b_point);
 		break;
 	case
 		L'\x01': /* C-a */
-		lnbegin();
+		b_point = lnbegin(b_point);
 		break;
 	case
 		L'\x04': /* C-d */
