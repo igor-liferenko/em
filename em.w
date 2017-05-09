@@ -292,9 +292,10 @@ FIXME: for what is |register|?
 wchar_t *ptr(register point_t offset)
 {
 	assert(offset >= 0);
-/* TODO: use |size_t| typedef for |point_t| when you will find out why this |assert| fails
+/* TODO-XXX: use |size_t| typedef for |point_t| when you will find out why this |assert| fails
    sometimes; for this check all places where this function is called and see if wrong
-   value can sneak in */
+   value can sneak in. NOTE: see function |upup| - changes were made there after this TODO
+   was added - maybe they fix the problem */
 @^TODO@>
 	return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
 }
@@ -547,7 +548,7 @@ opened. Before we open a file, lock is created in |DB_FILE| in
 in turn is executed right before the wanted file is opened). Upon exiting
 the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
 
-@ Reverse scan for start of logical line containing offset.
+@ Reverse scan for start of real line containing offset.
 
 @<Procedures@>=
 point_t lnstart(register point_t off)
@@ -620,11 +621,15 @@ point_t upup(point_t off)
 	point_t curr = lnstart(off);
 	point_t seg = segstart(curr, off);
 	if (curr < seg)
-		off = segstart(curr, seg-1); /* previous line (is considered the case that
-			current line may be wrapped) */
+		off = segstart(curr, seg-1>=0?seg-1:0); /* previous line (is considered the
+                  case that
+			current line may be wrapped) NOTE: this was done after TODO-XXX was
+                        added */
 	else
-		off = segstart(lnstart(curr-1>=0?curr-1:0), curr-1); /* previous line (is
-			considered the case that previous line may be wrapped) */
+		off = segstart(lnstart(curr-1>=0?curr-1:0), curr-1>=0?curr-1:0); /* previous
+                  line (is
+			considered the case that previous line may be wrapped) NOTE: this was
+                        done after TODO-XXX was added */
 	return off;
 }
 
@@ -846,13 +851,19 @@ void left(void) {@+ if (0 < b_point) b_point--; @+}
 void right(void) {@+ if (b_point < pos(b_ebuf)) b_point++; @+}
 void up(void) {@+ b_point = lncolumn(upup(b_point), b_col); @+}
 void down(void) {@+ b_point = lncolumn(dndn(b_point), b_col); @+}
-void lnbegin(void) {@+ b_point = segstart(lnstart(b_point), b_point); @+}
+void lnbegin(void) {@+ b_point = lnstart(b_point); @+}
 
-@ @<Procedures@>=
+@ Forward scan for end of real line containing offset.
+
+@<Procedures@>=
 void lnend(void)
 {
-	b_point = dndn(b_point);
-	left();
+  if (ptr(b_point)==b_ebuf) return;
+  wchar_t *p;
+  do
+    p = ptr(b_point++);
+  while (b_ebuf > p && *p != L'\n');
+  if (b_ebuf > p) b_point--; else b_point = pos(b_ebuf);
 }
 
 @ @<Procedures@>=
