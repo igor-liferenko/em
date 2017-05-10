@@ -1137,9 +1137,6 @@ sequences and keyboard buttons by which they are generated:
 }
 \smallskip
 {\bf Ubuntu} (corresponding {\sl terminfo\/} capabilities are \.{khome} and \.{kend}):
-TODO: check once again on Ubuntu that these sequences really map to terminfo capabilities
-khome and kend, by doing \.{infocmp -1\char'174egrep 'EOH\char'174EOF'}
-@^TODO@>
 {\tt\obeylines\obeyspaces
 |0x1B 0x4F 0x48 ==| Home
 |0x1B 0x4F 0x46 ==| End
