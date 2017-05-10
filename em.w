@@ -1130,13 +1130,16 @@ int main(int argc, char **argv)
 on certain buttons. Here are some examples of the identity between control code
 sequences and keyboard buttons by which they are generated:
 \medskip
-{\bf Debian} ({\sl terminfo\/} capability is \.{home}):
+{\bf Debian} (corresponding {\sl terminfo\/} capabilities are \.{home} and \.{end}):
 {\tt\obeylines\obeyspaces
 |0x1B 0x5B 0x48 ==| Home
 |0x1B 0x5B 0x46 ==| End
 }
 \smallskip
-{\bf Ubuntu} ({\sl terminfo\/} capability is \.{khome}):
+{\bf Ubuntu} (corresponding {\sl terminfo\/} capabilities are \.{khome} and \.{kend}):
+TODO: check once again on Ubuntu that these sequences really map to terminfo capabilities
+khome and kend, by doing \.{infocmp -1\char'174egrep 'EOH\char'174EOF'}
+@^TODO@>
 {\tt\obeylines\obeyspaces
 |0x1B 0x4F 0x48 ==| Home
 |0x1B 0x4F 0x46 ==| End
@@ -1155,10 +1158,10 @@ keypad(stdscr,TRUE);
 @ DB file cannot have null char, so use |fgets|.
 We will not use \\{fgetws} here, because the conversion
 of file name from UTF-8 to unicode is not
-necessary here and because it uses char*, not char, and char* is OK.
+necessary here and because it uses |char*|, not |char|, and |char*| is OK.
 
 We use Linux, so just delete the file by |unlink| after we open it - then open a new file
-with the same name and write the modified lines into the new file. We'll have two |FILE *|
+with the same name and write the modified lines into the new file. We'll have two |FILE*|
 variables.
 @^system dependencies@>
 
