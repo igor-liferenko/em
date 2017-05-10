@@ -1146,7 +1146,9 @@ sequences and keyboard buttons by which they are generated:
 On both of these systems \.{Home} and \.{End} keys are automatically translated into
 ``one-character'' codes |KEY_HOME| and
 |KEY_END| respectively by {\sl ncurses}, which frees us from scanning input sequences manually
-and looking them up in {\sl terminfo\/} database in the application.
+and looking them up in {\sl terminfo\/} database in the application (and also from
+interpreting not very clear naming scheme in which \.{khome} is equivalent to \.{home},
+etc.).
 @^system dependencies@>
 
 @<Automatically interpret ANSI control sequences@>=
