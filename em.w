@@ -1120,7 +1120,7 @@ int main(int argc, char **argv)
 	if (scrap != NULL) free(scrap);
 
 	move(LINES - 1, 0);
-	refresh(); /* update the real screen */
+	refresh(); /* needed after |move| */
 	noraw();
 	endwin(); /* end curses mode */
 
