@@ -1154,6 +1154,7 @@ etc.).
 
 @<Automatically interpret ANSI control sequences@>=
 keypad(stdscr,TRUE);
+set_escdelay(50); /* tell ncurses to pass the Esc key quickly */
 
 @ DB file cannot have null char, so use |fgets|.
 We will not use \\{fgetws} here, because the conversion
