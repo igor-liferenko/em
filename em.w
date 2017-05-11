@@ -1095,6 +1095,8 @@ int main(int argc, char **argv)
 		if (sscanf (argv[2], "%d", &lineno) != 1)
 		    fatal(L"error - line number not an integer\n");
 
+	if (initscr() == NULL) exit(EXIT_FAILURE); /* start curses mode */
+
 	FILE *fp;
 	@<Save file name@>@;
 	@<Open file@>@;
@@ -1105,7 +1107,6 @@ int main(int argc, char **argv)
 	if (argc == 3) @<Move cursor to |lineno|@>@;
 	else @<Ensure that restored position is inside buffer@>@;
 
-        initscr(); /* start curses mode */
         raw();
         noecho();
 	nonl(); /* return proper value (|0x0d|) from |get_wch| for C-m and ENTER keys */
