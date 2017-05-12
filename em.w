@@ -427,7 +427,11 @@ if ((r=readlink(tmpfname, b_absname, ARRAY_SIZE(b_absname)-1))==-1)
   fatal(L"Could not get absolute path.\x0a");
 b_absname[r]='\0';
 
-@ @<Open file@>=
+@ TODO: if file does not exist, do not create it right away - create it only in
+|@<Write file@>|.
+@^TODO@>
+
+@<Open file@>=
 if ((fp = fopen(b_fname, "r")) == NULL)
   if ((fp = fopen(b_fname, "w")) == NULL) /* create file if it does not exist */
     fatal(L"Failed to open file \"%s\".\x0a", b_fname);
@@ -470,6 +474,9 @@ if (b_buf < b_gap && *(b_gap-1) != L'\n')
 
 @ We write file character-by-character for similar reasons which are explained in
 |@<Read file@>|.
+TODO: before saving check if file was modified since it was read and ask
+if owerwrite must be done (see git lg here how asking was implemented earlier)
+@^TODO@>
 
 @<Write file@>=
 point_t n;
@@ -942,6 +949,8 @@ reset |search_failed| when direction is changed. Use |no_occurrences| to track t
 @<Search forward@>=
 if (direction==0&&!no_occurrences) search_failed=0; /* direction changed */
 for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
+/* FIXME: if instead of |end_p| will be used |a| will it get into the index? */
+@^FIXME@>
 	point_t pp;
 	wchar_t *s;
 	for (s=searchtext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++) ;
