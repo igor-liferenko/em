@@ -1201,7 +1201,10 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   if (strncmp(db_line, b_absname, strlen(b_absname)) == 0) {
     /* FIXME: check that |strlen(b_absname)<DB_LINE_SIZE);| */
 @^FIXME@>
-      if (sscanf(db_line+strlen(b_absname), "%ld", &b_point) != 1)
+      if (sscanf(db_line+strlen(b_absname), "%ld %ld", &b_point, &b_page) != 2)
+/* TODO: restore the same screen appearance, including cursor line (as in
+|@<Restore cursor...@>|) and cursor column (see |lncolumn|) */
+@^TODO@>
         file_is_locked = 1;
     continue;
   }
@@ -1244,7 +1247,8 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   fprintf(db_out,"%s",db_line);
 }
 fclose(db_in);
-if (strstr(b_absname,"COMMIT_EDITMSG")==NULL) fprintf(db_out,"%s %ld\n",b_absname,b_point);
+if (strstr(b_absname,"COMMIT_EDITMSG")==NULL)
+  fprintf(db_out,"%s %ld %ld\n",b_absname,b_point,b_page);
 fclose(db_out);
 
 @ @<Move cursor to |lineno|@>= {
@@ -1252,13 +1256,16 @@ fclose(db_out);
     b_point = lnend(b_point);
     right();
   }
-  b_page=b_point;
-  for (int i=LINES/2;i>0;i--)
-    b_page=upup(b_page);
-  b_epage=b_page;
-  for (int i=LINES;i>0;i--)
-    b_epage=dndn(b_epage);
+  @<Position cursor in the middle line of screen@>@;
 }
+
+@ @<Position cursor...@>=
+b_page=b_point;
+for (int i=LINES/2;i>0;i--)
+  b_page=upup(b_page);
+b_epage=b_page;
+for (int i=LINES;i>0;i--)
+  b_epage=dndn(b_epage);
 
 @ Here, besides reading user input, we handle resize event. We pass
 reference to variable of type
