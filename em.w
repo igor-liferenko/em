@@ -1247,10 +1247,17 @@ fclose(db_in);
 if (strstr(b_absname,"COMMIT_EDITMSG")==NULL) fprintf(db_out,"%s %ld\n",b_absname,b_point);
 fclose(db_out);
 
-@ @<Move cursor to |lineno|@>=
-for (b_point=0,lineno--; lineno>0; lineno--) {
-  b_point = lnend(b_point);
-  right();
+@ @<Move cursor to |lineno|@>= {
+  for (b_point=0,lineno--; lineno>0; lineno--) {
+    b_point = lnend(b_point);
+    right();
+  }
+  b_page=b_point;
+  for (int i=LINES/2;i>0;i--)
+    b_page=upup(b_page);
+  b_epage=b_page;
+  for (int i=LINES;i>0;i--)
+    b_epage=dndn(b_epage);
 }
 
 @ Here, besides reading user input, we handle resize event. We pass
