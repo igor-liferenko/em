@@ -1129,7 +1129,7 @@ int main(int argc, char **argv)
 	if (scrap != NULL) free(scrap);
 
 	move(LINES - 1, 0);
-	refresh(); /* needed after |move| */
+	refresh(); /* FIXME: why do we need this? Remove and check what will be. */
 	noraw();
 	endwin(); /* end curses mode */
 
