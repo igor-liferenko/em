@@ -1201,10 +1201,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   if (strncmp(db_line, b_absname, strlen(b_absname)) == 0) {
     /* FIXME: check that |strlen(b_absname)<DB_LINE_SIZE);| */
 @^FIXME@>
-      if (sscanf(db_line+strlen(b_absname), "%ld %ld", &b_point, &b_page) != 2)
-/* TODO: restore the same screen appearance, including cursor line (as in
-|@<Restore cursor...@>|) and cursor column (see |lncolumn|) */
-@^TODO@>
+      if (sscanf(db_line+strlen(b_absname), "%ld %ld %ld", &b_point, &b_page, &b_epage) != 3)
         file_is_locked = 1;
     continue;
   }
@@ -1248,7 +1245,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
 }
 fclose(db_in);
 if (strstr(b_absname,"COMMIT_EDITMSG")==NULL)
-  fprintf(db_out,"%s %ld %ld\n",b_absname,b_point,b_page);
+  fprintf(db_out,"%s %ld %ld %ld\n",b_absname,b_point,b_page,b_epage);
 fclose(db_out);
 
 @ @<Move cursor to |lineno|@>= {
