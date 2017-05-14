@@ -790,6 +790,11 @@ instead of recalculating it.
 @<Procedures@>=
 void display()
 {
+/* FIXME: when cursor is on bottom line and C-m is pressed, the cursor goes
+to new line but the page is not scrolled one line up as it should be;
+make so that |down| will be called if character |L'\x0A'| is inserted and |b_point|
+equals to |b_epage| */
+@^FIXME@>
 	wchar_t *p;
 	int i, j, k;
 
@@ -1042,6 +1047,11 @@ void search(direction)
 	  case KEY_BACKSPACE:
 		@<BackSpace in search@>@;
 		break;
+	  case KEY_IC:
+		/* TODO: use Insert key as a switcher to toggle |L'\x0D'| below between
+adding |L'\x0A'| to search string and current behavoir */
+@^TODO@>
+		break;
 	}
     }
     else {
@@ -1140,7 +1150,8 @@ int main(int argc, char **argv)
 on certain buttons. Here are some examples of the identity between control code
 sequences and keyboard buttons by which they are generated:
 \medskip
-{\bf Debian}, gnome-terminal (corresponding {\sl terminfo\/} capabilities are \.{home} and \.{end}):
+{\bf Debian}, gnome-terminal (corresponding {\sl terminfo\/} capabilities are \.{home} and
+\.{end}):
 {\tt\obeylines\obeyspaces
 |0x1B 0x5B 0x48 ==| Home
 |0x1B 0x5B 0x46 ==| End
@@ -1161,6 +1172,13 @@ and looking them up in {\sl terminfo\/} database in the application (and also fr
 interpreting not very clear naming scheme in which \.{khome} is equivalent to \.{home},
 etc.).
 @^system dependencies@>
+
+TODO: run \.{showkey -a} and press \.{F10}, then find the generated sequence in the output
+of \.{infocmp -1} to determine terminal capability, then find this capability in
+\.{terminfo(5)} and by analogy see which capability must have \.{F13} and then find
+the sequence for this capability in \.{infocmp -1} and bind this sequence to Esc key and C-[
+via xkb or something (ask on SO)
+@^TODO@>
 
 @<Automatically interpret ANSI control sequences@>=
 keypad(stdscr,TRUE);

@@ -4,6 +4,8 @@ section of cwebman (+ consider that it is UTF-8 sequence)
 "key <BKSP> { [ BackSpace, U2260 ] };")
 For this you will need to understand what means "@s not_eq normal" line in cweave.w,
 ctangle.w and common.w
+And then you will have to change also encTeX settings (to map these characters to proper
+slots in cmtex font) and make these codes of category 11.
 
 implement proper job control as said here:
   http://web.archive.org/web/20160329140839/http://www.cons.org/cracauer/sigint.html
