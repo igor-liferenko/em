@@ -1140,13 +1140,14 @@ int main(int argc, char **argv)
 on certain buttons. Here are some examples of the identity between control code
 sequences and keyboard buttons by which they are generated:
 \medskip
-{\bf Debian} (corresponding {\sl terminfo\/} capabilities are \.{home} and \.{end}):
+{\bf Debian}, gnome-terminal (corresponding {\sl terminfo\/} capabilities are \.{home} and \.{end}):
 {\tt\obeylines\obeyspaces
 |0x1B 0x5B 0x48 ==| Home
 |0x1B 0x5B 0x46 ==| End
 }
 \smallskip
-{\bf Ubuntu} (corresponding {\sl terminfo\/} capabilities are \.{khome} and \.{kend}):
+{\bf Ubuntu MATE}, mate-terminal (corresponding {\sl terminfo\/}
+capabilities are \.{khome} and \.{kend}):
 {\tt\obeylines\obeyspaces
 |0x1B 0x4F 0x48 ==| Home
 |0x1B 0x4F 0x46 ==| End
@@ -1163,7 +1164,6 @@ etc.).
 
 @<Automatically interpret ANSI control sequences@>=
 keypad(stdscr,TRUE);
-set_escdelay(50); /* tell ncurses to pass the Esc key quickly */
 
 @ DB file cannot have null char, so use |fgets|.
 We will not use \\{fgetws} here, because the conversion
