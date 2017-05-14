@@ -1028,6 +1028,7 @@ void search(direction)
   int search_failed = 0;
   point_t search_point;
   int no_occurrences=0;
+  int insert_mode=0;
 
   msg(L"Search %ls: ", direction==1?L"Forward":L"Backward");
   dispmsg();
@@ -1048,9 +1049,7 @@ void search(direction)
 		@<BackSpace in search@>@;
 		break;
 	  case KEY_IC:
-		/* TODO: use Insert key as a switcher to toggle |L'\x0D'| below between
-adding |L'\x0A'| to search string and current behavoir */
-@^TODO@>
+		@<Use Insert key as a switcher@>@;
 		break;
 	}
     }
@@ -1058,8 +1057,15 @@ adding |L'\x0A'| to search string and current behavoir */
 	switch (c) {
 	    case
               L'\x0d': /* C-m */
-			if (search_failed) b_point = search_point;
-			return;
+			if (insert_mode) {
+				c = L'\x0A';
+				@<Add char to search text@>@;
+				break;
+			}
+			else {
+				if (search_failed) b_point = search_point;
+				return;
+			}
 	    case
               L'\x07': /* C-g */
 	    @t\4@>
@@ -1082,13 +1088,7 @@ adding |L'\x0A'| to search string and current behavoir */
 		@<BackSpace in search@>@;
 		break;
 	    default:
-			if (cpos < STRBUF_M - 1) {
-				searchtext[cpos++] = (wchar_t) c;
-				searchtext[cpos] = L'\0';
-				msg(L"Search %ls: %ls",
-                                  direction==1?L"Forward":L"Backward",searchtext);
-				dispmsg();
-			}
+		@<Add char to search text@>@;
 	}
     }
   }
@@ -1100,6 +1100,27 @@ adding |L'\x0A'| to search string and current behavoir */
                         searchtext[--cpos] = L'\0';
                         msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
                         dispmsg();
+
+@ @<Add char to search text@>=
+                        if (cpos < STRBUF_M - 1) {
+                                searchtext[cpos++] = (wchar_t) c;
+                                searchtext[cpos] = L'\0';
+                                msg(L"Search %ls: %ls",
+                                  direction==1?L"Forward":L"Backward",searchtext);
+                                dispmsg();
+                        }
+
+@ Insert key toggles 
+the key which sends |L'\x0D'| between
+adding |L'\x0A'| to search string and exiting the search on the current spot.
+
+The matter is that code |0x0A| is automatically coverted to |0x0D| when text is pasted
+from buffer.
+
+This behavior is due to a dain bramage of window manager or gnome-terminal.
+
+@<Use Insert key as a switcher@>=
+insert_mode=!insert_mode;
 
 @ @<Main program@>=
 int main(int argc, char **argv)
