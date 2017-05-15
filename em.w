@@ -1215,6 +1215,10 @@ with the same name and write the modified lines into the new file. We'll have tw
 variables.
 @^system dependencies@>
 
+If the program is run as {\sl root\/} (|getuid()==0|), after changing |DB_FILE|
+change its ownership to {\sl user}.
+\xdef\getuidsec{\secno}
+
 @d DB_FILE "/tmp/em.db"
 @d DB_LINE_SIZE 10000
 
@@ -1249,6 +1253,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
 }
 fclose(db_in);
 fprintf(db_out,"%s lock\n",b_absname);
+if (getuid()==0) fchown(fileno(db_out),1000,1000);
 fclose(db_out);
 if (file_is_locked)
   fatal(L"File is locked.\n");
@@ -1286,6 +1291,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
 fclose(db_in);
 if (strstr(b_absname,"COMMIT_EDITMSG")==NULL)
   fprintf(db_out,"%s %ld %ld %ld\n",b_absname,b_point,b_page,b_epage);
+if (getuid()==0) fchown(fileno(db_out),1000,1000); /* see explanation in \getuidsec\ */
 fclose(db_out);
 
 @ @<Move cursor to |lineno|@>= {
