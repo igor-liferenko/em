@@ -1216,10 +1216,6 @@ with the same name and write the modified lines into the new file. We'll have tw
 variables.
 @^system dependencies@>
 
-If the program is run as {\sl root\/} (|getuid()==0|), after changing |DB_FILE|
-change its ownership to {\sl user}.
-\xdef\getuidsec{\secno}
-
 @d DB_FILE "/tmp/em.db"
 @d DB_LINE_SIZE 10000
 
@@ -1254,10 +1250,18 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
 }
 fclose(db_in);
 fprintf(db_out,"%s lock\n",b_absname);
-if (getuid()==0) fchown(fileno(db_out),1000,1000);
+@<Assure correct ownership of |DB_FILE|@>@;
 fclose(db_out);
 if (file_is_locked)
   fatal(L"File is locked.\n");
+
+@ If the program is run as {\sl root\/} (|getuid()==0|), after changing |DB_FILE|
+change its ownership to {\sl user}.
+
+@<Assure...@>=
+char *sudo_uid, *sudo_gid;
+if (getuid()==0 && (sudo_uid = getenv("SUDO_UID"))!=NULL && (sudo_gid = getenv("SUDO_GID"))!=NULL)
+  fchown(fileno(db_out),(uid_t)strtol(sudo_uid, NULL, 10),(gid_t)strtol(sudo_gid, NULL, 10));
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
@@ -1276,6 +1280,9 @@ if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
 
 @ See |@<Restore cursor...@>| for the technique used here.
 
+@s uid_t int
+@s gid_t int
+
 @<Remove lock and save cursor@>=
 if ((db_in=fopen(DB_FILE,"r"))==NULL)
   fatal(L"Could not open DB file for reading: %s\n", strerror(errno));
@@ -1292,7 +1299,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
 fclose(db_in);
 if (strstr(b_absname,"COMMIT_EDITMSG")==NULL)
   fprintf(db_out,"%s %ld %ld %ld\n",b_absname,b_point,b_page,b_epage);
-if (getuid()==0) fchown(fileno(db_out),1000,1000); /* see explanation in \S\ \getuidsec\ */
+@<Assure...@>@;
 fclose(db_out);
 
 @ @<Move cursor to |lineno|@>= {
@@ -1466,7 +1473,7 @@ else {
 @ @<Header files@>=
 /* TODO: sort alphabetically */
 @^TODO@>
-#include <stdlib.h> /* |malloc|, |exit|, |EXIT_FAILURE|, |free|, |realloc| */
+#include <stdlib.h> /* |malloc|, |exit|, |EXIT_FAILURE|, |free|, |realloc|, |getenv|, |strtol| */
 #include <stdarg.h> /* |va_end|, |va_start| */
 #include <assert.h> /* |assert| */
 #include <ncursesw/curses.h> /* |add_wch|, |addwstr|, |chars|, |clrtoeol|, |COLS|, |endwin|,
@@ -1482,6 +1489,7 @@ else {
 #include <string.h> /* |strerror|, |strncmp|, |memset|, |strlen|, |strstr| */
 #include <errno.h> /* |errno| */
 #include <limits.h> /* |PATH_MAX| */
-#include <unistd.h> /* |unlink|, |readlink|, |fchown| */
+#include <sys/types.h> /* |uid_t|, |gid_t| */
+#include <unistd.h> /* |unlink|, |readlink|, |fchown|, |getuid| */
 
 @* Index.
