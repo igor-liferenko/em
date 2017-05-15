@@ -621,7 +621,7 @@ point_t segnext(point_t start, point_t finish)
 	int c = 0;
 
 	point_t scan = segstart(start, finish);
-	for (;;) {
+	while (1) {
 		p = ptr(scan);
 		if (b_ebuf <= p || COLS <= c)
 			break;
@@ -1150,10 +1150,19 @@ pressing C-m key.) Insert key toggles the key which sends |L'\x0D'| between
 adding |L'\x0A'| to search string and normal behavior, i.e., exiting the
 search on the current spot.
 
-If this mode is active, it is indicated by uppercase letters in search prompt.
+If this mode is active, in search prompt all letters are uppercased.
+If this mode is not active, in search prompt all letters are lowercased,
+except first letters of words. The search prompt ends at the first occurrence
+of character `\.:'. The changes to search prompt are displayed immediately
+after Insert key is pressed.
 
 @<Use Insert key as a switcher@>=
 insert_mode=!insert_mode;
+for (wchar_t *k=msgline; *k!=L':'; k++)
+  if (insert_mode) *k=(wchar_t)towupper((wint_t)*k);
+  else if (k!=msgline&&*(k-1)!=L' ') *k=(wchar_t)towlower((wint_t)*k);
+msgflag=TRUE;
+dispmsg();
 
 @ @<Main program@>=
 int main(int argc, char **argv)
