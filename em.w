@@ -1261,8 +1261,7 @@ change its ownership to {\sl user}.
 @d UID 1000
 
 @<Assure...@>=
-if (getuid()==0)
-  fchown(fileno(db_out),UID,UID);
+if (getuid()==0) fchown(fileno(db_out),UID,UID);
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
@@ -1471,7 +1470,7 @@ else {
 @ @<Header files@>=
 /* TODO: sort alphabetically */
 @^TODO@>
-#include <stdlib.h> /* |malloc|, |exit|, |EXIT_FAILURE|, |free|, |realloc|, |getenv|, |strtol| */
+#include <stdlib.h> /* |malloc|, |exit|, |EXIT_FAILURE|, |free|, |realloc| */
 #include <stdarg.h> /* |va_end|, |va_start| */
 #include <assert.h> /* |assert| */
 #include <ncursesw/curses.h> /* |add_wch|, |addwstr|, |chars|, |clrtoeol|, |COLS|, |endwin|,
@@ -1487,7 +1486,6 @@ else {
 #include <string.h> /* |strerror|, |strncmp|, |memset|, |strlen|, |strstr| */
 #include <errno.h> /* |errno| */
 #include <limits.h> /* |PATH_MAX| */
-#include <sys/types.h> /* |uid_t|, |gid_t| */
 #include <unistd.h> /* |unlink|, |readlink|, |fchown|, |getuid| */
 
 @* Index.
