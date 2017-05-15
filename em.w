@@ -1061,16 +1061,14 @@ void search(direction)
     else {
 	switch (c) {
 	    case
-              L'\x0d': /* C-m */
+              L'\x0D': /* C-m */
 			if (insert_mode) {
 				c = L'\x0A';
 				@<Add char to search text@>@;
 				break;
 			}
-			else {
-				if (search_failed) b_point = search_point;
-				return;
-			}
+			if (search_failed) b_point = search_point;
+			return;
 	    case
               L'\x07': /* C-g */
 	    @t\4@>
