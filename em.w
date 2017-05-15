@@ -1292,7 +1292,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
 fclose(db_in);
 if (strstr(b_absname,"COMMIT_EDITMSG")==NULL)
   fprintf(db_out,"%s %ld %ld %ld\n",b_absname,b_point,b_page,b_epage);
-if (getuid()==0) fchown(fileno(db_out),1000,1000); /* see explanation in \getuidsec\ */
+if (getuid()==0) fchown(fileno(db_out),1000,1000); /* see explanation in \S\ \getuidsec\ */
 fclose(db_out);
 
 @ @<Move cursor to |lineno|@>= {
