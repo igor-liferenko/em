@@ -1258,6 +1258,9 @@ if (file_is_locked)
 @ If the program is run as {\sl root\/} (|getuid()==0|), after changing |DB_FILE|
 change its ownership to {\sl user}.
 
+@s uid_t int
+@s gid_t int
+
 @<Assure...@>=
 char *sudo_uid, *sudo_gid;
 if (getuid()==0 && (sudo_uid = getenv("SUDO_UID"))!=NULL && (sudo_gid = getenv("SUDO_GID"))!=NULL)
@@ -1279,9 +1282,6 @@ saved cursor position must be the same as it was read from |DB_FILE|.
 if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
 
 @ See |@<Restore cursor...@>| for the technique used here.
-
-@s uid_t int
-@s gid_t int
 
 @<Remove lock and save cursor@>=
 if ((db_in=fopen(DB_FILE,"r"))==NULL)
