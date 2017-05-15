@@ -1297,7 +1297,7 @@ fclose(db_out);
 
 @ @<Position cursor...@>=
 b_page=b_point;
-for (int i=LINES/2;i>0;i--)
+for (int i=(LINES%2?LINES/2:LINES/2-1);i>0;i--)
   b_page=upup(b_page);
 b_epage=b_page;
 for (int i=LINES;i>0;i--)
