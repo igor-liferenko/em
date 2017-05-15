@@ -1265,7 +1265,7 @@ if (file_is_locked)
 @ If the program is run as {\sl root\/} (|getuid()==0|), after changing |DB_FILE|
 change its ownership to {\sl user}.
 
-@d UID 1000
+@d UID 1000 /* id of user who runs EM */
 
 @<Assure...@>=
 if (getuid()==0) fchown(fileno(db_out),UID,UID);
