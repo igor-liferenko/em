@@ -1258,15 +1258,11 @@ if (file_is_locked)
 @ If the program is run as {\sl root\/} (|getuid()==0|), after changing |DB_FILE|
 change its ownership to {\sl user}.
 
-@s uid_t int
-@s gid_t int
+@d UID 1000
 
 @<Assure...@>=
-const char *sudo_uid, *sudo_gid;
-if (getuid()==0 && (sudo_uid = getenv("SUDO_UID"))!=NULL && (sudo_gid = getenv("SUDO_GID"))!=NULL)
-  fchown(fileno(db_out),(uid_t)strtol(sudo_uid, NULL, 10),(gid_t)strtol(sudo_gid, NULL, 10));
-/* FIXME: is casting to |uid_t| and |git_t| safe? */
-@^FIXME@>
+if (getuid()==0)
+  fchown(fileno(db_out),UID,UID);
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
