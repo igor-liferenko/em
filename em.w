@@ -1020,6 +1020,9 @@ wchar_t searchtext[STRBUF_M];
 @ /* TODO: make search case-insensitive */
 @^TODO@>
 
+TODO: highlight matched text with inverted colors
+@^TODO@>
+
 @<Procedures@>=
 void search(direction)
    int direction; /* 1 = forward; 0 = backward */
@@ -1112,14 +1115,18 @@ void search(direction)
                                 dispmsg();
                         }
 
-@ Insert key toggles 
-the key which sends |L'\x0D'| between
-adding |L'\x0A'| to search string and exiting the search on the current spot.
-
-The matter is that code |0x0A| is automatically coverted to |0x0D| when text is pasted
-from buffer.
-
-This behavior is due to a dain bramage of window manager or gnome-terminal.
+@ Normally, when you want to search newline, you press C-j in search
+mode---this key sends code |0x0A|, which is duly inserted in search text.
+When you want to paste searched text from clipboard, press Insert key
+before the paste, and then after the paste---to restore normal behavior.
+The matter is that code |0x0A| is automatically coverted to |0x0D| when text is
+pasted from buffer. (This behavior is caused by window manager, or
+gnome-terminal---I'm not sure exactly, and I don't know how to disable it;
+maybe this may be even used as a feature---to type |0x0A| character in
+search text the same way as you type it in ondinary text, i.e., by
+pressing C-m key.) Insert key toggles the key which sends |L'\x0D'| between
+adding |L'\x0A'| to search string and normal behavior, i.e., exiting the
+search on the current spot.
 
 @<Use Insert key as a switcher@>=
 insert_mode=!insert_mode;
