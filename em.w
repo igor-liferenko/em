@@ -221,7 +221,8 @@ editor because of its simplicity and efficient use of memory.
 @d B_MODIFIED 0x01 /* modified buffer */
 @d CHUNK 8096L /* TODO: when it was 512 and I pasted from clipboard
   (or typed manually in one go) text of ~600 characters,
-  program segfaulted; reproduce this again and determine the cause */
+  program segfaulted; reproduce this again and determine the cause.
+  HINT: make |CHUNK| 2 or 3 and use \.{gdb} */
 @^TODO@>
 
 @c
@@ -804,7 +805,7 @@ equals to |b_epage| */
 		b_page = segstart(lnbegin(b_point), b_point);
 
 	/* reframe when scrolled off bottom */
-	if (b_epage <= b_point) {
+	if (b_epage <= b_point) { /* FIXME: see if logic in section \linenosec\ matches this */
 		b_page = dndn(b_point); /* find end of screen plus one */
 		if (pos(b_ebuf) <= b_page) { /* if we scoll to EOF we show 1
                   blank line at bottom of screen */
@@ -1295,13 +1296,13 @@ fclose(db_out);
   @<Position cursor in the middle line of screen@>@;
 }
 
-@ @<Position cursor...@>=
+@ \xdef\linenosec{\secno}
+
+@<Position cursor...@>=
 b_page=b_point;
-for (int i=(LINES%2?LINES/2:LINES/2-1);i>0;i--)
+for (int i=(LINES-1)/2;i>0;i--)
   b_page=upup(b_page);
-b_epage=b_page;
-for (int i=LINES;i>0;i--)
-  b_epage=dndn(b_epage);
+b_epage=b_point+1; /* |display| will be called anyway, and it will set proper value */
 
 @ Here, besides reading user input, we handle resize event. We pass
 reference to variable of type
