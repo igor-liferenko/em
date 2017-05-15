@@ -1262,9 +1262,11 @@ change its ownership to {\sl user}.
 @s gid_t int
 
 @<Assure...@>=
-char *sudo_uid, *sudo_gid;
+const char *sudo_uid, *sudo_gid;
 if (getuid()==0 && (sudo_uid = getenv("SUDO_UID"))!=NULL && (sudo_gid = getenv("SUDO_GID"))!=NULL)
   fchown(fileno(db_out),(uid_t)strtol(sudo_uid, NULL, 10),(gid_t)strtol(sudo_gid, NULL, 10));
+/* FIXME: is casting to |uid_t| and |git_t| safe? */
+@^FIXME@>
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
