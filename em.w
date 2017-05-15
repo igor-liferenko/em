@@ -805,7 +805,8 @@ equals to |b_epage| */
 		b_page = segstart(lnbegin(b_point), b_point);
 
 	/* reframe when scrolled off bottom */
-	if (b_epage <= b_point) { /* FIXME: see if logic in section \linenosec\ matches this */
+	if (b_epage <= b_point) { /* FIXME: see if logic in section |@<Position cursor...@>|
+          matches this */
 		b_page = dndn(b_point); /* find end of screen plus one */
 		if (pos(b_ebuf) <= b_page) { /* if we scoll to EOF we show 1
                   blank line at bottom of screen */
@@ -1302,9 +1303,7 @@ fclose(db_out);
   @<Position cursor in the middle line of screen@>@;
 }
 
-@ \xdef\linenosec{\secno}
-
-@<Position cursor...@>=
+@ @<Position cursor...@>=
 b_page=b_point;
 for (int i=(LINES-1)/2;i>0;i--)
   b_page=upup(b_page);
@@ -1483,6 +1482,6 @@ else {
 #include <string.h> /* |strerror|, |strncmp|, |memset|, |strlen|, |strstr| */
 #include <errno.h> /* |errno| */
 #include <limits.h> /* |PATH_MAX| */
-#include <unistd.h> /* |unlink|, |readlink| */
+#include <unistd.h> /* |unlink|, |readlink|, |fchown| */
 
 @* Index.
