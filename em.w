@@ -805,8 +805,7 @@ equals to |b_epage| */
 		b_page = segstart(lnbegin(b_point), b_point);
 
 	/* reframe when scrolled off bottom */
-	if (b_epage <= b_point) { /* FIXME: see if logic in section |@<Position cursor...@>|
-          matches this */
+	if (b_epage <= b_point) {
 		b_page = dndn(b_point); /* find end of screen plus one */
 		if (pos(b_ebuf) <= b_page) { /* if we scoll to EOF we show 1
                   blank line at bottom of screen */
@@ -1282,7 +1281,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   if (strncmp(db_line, b_absname, strlen(b_absname)) == 0) {
     /* FIXME: check that |strlen(b_absname)<DB_LINE_SIZE);| */
 @^FIXME@>
-      if (sscanf(db_line+strlen(b_absname), "%ld %ld %ld", &b_point, &b_page, &b_epage) != 3)
+      if (sscanf(db_line+strlen(b_absname), "%ld %ld", &b_point, &b_page) != 2)
         file_is_locked = 1;
     continue;
   }
@@ -1294,6 +1293,7 @@ fprintf(db_out,"%s lock\n",b_absname);
 fclose(db_out);
 if (file_is_locked)
   fatal(L"File is locked.\n");
+b_epage=pos(b_ebuf);
 
 @ If the program is run as {\sl root\/} (|getuid()==0|), after changing |DB_FILE|
 change its ownership to {\sl user}.
@@ -1335,7 +1335,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
 }
 fclose(db_in);
 if (strstr(b_absname,"COMMIT_EDITMSG")==NULL)
-  fprintf(db_out,"%s %ld %ld %ld\n",b_absname,b_point,b_page,b_epage);
+  fprintf(db_out,"%s %ld %ld\n",b_absname,b_point,b_page);
 @<Assure...@>@;
 fclose(db_out);
 
@@ -1351,7 +1351,7 @@ fclose(db_out);
 b_page=b_point;
 for (int i=(LINES-1)/2;i>0;i--)
   b_page=upup(b_page);
-b_epage=b_point+1; /* |display| will be called anyway, and it will set proper value */
+b_epage=pos(b_ebuf);
 
 @ Here, besides reading user input, we handle resize event. We pass
 reference to variable of type
