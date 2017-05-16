@@ -272,7 +272,12 @@ void fatal(wchar_t *msg, ...)
 wchar_t msgline[MSGBUF];
 int msgflag;
 
-@ @<Procedures@>=
+@ @d search_msg(...) {
+  msg(__VA_ARGS__);
+  search_insert_mode(insert_mode);
+}
+
+@<Procedures@>=
 void msg(wchar_t *msg, ...)
 {
 	va_list args;
@@ -280,6 +285,23 @@ void msg(wchar_t *msg, ...)
 	vswprintf(msgline, ARRAY_SIZE(msgline), msg, args);
 	va_end(args);
 	msgflag = TRUE;
+}
+
+@ Search prompt is formatted in accordance with |insert_mode| (see
+|@<Use Insert key as a switcher@>|).
+If this mode is active, in search prompt all letters are uppercased.
+If this mode is not active, in search prompt all letters are lowercased,
+except first letters of words. The search prompt ends at the first occurrence
+of character `\.:'.
+
+@<Procedures@>=
+void search_insert_mode(int insert_mode)
+{
+  for (wchar_t *k = msgline; *k != L':'; k++)
+    if (insert_mode)
+      *k = (wchar_t) towupper((wint_t) *k);
+    else if (k != msgline && *(k-1) != L' ')
+      *k = (wchar_t) towlower((wint_t) *k);
 }
 
 @ Given a buffer offset, convert it to a pointer into the buffer.
@@ -960,10 +982,7 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 	for (s=searchtext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = pp;
-	  if (insert_mode)
-	    msg(L"SEARCH FORWARD: %ls", searchtext);
-	  else
-            msg(L"Search Forward: %ls", searchtext);
+          search_msg(L"Search Forward: %ls", searchtext);
           display();
 	  search_failed=0;
           goto search_forward;
@@ -974,10 +993,7 @@ if (search_failed) {
   no_occurrences=1;
 }
 else {
-  if (insert_mode)
-    msg(L"FAILING FORWARD SEARCH: %ls", searchtext);
-  else
-    msg(L"Failing Forward Search: %ls", searchtext);
+  search_msg(L"Failing Forward Search: %ls", searchtext);
   search_failed=1;
   search_point=b_point;
 }
@@ -996,10 +1012,7 @@ for (point_t p=b_point; p > 0;) {
 	for (s=searchtext, pp=p; *s == *ptr(pp) && *s != L'\0' && pp >= 0; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = p;
-	  if (insert_mode)
-	    msg(L"SEARCH BACKWARD: %ls", searchtext);
-	  else
-            msg(L"Search Backward: %ls", searchtext);
+	  search_msg(L"Search Backward: %ls", searchtext);
           display();
 	  search_failed=0;
           goto search_backward;
@@ -1010,10 +1023,7 @@ if (search_failed) {
   no_occurrences=1;
 }
 else {
-  if (insert_mode)
-    msg(L"FAILING BACKWARD SEARCH: %ls", searchtext);
-  else
-    msg(L"Failing Backward Search: %ls", searchtext);
+  search_msg(L"Failing Backward Search: %ls", searchtext);
   search_failed=1;
   search_point=b_point;
 }
@@ -1044,10 +1054,7 @@ void search(direction)
   int no_occurrences=0;
   int insert_mode=0;
 
-  if (insert_mode)
-    msg(L"SEARCH %ls: ", direction==1?L"FORWARD":L"BACKWARD");
-  else
-    msg(L"Search %ls: ", direction==1?L"Forward":L"Backward");
+  search_msg(L"Search %ls: ", direction==1?L"Forward":L"Backward");
   dispmsg();
 
   searchtext[0] = L'\0';
@@ -1058,12 +1065,8 @@ void search(direction)
     if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
 	switch (c) {
 	  case KEY_RESIZE:
-		if (insert_mode)
-		  msg(L"SEARCH %ls: %ls",
-		    direction==1?L"FORWARD":L"BACKWARD",searchtext);
-		else
-		  msg(L"Search %ls: %ls",
-                    direction==1?L"Forward":L"Backward",searchtext);
+		search_msg(L"Search %ls: %ls",
+		  direction==1?L"Forward":L"Backward",searchtext);
 		display();
 		continue;
 	  case KEY_BACKSPACE:
@@ -1117,20 +1120,14 @@ void search(direction)
 if (cpos == 0)
   continue;
 searchtext[--cpos] = L'\0';
-if (insert_mode)
-  msg(L"SEARCH %ls: %ls", direction==1?L"FORWARD":L"BACKWARD",searchtext);
-else
-  msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
+search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
 dispmsg();
 
 @ @<Add char to search text@>=
 if (cpos < STRBUF_M - 1) {
   searchtext[cpos++] = (wchar_t) c;
   searchtext[cpos] = L'\0';
-  if (insert_mode)
-    msg(L"SEARCH %ls: %ls", direction==1?L"FORWARD":L"BACKWARD",searchtext);
-  else
-    msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
+  search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
   dispmsg();
 }
 
@@ -1147,18 +1144,13 @@ pressing C-m key.) Insert key toggles the key which sends |L'\x0D'| between
 adding |L'\x0A'| to search string and normal behavior, i.e., exiting the
 search on the current spot.
 
-If this mode is active, in search prompt all letters are uppercased.
-If this mode is not active, in search prompt all letters are lowercased,
-except first letters of words. The search prompt ends at the first occurrence
-of character `\.:'. The changes to search prompt are displayed immediately
-after Insert key is pressed.
+The changes to search prompt made in |search_insert_mode|
+are displayed immediately after Insert key is pressed.
 
 @<Use Insert key as a switcher@>=
-insert_mode=!insert_mode;
-for (wchar_t *k=msgline; *k!=L':'; k++)
-  if (insert_mode) *k=(wchar_t)towupper((wint_t)*k);
-  else if (k!=msgline&&*(k-1)!=L' ') *k=(wchar_t)towlower((wint_t)*k);
-msgflag=TRUE;
+insert_mode =! insert_mode;
+search_insert_mode(insert_mode);
+msgflag = TRUE;
 dispmsg();
 
 @ @<Main program@>=
