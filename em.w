@@ -306,11 +306,8 @@ void search_insert_mode(int insert_mode)
 
 @ Given a buffer offset, convert it to a pointer into the buffer.
 
-FIXME: for what is |register|?
-@^FIXME@>
-
 @<Procedures@>=
-wchar_t *ptr(register point_t offset)
+wchar_t *ptr(point_t offset)
 {
 	assert(offset >= 0);
 /* TODO-XXX: use |size_t| typedef for |point_t| when you will find out why this |assert| fails
@@ -324,7 +321,7 @@ wchar_t *ptr(register point_t offset)
 @ Given a pointer into the buffer, convert it to a buffer offset.
 
 @<Procedures@>=
-point_t pos(register wchar_t *cp)
+point_t pos(wchar_t *cp)
 {
 	assert(b_buf <= cp && cp <= b_ebuf);
 	assert(cp < b_gap || cp >= b_egap);
@@ -579,11 +576,11 @@ the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
 @ Reverse scan for beginning of real line containing offset.
 
 @<Procedures@>=
-point_t lnbegin(register point_t off)
+point_t lnbegin(point_t off)
 {
 	assert(off >= 0);
 	if (off == 0) return off;
-	register wchar_t *p;
+	wchar_t *p;
 	do
 		p = ptr(--off);
 	while (b_buf < p && *p != L'\x0A');
