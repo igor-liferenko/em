@@ -789,7 +789,7 @@ that's the case, you can just copy that layout info into the new line,
 instead of recalculating it.
 
 @<Procedures@>=
-void display()
+void display(void)
 {
 /* FIXME: when cursor is on bottom line and C-m is pressed, the cursor goes
 to new line but the page is not scrolled one line up as it should be;
@@ -1293,7 +1293,6 @@ fprintf(db_out,"%s lock\n",b_absname);
 fclose(db_out);
 if (file_is_locked)
   fatal(L"File is locked.\n");
-b_epage=pos(b_ebuf);
 
 @ If the program is run as {\sl root\/} (|getuid()==0|), after changing |DB_FILE|
 change its ownership to {\sl user}.
@@ -1315,8 +1314,10 @@ changed after it was opened (|if (b_flags&(char)B_MODIFIED)|),
 saved cursor position must be the same as it was read from |DB_FILE|.
 @^TODO@>
 
-@<Ensure that restored...@>=
-if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
+@<Ensure that restored...@>= {
+  if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
+  b_epage=pos(b_ebuf);
+}
 
 @ See |@<Restore cursor...@>| for the technique used here.
 
