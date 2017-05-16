@@ -1239,7 +1239,7 @@ etc.).
 TODO: run \.{showkey -a} and press \.{F10}, then find the generated sequence in the output
 of \.{infocmp -1} to determine terminal capability, then find this capability in
 \.{terminfo(5)} and by analogy see which capability must have \.{F13} and then find
-the sequence for this capability in \.{infocmp -1} and bind this sequence to Esc key and C-[
+the sequence for this capability in \.{infocmp -1} and bind this sequence to C-[
 via xkb or something (ask on SO)
 @^TODO@>
 
