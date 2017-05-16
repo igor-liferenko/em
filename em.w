@@ -278,7 +278,6 @@ messages are treated specially.
 @d search_msg(...) {
   msg(__VA_ARGS__);
   search_insert_mode(insert_mode);
-  visible_newline();
 }
 
 @<Procedures@>=
@@ -306,15 +305,6 @@ void search_insert_mode(int insert_mode)
       *k = (wchar_t) towupper((wint_t) *k);
     else if (k != msgline && *(k-1) != L' ')
       *k = (wchar_t) towlower((wint_t) *k);
-}
-
-@ In search print special symbol for code |0x0A| instead of default \.{\^J}.
-
-@<Procedures@>=
-void visible_newline(void)
-{
-  for (wchar_t *k = msgline; *k != L'\0'; k++)
-    if (*k==L'\x0A') *k=L'\u2756';
 }
 
 @ Given a buffer offset, convert it to a pointer into the buffer.
@@ -728,10 +718,14 @@ void dispmsg()
                         memset(&my_cchar, 0, sizeof(my_cchar));
                         my_cchar.chars[0] = *p;
                         my_cchar.chars[1] = L'\0';
-                        if (iswprint((wint_t) *p))
-                                add_wch(&my_cchar);
-                        else
-                                addwstr(wunctrl(&my_cchar));
+			if (iswprint((wint_t) *p))
+                          add_wch(&my_cchar);
+                        else if (*p==L'\x0A')
+                          addwstr(L"\u2324 "); /* special symbol of two-cells wide for
+                            charcode |0x0A| instead of default \.{\^J}; such chars may appear
+                            only in search mode */
+			else
+                          addwstr(wunctrl(&my_cchar));
 		}
 		standend();
 		clrtoeol();
