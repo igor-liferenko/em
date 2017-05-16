@@ -1316,7 +1316,7 @@ saved cursor position must be the same as it was read from |DB_FILE|.
 
 @<Ensure that restored...@>= {
   if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
-  b_epage=pos(b_ebuf);
+  b_epage=pos(b_ebuf); /* must be set after file has been read */
 }
 
 @ See |@<Restore cursor...@>| for the technique used here.
