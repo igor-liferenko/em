@@ -1294,14 +1294,12 @@ fclose(db_out);
 if (file_is_locked)
   fatal(L"File is locked.\n");
 
-@ If the program is run under \.{sudo} (and in our case this is equivalent to {\sl root\/}),
+@ If the program is run under \.{sudo} as {\sl root},
 then after changing |DB_FILE| change its ownership back to the user who invoked \.{sudo}.
-
-@d UID 1000 /* id of user who runs EM */
 
 @<Assure...@>=
 struct passwd *sudo;
-if ((getenv("SUDO_USER"))!=NULL)
+if (getuid()==0 && (getenv("SUDO_USER"))!=NULL)
   if ((sudo=getpwnam(getenv("SUDO_USER")))!=NULL)
     fchown(fileno(db_out),sudo->pw_uid,sudo->pw_gid);
 
@@ -1531,6 +1529,6 @@ else {
 #include <string.h> /* |strerror|, |strncmp|, |memset|, |strlen|, |strstr| */
 #include <errno.h> /* |errno| */
 #include <limits.h> /* |PATH_MAX| */
-#include <unistd.h> /* |unlink|, |readlink|, |fchown| */
+#include <unistd.h> /* |unlink|, |readlink|, |fchown|, |getuid| */
 
 @* Index.
