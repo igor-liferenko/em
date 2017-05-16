@@ -1187,6 +1187,7 @@ int main(int argc, char **argv)
 	@<Close file@>@;
 	if (argc == 3) @<Move cursor to |lineno|@>@;
 	else @<Ensure that restored position is inside buffer@>@;
+	@<Set |b_epage|...@>@;
 
         raw();
         noecho();
@@ -1317,8 +1318,14 @@ saved cursor position must be the same as it was read from |DB_FILE|.
 
 @<Ensure that restored...@>= {
   if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
-  b_epage=pos(b_ebuf); /* must be set after file has been read */
 }
+
+@ Set |b_epage| to maximum value.
+This must be set after the file has been read, in order that the buffer is
+allocated.
+
+@<Set |b_epage| for proper positioning of cursor on screen@>=
+b_epage=pos(b_ebuf);
 
 @ See |@<Restore cursor...@>| for the technique used here.
 
@@ -1353,7 +1360,6 @@ fclose(db_out);
 b_page=b_point;
 for (int i=(LINES-1)/2;i>0;i--)
   b_page=upup(b_page);
-b_epage=pos(b_ebuf);
 
 @ Here, besides reading user input, we handle resize event. We pass
 reference to variable of type
