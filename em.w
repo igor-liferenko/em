@@ -249,9 +249,6 @@ char b_flags = 0;             /* buffer flags */
 
 @ @<Global variables@>=
 int done;
-int msgflag;
-point_t nscrap = 0;
-wchar_t *scrap = NULL;
 
 @ @<Procedures@>=
 void fatal(wchar_t *msg, ...)
@@ -273,6 +270,7 @@ void fatal(wchar_t *msg, ...)
 
 @<Global variables@>=
 wchar_t msgline[MSGBUF];
+int msgflag;
 
 @ @<Procedures@>=
 void msg(wchar_t *msg, ...)
@@ -1199,8 +1197,6 @@ int main(int argc, char **argv)
 		@<Handle key@>@;
 	}
 
-	if (scrap != NULL) free(scrap);
-
 	move(LINES - 1, 0);
 	refresh(); /* FIXME: why do we need this? Remove and check what will be. */
 	noraw();
@@ -1439,8 +1435,10 @@ else {
   switch (c) {
 	case
 		L'\x18': /* C-x */
+#if 1==0
 		@<Remove lock and save cursor@>@;
 		done = 1; /* quit without saving */
+#endif
 		break;
 	case
 		L'\x12': /* C-r */
