@@ -272,9 +272,13 @@ void fatal(wchar_t *msg, ...)
 wchar_t msgline[MSGBUF];
 int msgflag;
 
-@ @d search_msg(...) {
+@ Prepare |msgline| using format |msg|. In search mode
+messages are treated specially.
+
+@d search_msg(...) {
   msg(__VA_ARGS__);
   search_insert_mode(insert_mode);
+  visible_newline();
 }
 
 @<Procedures@>=
@@ -302,6 +306,15 @@ void search_insert_mode(int insert_mode)
       *k = (wchar_t) towupper((wint_t) *k);
     else if (k != msgline && *(k-1) != L' ')
       *k = (wchar_t) towlower((wint_t) *k);
+}
+
+@ In search print special symbol for code |0x0A| instead of default \.{\^J}.
+
+@<Procedures@>=
+void visible_newline(void)
+{
+  for (wchar_t *k = msgline; *k != L'\0'; k++)
+    if (*k==L'\x0A') *k=L'\u2756';
 }
 
 @ Given a buffer offset, convert it to a pointer into the buffer.
