@@ -1300,7 +1300,10 @@ change its ownership to {\sl user}.
 @d UID 1000 /* id of user who runs EM */
 
 @<Assure...@>=
-if (getuid()==0) fchown(fileno(db_out),UID,UID);
+struct passwd *sudo;
+if (getuid()==0)
+  if ((sudo=getpwnam(getenv("SUDO_USER")))!=NULL)
+    fchown(fileno(db_out),sudo->pw_uid,sudo->pw_gid);
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
@@ -1511,7 +1514,7 @@ else {
 @ @<Header files@>=
 /* TODO: sort alphabetically */
 @^TODO@>
-#include <stdlib.h> /* |malloc|, |exit|, |EXIT_FAILURE|, |free|, |realloc| */
+#include <stdlib.h> /* |malloc|, |exit|, |EXIT_FAILURE|, |free|, |realloc|, |getenv| */
 #include <stdarg.h> /* |va_end|, |va_start| */
 #include <assert.h> /* |assert| */
 #include <ncursesw/curses.h> /* |add_wch|, |addwstr|, |chars|, |clrtoeol|, |COLS|, |endwin|,
@@ -1520,6 +1523,7 @@ else {
   |KEY_END|, |KEY_NPAGE|, |KEY_PPAGE|, |KEY_DC|, |KEY_BACKSPACE|, |LINES|, |move|, |noecho|,
   |nonl|, |noraw|, |OK|, |raw|, |refresh|, |standend|, |standout|, |stdscr|, |TRUE|, |wunctrl|,
   |KEY_CODE_YES|, |cchar_t| */
+#include <pwd.h> /* |struct passwd|, |pw_uid|, |pw_gid|, |getpwnam| */
 #include <stdio.h> /* |fclose|, |fgets|, |fileno|, |snprintf|, |fopen|, |fprintf|, |sscanf| */
 #include <locale.h> /* |LC_CTYPE|, |setlocale| */
 #include <wchar.h> /* |fgetwc|, |fputwc|, |vswprintf|, |vwprintf|, |wcslen|, |WEOF| */
