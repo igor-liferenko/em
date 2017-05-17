@@ -807,7 +807,8 @@ instead of recalculating it.
 @<Procedures@>=
 void display(void)
 {
-/* FIXME: when cursor is on bottom line and C-m is pressed, the cursor goes
+/* FIXME: when cursor is on bottom line (except when it is in the end of this line)
+and C-m is pressed, the cursor goes
 to new line but the page is not scrolled one line up as it should be;
 make so that |down| will be called if character |L'\x0A'| is inserted and |b_point|
 equals to |b_epage| */
@@ -1251,9 +1252,12 @@ char db_line[DB_LINE_SIZE+1];
 before the call to |fatal|.
 
 @<Restore cursor...@>=
+if (getenv("SUDO_USER")!=NULL && getuid()!=0)
+  fatal(L"DB_FILE must have ownership of default user, so it may be run under sudo only \
+as root\x0A");
 if ((db_in=fopen(DB_FILE,"a+"))==NULL) { /* |"a+"| creates empty file if it does not exist */
   fclose(fp);
-  fatal(L"Could not open DB file for reading: %s\n", strerror(errno));
+  fatal(L"Could not open DB file in a+ mode: %s\n", strerror(errno));
 }
 unlink(DB_FILE);
 if ((db_out=fopen(DB_FILE,"w"))==NULL) {
@@ -1279,14 +1283,13 @@ fclose(db_out);
 if (file_is_locked)
   fatal(L"File is locked.\n");
 
-@ If the program is run under \.{sudo} as {\sl root},
+@ If the program is run under \.{sudo},
 then after changing |DB_FILE| change its ownership back to the user who invoked \.{sudo}.
 
 @<Assure...@>=
 struct passwd *sudo;
-if (getuid()==0 && (getenv("SUDO_USER"))!=NULL)
-  if ((sudo=getpwnam(getenv("SUDO_USER")))!=NULL)
-    fchown(fileno(db_out),sudo->pw_uid,sudo->pw_gid);
+if ((sudo=getpwnam(getenv("SUDO_USER")))!=NULL)
+  fchown(fileno(db_out),sudo->pw_uid,sudo->pw_gid);
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
