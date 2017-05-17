@@ -1288,8 +1288,9 @@ then after changing |DB_FILE| change its ownership back to the user who invoked 
 
 @<Assure...@>=
 struct passwd *sudo;
-if ((sudo=getpwnam(getenv("SUDO_USER")))!=NULL)
-  fchown(fileno(db_out),sudo->pw_uid,sudo->pw_gid);
+if (getenv("SUDO_USER")!=NULL)
+  if ((sudo=getpwnam(getenv("SUDO_USER")))!=NULL)
+    fchown(fileno(db_out),sudo->pw_uid,sudo->pw_gid);
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
