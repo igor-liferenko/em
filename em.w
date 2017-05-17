@@ -276,9 +276,7 @@ int msgflag;
 messages are treated specially.
 
 @<Procedures@>=
-#define search_msg(...) \
-  msg(__VA_ARGS__); \
-  search_insert_mode(insert_mode);
+#define search_msg(...) @,@,@, msg(__VA_ARGS__); @+ search_insert_mode(insert_mode);
 
 void msg(wchar_t *msg, ...)
 {
