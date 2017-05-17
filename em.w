@@ -275,12 +275,11 @@ int msgflag;
 @ Prepare |msgline| using format |msg|. In search mode
 messages are treated specially.
 
-@d search_msg(...) {
-  msg(__VA_ARGS__);
-  search_insert_mode(insert_mode);
-}
-
 @<Procedures@>=
+#define search_msg(...) \
+  msg(__VA_ARGS__); \
+  search_insert_mode(insert_mode);
+
 void msg(wchar_t *msg, ...)
 {
 	va_list args;
