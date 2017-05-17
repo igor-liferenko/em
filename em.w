@@ -712,10 +712,8 @@ void dispmsg()
                         my_cchar.chars[1] = L'\0';
 			if (iswprint((wint_t) *p))
                           add_wch(&my_cchar);
-                        else if (*p==L'\x0A')
-                          addwstr(L"\u2324 "); /* special symbol of two-cells wide for
-                            charcode |0x0A| instead of default \.{\^J}; such chars may appear
-                            only in search mode */
+                        else if (*p == L'\x0A')
+                          addwstr(L"<NL>"); /* instead of |wunctrl| (\.{\^J}) */
 			else
                           addwstr(wunctrl(&my_cchar));
 		}
