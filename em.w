@@ -313,10 +313,9 @@ void search_insert_mode(int insert_mode)
 wchar_t *ptr(point_t offset)
 {
 	assert(offset >= 0);
-/* TODO-XXX: use |size_t| typedef for |point_t| when you will find out why this |assert| fails
+/* TODO: use |size_t| typedef for |point_t| when you will find out why this |assert| fails
    sometimes; for this check all places where this function is called and see if wrong
-   value can sneak in. NOTE: see function |upup| - changes were made there after this TODO
-   was added - maybe they fix the problem */
+   value can sneak in */
 @^TODO@>
 	return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
 }
@@ -663,14 +662,10 @@ point_t upup(point_t off)
 	point_t seg = segstart(curr, off);
 	if (curr < seg)
 		off = segstart(curr, seg-1>=0?seg-1:0); /* previous line (is considered the
-                  case that
-			current line may be wrapped) NOTE: this was done after TODO-XXX was
-                        added */
+                  case that current line may be wrapped) */
 	else
 		off = segstart(lnbegin(curr-1>=0?curr-1:0), curr-1>=0?curr-1:0); /* previous
-                  line (is
-			considered the case that previous line may be wrapped) NOTE: this was
-                        done after TODO-XXX was added */
+                  line (is considered the case that previous line may be wrapped) */
 	return off;
 }
 
