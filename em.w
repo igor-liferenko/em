@@ -974,7 +974,8 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 @^FIXME@>
 	point_t pp;
 	wchar_t *s;
-	for (s=searchtext, pp=p; *s == *ptr(pp) && *s !=L'\0' && pp < end_p; s++, pp++) ;
+	for (s=searchtext, pp=p; towlower((wint_t) *s) == towlower((wint_t) *ptr(pp)) &&
+	  *s !=L'\0' && pp < end_p; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = pp;
           search_msg(L"Search Forward: %ls", searchtext);
@@ -1004,7 +1005,8 @@ for (point_t p=b_point; p > 0;) {
 	p--;
 	point_t pp;
         wchar_t *s;
-	for (s=searchtext, pp=p; *s == *ptr(pp) && *s != L'\0' && pp >= 0; s++, pp++) ;
+	for (s=searchtext, pp=p; towlower((wint_t) *s) == towlower((wint_t) *ptr(pp)) &&
+	  *s != L'\0' && pp >= 0; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = p;
 	  search_msg(L"Search Backward: %ls", searchtext);
@@ -1031,10 +1033,7 @@ b_point=pos(b_ebuf);
 @<Global variables@>=
 wchar_t searchtext[STRBUF_M];
 
-@ /* TODO: make search case-insensitive */
-@^TODO@>
-
-TODO: highlight matched text with inverted colors
+@ TODO: highlight matched text with inverted colors
 @^TODO@>
 
 @<Procedures@>=
