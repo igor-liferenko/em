@@ -967,6 +967,8 @@ warning that no occurrences were found.
 On the other hand, if we already know that there are no occurrences, no need to
 reset |search_failed| when direction is changed. Use |no_occurrences| to track this.
 
+If |insert_mode| is active, search is case-sensitive, otherwise it is case-insensitive.
+
 @<Search forward@>=
 if (direction==0&&!no_occurrences) search_failed=0; /* direction changed */
 for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
@@ -974,7 +976,8 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 @^FIXME@>
 	point_t pp;
 	wchar_t *s;
-	for (s=searchtext, pp=p; towlower((wint_t) *s) == towlower((wint_t) *ptr(pp)) &&
+	for (s=searchtext, pp=p; (insert_mode ? *s == *ptr(pp) :
+	  towlower((wint_t) *s) == towlower((wint_t) *ptr(pp))) &&
 	  *s !=L'\0' && pp < end_p; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = pp;
@@ -1005,7 +1008,8 @@ for (point_t p=b_point; p > 0;) {
 	p--;
 	point_t pp;
         wchar_t *s;
-	for (s=searchtext, pp=p; towlower((wint_t) *s) == towlower((wint_t) *ptr(pp)) &&
+	for (s=searchtext, pp=p; (insert_mode ? *s == *ptr(pp) :
+	  towlower((wint_t) *s) == towlower((wint_t) *ptr(pp))) &&
 	  *s != L'\0' && pp >= 0; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = p;
