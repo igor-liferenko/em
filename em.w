@@ -971,6 +971,8 @@ If |insert_mode| is active, search is case-sensitive, otherwise it is case-insen
 This is combined with |insert_mode| because case-sensivity works well in
 conjunction with pasting from clipboard, and can be activated in manual search if the need arises
 (by default search is case-insensitive).
+For description of what is |insert_mode| see doc part of section
+|@<Use Insert key as a switcher@>|.
 
 @<Search forward@>=
 if (direction==0&&!no_occurrences) search_failed=0; /* direction changed */
