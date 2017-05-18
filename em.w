@@ -988,7 +988,7 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 	}
 }
 if (search_failed) {
-  msg(L"No occurrences: %ls", searchtext);
+  search_msg(L"No occurrences: %ls", searchtext);
   no_occurrences=1;
 }
 else {
@@ -1020,7 +1020,7 @@ for (point_t p=b_point; p > 0;) {
 	}
 }
 if (search_failed) {
-  msg(L"No occurrences: %ls", searchtext);
+  search_msg(L"No occurrences: %ls", searchtext);
   no_occurrences=1;
 }
 else {
