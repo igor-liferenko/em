@@ -988,7 +988,7 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 	}
 }
 if (search_failed) {
-  search_msg(L"No occurrences: %ls", searchtext);
+  search_msg(L"No Occurrences: %ls", searchtext);
   no_occurrences=1;
 }
 else {
@@ -1020,7 +1020,7 @@ for (point_t p=b_point; p > 0;) {
 	}
 }
 if (search_failed) {
-  search_msg(L"No occurrences: %ls", searchtext);
+  search_msg(L"No Occurrences: %ls", searchtext);
   no_occurrences=1;
 }
 else {
@@ -1221,6 +1221,10 @@ and looking them up in {\sl terminfo\/} database in the application (and also fr
 interpreting not very clear naming scheme in which \.{khome} is equivalent to \.{home},
 etc.).
 @^system dependencies@>
+
+\.{Esc} key, like \.{F1}, is reserved for window manager and must not be used
+in programs that I write. (Besides window manager, \.{Esc} key may be used in some
+existing programs.)
 
 TODO: run \.{showkey -a} and press \.{F10}, then find the generated sequence in the output
 of \.{infocmp -1} to determine terminal capability, then find this capability in
