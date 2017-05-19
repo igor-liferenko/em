@@ -331,7 +331,7 @@ point_t pos(wchar_t *cp)
 TODO: check that |(size_t)newlen*sizeof(wchar_t)| does not cause overflow.
 @^TODO@>
 \medskip
-\centerline{\hbox to14.225cm{\vbox to2.7cm{\vss\special{psfile=buffer-gap.eps}}\hss}}
+\centerline{\hbox to404bp{\vbox to78bp{\vss\special{psfile=buffer-gap.eps}}\hss}}
 \medskip
 
 @<Procedures@>=
