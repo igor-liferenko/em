@@ -330,9 +330,8 @@ point_t pos(wchar_t *cp)
 @ Enlarge gap by n chars, position of gap cannot change.
 TODO: check that |(size_t)newlen*sizeof(wchar_t)| does not cause overflow.
 @^TODO@>
-\medskip
-\centerline{\hbox to14.25cm{\vbox to2.75cm{\vss\special{psfile=buffer-gap.eps voffset=1}}\hss}}
-\medskip
+
+$$\hbox to14.25cm{\vbox to2.75cm{\vss\special{psfile=buffer-gap.eps voffset=1}}\hss}$$
 
 @<Procedures@>=
 int growgap(point_t n)
