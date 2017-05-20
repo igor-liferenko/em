@@ -1292,7 +1292,8 @@ fprintf(db_out,"%s lock\n",b_absname);
 fclose(db_out);
 if (file_is_locked)
   fatal(L"File is locked.\n");
-/* FIXME: now this is printed when erroneously open a directory - make correct error message in such case */
+/* FIXME: now this is printed when a directory is erroneously specified as the first
+argument - make proper error message in such case */
 @^FIXME@>
 
 @ If the program is run under \.{sudo},
