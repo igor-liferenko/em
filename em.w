@@ -1178,7 +1178,7 @@ int main(int argc, char **argv)
 	@<Read file@>@;
 	@<Close file@>@;
 	if (argc == 3) @<Move cursor to |lineno|@>@;
-	else @<Ensure that restored position is inside buffer@>@;
+	else @<Ensure that restored position is inside buffer@>;
 	@<Set |b_epage|...@>@;
 
         raw();
@@ -1316,9 +1316,8 @@ changed after it was opened (|if (b_flags&(char)B_MODIFIED)|),
 saved cursor position must be the same as it was read from |DB_FILE|.
 @^TODO@>
 
-@<Ensure that restored...@>= {
+@<Ensure that restored...@>=
   if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
-}
 
 @ Set |b_epage| to maximum value.
 This must be set after the file has been read, in order that the buffer is
