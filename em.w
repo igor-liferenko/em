@@ -331,7 +331,7 @@ point_t pos(wchar_t *cp)
 TODO: check that |(size_t)newlen*sizeof(wchar_t)| does not cause overflow.
 @^TODO@>
 
-$$\hbox to14.25cm{\vbox to2.75cm{\vss\special{psfile=buffer-gap.eps voffset=1}}\hss}$$
+$$\hbox to14.25cm{\vbox to2.75cm{\vss\special{psfile=buffer-gap.eps}}\hss}$$
 
 @<Procedures@>=
 int growgap(point_t n)
