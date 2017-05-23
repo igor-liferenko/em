@@ -1036,13 +1036,10 @@ dispmsg();
 b_point=pos(b_ebuf);
 @/@t\4@> search_backward:
 
-@ @d STRBUF_M 64
-
-@<Global variables@>=
-wchar_t searchtext[STRBUF_M];
-
 @ TODO: highlight matched text with inverted colors
 @^TODO@>
+
+@d STRBUF_M 64
 
 @<Procedures@>=
 void search(direction)
@@ -1056,7 +1053,12 @@ void search(direction)
   int no_occurrences=0;
   int insert_mode=0;
 
-  search_msg(L"Search %ls: ", direction==1?L"Forward":L"Backward");
+  static wchar_t searchtext[STRBUF_M];
+
+  search_msg(L"Search %ls%s%ls%s: ", direction==1?L"Forward":L"Backward",
+    ((*searchtext==L'\0'||cpos!=0)?"":" ["),
+    ((*searchtext==L'\0'||cpos!=0)?L"":searchtext),
+    ((*searchtext==L'\0'||cpos!=0)?"":"]"));
   dispmsg();
 
   searchtext[0] = L'\0';
@@ -1088,6 +1090,7 @@ void search(direction)
 				@<Add char to search text@>@;
 				break;
 			}
+			//*searchtext = L'\0';
 			if (search_failed) b_point = search_point;
 			return;
 	    case
