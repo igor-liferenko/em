@@ -1317,7 +1317,7 @@ saved cursor position must be the same as it was read from |DB_FILE|.
 @^TODO@>
 
 @<Ensure that restored...@>=
-  if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
+if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
 
 @ Set |b_epage| to maximum value.
 This must be set after the file has been read, in order that the buffer is
