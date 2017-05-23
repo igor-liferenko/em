@@ -847,6 +847,10 @@ equals to |b_epage| */
 			b_row = i;
 			b_col = j;
 		}
+                if (match_found && b_point==b_epage) b_point < b_search_point ?
+                  attron(COLOR_PAIR(1)) : attroff(COLOR_PAIR(1));
+		if (match_found && b_search_point==b_epage) b_point < b_search_point ?
+                  attroff(COLOR_PAIR(1)) : attron(COLOR_PAIR(1));
 		p = ptr(b_epage);
 		if (LINES - 1 <= i || b_ebuf <= p) /* maxline */
 			break;
@@ -988,6 +992,8 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 	  *s !=L'\0' && pp < end_p; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = pp;
+          b_search_point = p;
+          match_found = 1;
           search_msg(L"Search Forward: %ls", searchtext);
           display();
           search_failed=0;
@@ -1005,6 +1011,7 @@ else {
 }
 dispmsg();
 b_point=0;
+match_found=0;
 @/@t\4@> search_forward:
 
 @ The logic is analogous to |@<Search forward@>|.
@@ -1020,6 +1027,8 @@ for (point_t p=b_point; p > 0;) {
 	  *s != L'\0' && pp >= 0; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = p;
+          b_search_point = pp;
+          match_found=1;
           search_msg(L"Search Backward: %ls", searchtext);
           display();
           search_failed=0;
@@ -1037,15 +1046,15 @@ else {
 }
 dispmsg();
 b_point=pos(b_ebuf);
+match_found=0;
 @/@t\4@> search_backward:
 
 @ @<Global...@>=
 long int msgblink = -1;
+point_t b_search_point;
+int match_found = 0;
 
-@ TODO: highlight matched text with inverted colors
-@^TODO@>
-
-@d STRBUF_M 64
+@ @d STRBUF_M 64
 
 @<Procedures@>=
 void search(direction)
@@ -1096,6 +1105,7 @@ void search(direction)
 			}
 			//*searchtext = L'\0';
 			if (search_failed) b_point = search_point;
+			match_found = 0; /* reset */
 			return;
 	    case
               L'\x07': /* C-g */
@@ -1103,6 +1113,7 @@ void search(direction)
 	    case
               L'\x1B': /* ESC */
 			b_point = o_point;
+			match_found = 0; /* reset */
 			return;
 	    case
 		L'\x12': /* C-r */
@@ -1193,10 +1204,9 @@ int main(int argc, char **argv)
 	nonl(); /* return proper value (|0x0d|) from |get_wch| for C-m and ENTER keys */
 	@<Automatically interpret ANSI control sequences@>@;
 
-//start_color();
-//use_default_colors(); /* reset the screen to default terminal colors */
-//init_pair(1, COLOR_BLACK, COLOR_YELLOW);
-//attron(COLOR_PAIR(1));
+	start_color();
+	use_default_colors(); /* reset the screen to default terminal colors */
+	init_pair(1, COLOR_BLACK, COLOR_YELLOW);
 
 	while (!done) {
 		display();
