@@ -705,6 +705,7 @@ void dispmsg()
 		move(LINES - 1, 0);
 		standout();
 		for(wchar_t *p=msgline; *p!=L'\0'; p++) {
+                        if (p - msgline == msgblink) attron(A_BLINK);
                         cchar_t my_cchar;
                         memset(&my_cchar, 0, sizeof(my_cchar));
                         my_cchar.chars[0] = *p;
@@ -719,6 +720,8 @@ void dispmsg()
 		standend();
 		clrtoeol();
 		msgflag = FALSE;
+		if (msgblink != -1) move(LINES - 1, (int) msgblink);
+		msgblink = -1; /* reset */
 	}
 }
 
@@ -1036,6 +1039,9 @@ dispmsg();
 b_point=pos(b_ebuf);
 @/@t\4@> search_backward:
 
+@ @<Global...@>=
+long int msgblink = -1;
+
 @ TODO: highlight matched text with inverted colors
 @^TODO@>
 
@@ -1055,14 +1061,12 @@ void search(direction)
 
   static wchar_t searchtext[STRBUF_M];
 
-  search_msg(L"Search %ls%s%ls%s: ", direction==1?L"Forward":L"Backward",
-    ((*searchtext==L'\0'||cpos!=0)?"":" ["),
+  search_msg(L"Search %ls:%s%ls%s", direction==1?L"Forward":L"Backward",
+    ((*searchtext==L'\0'||cpos!=0)?"":" "),
     ((*searchtext==L'\0'||cpos!=0)?L"":searchtext),
-    ((*searchtext==L'\0'||cpos!=0)?"":"]"));
+    ((*searchtext==L'\0'||cpos!=0)?" ":""));
+  if (!(*searchtext==L'\0'||cpos!=0)) msgblink = wcsstr(msgline, L":") - msgline + 1;
   dispmsg();
-
-  searchtext[0] = L'\0';
-  cpos = (int) wcslen(searchtext);
 
   while (1) {
     refresh(); /* update the real screen */
@@ -1188,6 +1192,11 @@ int main(int argc, char **argv)
         noecho();
 	nonl(); /* return proper value (|0x0d|) from |get_wch| for C-m and ENTER keys */
 	@<Automatically interpret ANSI control sequences@>@;
+
+//start_color();
+//use_default_colors(); /* reset the screen to default terminal colors */
+//init_pair(1, COLOR_BLACK, COLOR_YELLOW);
+//attron(COLOR_PAIR(1));
 
 	while (!done) {
 		display();
