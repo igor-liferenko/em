@@ -713,7 +713,7 @@ if search was started without pre-existing search string), unless
 C-s or C-r is pressed.
 
 @<Procedures@>=
-void dispmsg()
+void dispmsg(void)
 {
 	if (msgflag) {
 		move(LINES - 1, 0);
@@ -726,16 +726,19 @@ void dispmsg()
                         my_cchar.chars[1] = L'\0';
 			if (iswprint((wint_t) *p))
                           add_wch(&my_cchar);
-                        else if (*p == L'\x0A')
-                          addwstr(L"<NL>"); /* instead of |wunctrl| (\.{\^J}) */
+                        else if (search_active && *p == L'\x0A')
+                          addwstr(L"<NL>");
 			else
                           addwstr(wunctrl(&my_cchar));
 		}
 		standend();
 		clrtoeol();
 		msgflag = FALSE;
-		if (msgblink != -1) move(LINES - 1, (int) msgblink);
-		msgblink = -1; /* reset */
+		if (search_active) { /* the |move| which is performed right after this procedure
+			in |display| will put the cursor to msg line */
+			b_row = LINES - 1;
+			b_col = (int)wcslen(msgline);
+		}
 	}
 }
 
@@ -1063,10 +1066,15 @@ b_point=pos(b_ebuf);
 match_found=0;
 @/@t\4@> search_backward:
 
-@ @<Global...@>=
+@ |search_active| is a flag, which is used in |dispmsg| for
+special handling of msg line---when we are
+typing search text, cursor must stay there until we exit search via C-g or C-m.
+
+@<Global...@>=
 long int msgblink = -1;
 point_t b_search_point;
 int match_found = 0;
+int search_active = 0;
 
 @ @d STRBUF_M 64
 
@@ -1082,6 +1090,8 @@ void search(direction)
   int no_occurrences=0;
   int insert_mode=0;
 
+  search_active = 1;
+
   static wchar_t searchtext[STRBUF_M];
 
   search_msg(L"Search %ls:%s%ls%s", direction==1?L"Forward":L"Backward",
@@ -1090,6 +1100,9 @@ void search(direction)
     ((*searchtext==L'\0'||cpos!=0)?" ":""));
   if (!(*searchtext==L'\0'||cpos!=0)) msgblink = wcsstr(msgline, L":") - msgline + 1;
   dispmsg();
+  if (msgblink != -1) move(LINES - 1, (int) msgblink); /* put the ``real'' cursor right after `:',
+	effectively making it invisible */
+  msgblink = -1; /* reset */
 
   while (1) {
     refresh(); /* update the real screen */
@@ -1119,6 +1132,7 @@ void search(direction)
 			}
 			if (search_failed) b_point = search_point;
 			match_found = 0; /* reset */
+			search_active = 0;
 			return;
 	    case
               L'\x07': /* C-g */
@@ -1127,15 +1141,20 @@ void search(direction)
               L'\x1B': /* ESC */
 			b_point = o_point;
 			match_found = 0; /* reset */
+			search_active = 0;
 			return;
 	    case
 		L'\x12': /* C-r */
 			direction=0;
+			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing
+				search string */
 			@<Search backward@>@;
 			break;
 	    case
 		L'\x13': /* C-s */
 			direction=1;
+			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing
+				search string */
 			@<Search forward@>@;
 			break;
 	    case
