@@ -698,13 +698,19 @@ void modeline(void)
        clrtoeol();
 }
 
-@ The previous search text is blinking to imitate ordinary cursor (with the distinction that
-the ``new'' cursor may occupy more than one cell), so that search text can be entered, as
-if search was started for the first time in file which was never before opened in EM, unless
-C-s or C-r will be pressed, in which case the blinking search text
-will turn into the ordinary search text (i.e., the effect will be the same as if the
-search text was input by hand when search was started for the first time in file
-which was never before opened in EM).
+@ There is indication of pre-existing search, which is done via blinking. This requires
+blinking capability support in your terminal. You can check this by running
+$$\.{tput blink; echo hello world; tput sgr0}$$
+If the `\.{hello world}' is not blinking, then your terminal does not support blinking.
+In such case you may use \.{xterm}, or something else which does.
+
+I decided to make the previous search text blinking, because this way it imitates ordinary
+cursor\footnote*{it is supposed that ordinary cursor is blinking, which is the case in my setup}
+(with the distinction that
+the ``new'' cursor may occupy more than one cell). This way it makes the intentions clear:
+the search text can be entered as usual (i.e., as
+if search was started without pre-existing search string), unless
+C-s or C-r is pressed.
 
 @<Procedures@>=
 void dispmsg()
@@ -1111,7 +1117,6 @@ void search(direction)
 				@<Add char to search text@>@;
 				break;
 			}
-			//*searchtext = L'\0';
 			if (search_failed) b_point = search_point;
 			match_found = 0; /* reset */
 			return;
@@ -1182,6 +1187,12 @@ msgflag = TRUE;
 dispmsg();
 
 @* Color initialization.
+Your terminal must support 256 colors. You can check this by running
+$$\.{echo \$TERM}$$
+If it will not print `\.{xterm-256color}', find a way to enable 256 colors
+for your terminal. For example, in \.{xterm} this is done by adding
+`\.{-tn xterm-256color}' option.
+
 /* FIXME: find out how to determine new color instead of redefining existing one */
 @^FIXME@>
 
