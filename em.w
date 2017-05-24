@@ -698,7 +698,15 @@ void modeline(void)
        clrtoeol();
 }
 
-@ @<Procedures@>=
+@ The previous search text is blinking to imitate ordinary cursor (with the distinction that
+the ``new'' cursor may occupy more than one cell), so that search text can be entered, as
+if search was started for the first time in file which was never before opened in EM, unless
+C-s or C-r will be pressed, in which case the blinking search text
+will turn into the ordinary search text (i.e., the effect will be the same as if the
+search text was input by hand when search was started for the first time in file
+which was never before opened in EM).
+
+@<Procedures@>=
 void dispmsg()
 {
 	if (msgflag) {
@@ -848,9 +856,9 @@ equals to |b_epage| */
 			b_col = j;
 		}
                 if (match_found && b_point==b_epage) b_point < b_search_point ?
-                  attron(COLOR_PAIR(1)) : attroff(COLOR_PAIR(1));
+                  attron(COLOR_PAIR(COLOR_SEARCH_PAIR)) : attroff(COLOR_PAIR(COLOR_SEARCH_PAIR));
 		if (match_found && b_search_point==b_epage) b_point < b_search_point ?
-                  attroff(COLOR_PAIR(1)) : attron(COLOR_PAIR(1));
+                  attroff(COLOR_PAIR(COLOR_SEARCH_PAIR)) : attron(COLOR_PAIR(COLOR_SEARCH_PAIR));
 		p = ptr(b_epage);
 		if (LINES - 1 <= i || b_ebuf <= p) /* maxline */
 			break;
@@ -1173,6 +1181,22 @@ search_insert_mode(insert_mode);
 msgflag = TRUE;
 dispmsg();
 
+@* Color initialization.
+/* FIXME: find out how to determine new color instead of redefining existing one */
+@^FIXME@>
+
+/* FIXME: find out if the first argument of |init_pair| must start with 1 or with 0 */
+@^FIXME@>
+
+@d COLOR_SEARCH COLOR_YELLOW
+@d COLOR_SEARCH_PAIR 1
+
+@<Initialize colors@>=
+start_color(); /* set |COLORS| to the maximum number of colors the terminal can support */
+use_default_colors(); /* reset the screen to pre-existing terminal colors */
+init_color(COLOR_SEARCH, 500, 800, 600);
+init_pair(COLOR_SEARCH_PAIR, COLOR_BLACK, COLOR_SEARCH);
+
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
@@ -1204,9 +1228,7 @@ int main(int argc, char **argv)
 	nonl(); /* return proper value (|0x0d|) from |get_wch| for C-m and ENTER keys */
 	@<Automatically interpret ANSI control sequences@>@;
 
-	start_color();
-	use_default_colors(); /* reset the screen to default terminal colors */
-	init_pair(1, COLOR_BLACK, COLOR_YELLOW);
+	@<Initialize colors@>;
 
 	while (!done) {
 		display();
