@@ -1070,7 +1070,10 @@ match_found=0;
 special handling of msg line---when we are
 typing search text, cursor must stay there until we exit search via C-g or C-m.
 
+@d STRBUF_M 64
+
 @<Global...@>=
+wchar_t searchtext[STRBUF_M];
 long int msgblink = -1;
 point_t b_search_point;
 int match_found = 0;
@@ -1083,8 +1086,6 @@ FIXME: check what will be if we press C-m or C-g right after C-s or C-r, if ther
 pre-existing search text
 @^FIXME@>
 
-@d STRBUF_M 64
-
 @<Procedures@>=
 void search(direction)
    int direction; /* 1 = forward; 0 = backward */
@@ -1094,12 +1095,9 @@ void search(direction)
   point_t o_point = b_point;
   int search_failed = 0;
   point_t search_point;
-  int no_occurrences=0;
-  int insert_mode=0;
-
+  int no_occurrences = 0;
+  int insert_mode = 0;
   search_active = 1;
-
-  static wchar_t searchtext[STRBUF_M];
 
   if (*searchtext == L'\0' || cpos != 0) {
     search_msg(L"Search %ls: ", direction==1?L"Forward":L"Backward");
