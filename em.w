@@ -720,16 +720,15 @@ void dispmsg(void)
 		standout();
 		for(wchar_t *p=msgline; *p!=L'\0'; p++) {
                         if (p - msgline == msgblink) attron(A_BLINK);
-                        cchar_t my_cchar;
-                        memset(&my_cchar, 0, sizeof(my_cchar));
-                        my_cchar.chars[0] = *p;
-                        my_cchar.chars[1] = L'\0';
-			if (iswprint((wint_t) *p))
+			if (*p == L'\x0A')
+			  addwstr(L"<NL>");
+			else {
+                          cchar_t my_cchar;
+                          memset(&my_cchar, 0, sizeof(my_cchar));
+                          my_cchar.chars[0] = *p;
+                          my_cchar.chars[1] = L'\0';
                           add_wch(&my_cchar);
-                        else if (search_active && *p == L'\x0A')
-                          addwstr(L"<NL>");
-			else
-                          addwstr(wunctrl(&my_cchar));
+			}
 		}
 		standend();
 		clrtoeol();
@@ -1099,6 +1098,8 @@ void search(direction)
   int insert_mode = 0;
   search_active = 1;
 
+  /* FIXME: check if blinking will work correctly in KEY_RESIZE event */
+@^FIXME@>
   if (*searchtext == L'\0' || cpos != 0) {
     search_msg(L"Search %ls: ", direction==1?L"Forward":L"Backward");
   }
@@ -1144,9 +1145,6 @@ void search(direction)
 			return;
 	    case
               L'\x07': /* C-g */
-	    @t\4@>
-	    case
-              L'\x1B': /* ESC */
 			b_point = o_point;
 			match_found = 0; /* reset */
 			search_active = 0;
@@ -1169,7 +1167,12 @@ void search(direction)
 		L'\x08': /* C-h */
 		@<BackSpace in search@>@;
 		break;
+	    case
+		L'\x0A': /* C-j */
+                @<Add char to search text@>@;
+                break;
 	    default:
+		if (iswcntrl(c)) break; /* ignore non-assigned control keys */
 		@<Add char to search text@>@;
 	}
     }
