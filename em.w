@@ -1076,7 +1076,14 @@ point_t b_search_point;
 int match_found = 0;
 int search_active = 0;
 
-@ @d STRBUF_M 64
+@ FIXME: check what will be if we press C-s or C-r when there is no pre-existing search string
+@^FIXME@>
+
+FIXME: check what will be if we press C-m or C-g right after C-s or C-r, if there is
+pre-existing search text
+@^FIXME@>
+
+@d STRBUF_M 64
 
 @<Procedures@>=
 void search(direction)
@@ -1094,13 +1101,16 @@ void search(direction)
 
   static wchar_t searchtext[STRBUF_M];
 
-  search_msg(L"Search %ls:%s%ls%s", direction==1?L"Forward":L"Backward",
-    ((*searchtext==L'\0'||cpos!=0)?"":" "),
-    ((*searchtext==L'\0'||cpos!=0)?L"":searchtext),
-    ((*searchtext==L'\0'||cpos!=0)?" ":""));
-  if (!(*searchtext==L'\0'||cpos!=0)) msgblink = wcsstr(msgline, L":") - msgline + 1;
+  if (*searchtext == L'\0' || cpos != 0) {
+    search_msg(L"Search %ls: ", direction==1?L"Forward":L"Backward");
+  }
+  else {
+    search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward", searchtext);
+    msgblink = wcsstr(msgline, L":") - msgline + 1;
+  }
   dispmsg();
-  if (msgblink != -1) move(LINES - 1, (int) msgblink); /* put the ``real'' cursor right after `:',
+  if (msgblink != -1)
+    move(LINES - 1, (int) msgblink); /* put the ``real'' cursor right after `:',
 	effectively making it invisible */
   msgblink = -1; /* reset */
 
