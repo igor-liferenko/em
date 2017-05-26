@@ -1108,9 +1108,7 @@ void search(direction)
     msgblink = wcsstr(msgline, L":") - msgline + 1;
   }
   dispmsg();
-  if (msgblink != -1)
-    move(LINES - 1, (int) msgblink); /* put the ``real'' cursor right after `:',
-	effectively making it invisible */
+  if (msgblink != -1) curs_set(0); /* make the ``real'' cursor invisible */
   msgblink = -1; /* reset */
 
   while (1) {
@@ -1131,6 +1129,7 @@ void search(direction)
 	}
     }
     else {
+	curs_set(1);
 	switch (c) {
 	    case
               L'\x0D': /* C-m */
