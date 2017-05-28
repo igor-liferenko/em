@@ -1097,6 +1097,7 @@ void search(direction)
   point_t search_point;
   int no_occurrences = 0;
   int insert_mode = 0;
+
   search_active = 1;
 
   /* FIXME: check if blinking will work correctly in |KEY_RESIZE| event */
