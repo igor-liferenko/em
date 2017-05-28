@@ -1500,6 +1500,9 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_BACKSPACE:
         backsp();
         break;
+    case KEY_F(1):
+	top();
+	break;
     case KEY_F(2):
 	bottom();
 	break;
@@ -1535,14 +1538,6 @@ else {
 	case
 		L'\x13': /* C-s */
 		search(1);
-		break;
-	case
-		L'\x1B': /* C-[ */
-		top();
-		break;
-	case
-		L'\x1d': /* C-] */
-		bottom();
 		break;
 	case
 		L'\x10': /* C-p */
