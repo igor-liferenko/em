@@ -864,9 +864,11 @@ equals to |b_epage| */
 			b_row = i;
 			b_col = j;
 		}
-                if (match_found && b_point==b_epage) b_point < b_search_point ?
+                if (search_active && b_search_point!=b_point && b_point==b_epage)
+		  b_point < b_search_point ?
                   attron(COLOR_PAIR(COLOR_SEARCH_PAIR)) : attroff(COLOR_PAIR(COLOR_SEARCH_PAIR));
-		if (match_found && b_search_point==b_epage) b_point < b_search_point ?
+		if (search_active && b_search_point!=b_point && b_search_point==b_epage)
+		  b_point < b_search_point ?
                   attroff(COLOR_PAIR(COLOR_SEARCH_PAIR)) : attron(COLOR_PAIR(COLOR_SEARCH_PAIR));
 		p = ptr(b_epage);
 		if (LINES - 1 <= i || b_ebuf <= p) /* maxline */
@@ -1010,7 +1012,6 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 	if (*s == L'\0') {
           b_point = pp;
           b_search_point = p;
-          match_found = 1;
           search_msg(L"Search Forward: %ls", searchtext);
           display();
           search_failed=0;
@@ -1028,7 +1029,7 @@ else {
 }
 dispmsg();
 b_point=0;
-match_found=0;
+b_search_point=b_point;
 @/@t\4@> search_forward:
 
 @ The logic is analogous to |@<Search forward@>|.
@@ -1045,7 +1046,6 @@ for (point_t p=b_point; p > 0;) {
 	if (*s == L'\0') {
           b_point = p;
           b_search_point = pp;
-          match_found=1;
           search_msg(L"Search Backward: %ls", searchtext);
           display();
           search_failed=0;
@@ -1063,12 +1063,18 @@ else {
 }
 dispmsg();
 b_point=pos(b_ebuf);
-match_found=0;
+b_search_point=b_point;
 @/@t\4@> search_backward:
 
 @ |search_active| is a flag, which is used in |dispmsg| for
 special handling of msg line---when we are
 typing search text, cursor must stay there until we exit search via C-g or C-m.
+It is also used in |display| to make it possible to use |b_search_point!=b_point| check
+is an indicator fi a match is found.
+
+|b_search_point| is used to determine the other part of the word to highlight it,
+and at the same time it is used as an indicator if a match was found, to determine
+if highlighting must be done.
 
 @d STRBUF_M 64
 
@@ -1076,7 +1082,6 @@ typing search text, cursor must stay there until we exit search via C-g or C-m.
 wchar_t searchtext[STRBUF_M];
 int msgblink = -1;
 point_t b_search_point;
-int match_found = 0;
 int search_active = 0;
 
 @ FIXME: check what will be if we press C-s or C-r when there is no pre-existing search string
@@ -1099,6 +1104,7 @@ void search(direction)
   int insert_mode = 0;
 
   search_active = 1;
+  b_search_point = b_point;
 
   /* FIXME: check if blinking will work correctly in |KEY_RESIZE| event */
 @^FIXME@>
@@ -1143,13 +1149,11 @@ void search(direction)
 				break;
 			}
 			if (search_failed) b_point = search_point;
-			match_found = 0; /* reset */
 			search_active = 0;
 			return;
 	    case
               L'\x07': /* C-g */
 			b_point = o_point;
-			match_found = 0; /* reset */
 			search_active = 0;
 			return;
 	    case
