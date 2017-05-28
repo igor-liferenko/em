@@ -1513,6 +1513,9 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_F(6):
 	search(1);
 	break;
+    case KEY_F(11):
+	/* NOTE: it may be used, because xterm permits this */
+	break;
     case KEY_F(12):
 	quit();
 	break;
