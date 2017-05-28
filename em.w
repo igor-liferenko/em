@@ -1074,7 +1074,7 @@ typing search text, cursor must stay there until we exit search via C-g or C-m.
 
 @<Global...@>=
 wchar_t searchtext[STRBUF_M];
-long int msgblink = -1;
+int msgblink = -1;
 point_t b_search_point;
 int match_found = 0;
 int search_active = 0;
@@ -1107,7 +1107,7 @@ void search(direction)
   }
   else {
     search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward", searchtext);
-    msgblink = wcsstr(msgline, L":") - msgline + 1;
+    msgblink = (int) (wcsstr(msgline, L":") - msgline) + 1;
   }
   dispmsg();
   if (msgblink != -1) curs_set(0); /* make the ``real'' cursor invisible */
