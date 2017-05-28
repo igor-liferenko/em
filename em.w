@@ -734,8 +734,9 @@ void dispmsg(void)
 		standend();
 		clrtoeol();
 		msgflag = FALSE;
-		if (search_active) { /* the |move| which is performed right after this procedure
-			in |display| will put the cursor to msg line */
+		if (search_active) { /* override |b_row| and |b_col|, in order that |move|, which is
+			performed right after this procedure in |display|, will put the cursor to msg
+			line */
 			b_row = LINES - 1;
 			b_col = (int)wcslen(msgline);
 		}
