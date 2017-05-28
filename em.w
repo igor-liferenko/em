@@ -734,12 +734,6 @@ void dispmsg(void)
 		standend();
 		clrtoeol();
 		msgflag = FALSE;
-		if (search_active) { /* override |b_row| and |b_col|, in order that |move|, which is
-			performed right after this procedure in |display|, will put the cursor to msg
-			line */
-			b_row = LINES - 1;
-			b_col = (int)wcslen(msgline);
-		}
 	}
 }
 
@@ -907,6 +901,11 @@ equals to |b_epage| */
 
 	modeline();
 	dispmsg();
+        if (search_active) { /* override |b_row| and |b_col|, in order that cursor will be
+                                put to msg line */
+          b_row = LINES - 1;
+          b_col = (int) wcslen(msgline);
+        }
 	move(b_row, b_col); /* set cursor */
 	refresh(); /* update the real screen */
 }
