@@ -1128,6 +1128,8 @@ void search(direction)
 	  case KEY_IC:
 		@<Use Insert key as a switcher@>@;
 		break;
+/* TODO: implement |KEY_F(5)| and |KEY_F(6)| to search backward and forward */
+@^TODO@>
 	}
     }
     else {
@@ -1153,15 +1155,13 @@ void search(direction)
 	    case
 		L'\x12': /* C-r */
 			direction=0;
-			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing
-				search string */
+			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
 			@<Search backward@>@;
 			break;
 	    case
 		L'\x13': /* C-s */
 			direction=1;
-			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing
-				search string */
+			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
 			@<Search forward@>@;
 			break;
 	    case
@@ -1507,16 +1507,13 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_F(2):
 	bottom();
 	break;
-    case KEY_F(3):
-	done = 1; /* quit without saving */
-	break;
     case KEY_F(5):
 	search(0);
 	break;
     case KEY_F(6):
 	search(1);
 	break;
-    case KEY_F(10):
+    case KEY_F(12):
 	quit();
 	break;
     default:
