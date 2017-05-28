@@ -1123,7 +1123,7 @@ void search(direction)
     refresh(); /* update the real screen */
     if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
 	switch (c) {
-	  case KEY_RESIZE:
+	  case KEY_RESIZE: /* integer promotion takes place in such case */
 		search_msg(L"Search %ls: %ls",
 		  direction==1?L"Forward":L"Backward",searchtext);
 		display();
@@ -1144,7 +1144,7 @@ void search(direction)
 	    case
               L'\x0D': /* C-m */
 			if (insert_mode) {
-				c = L'\x0A';
+				c = L'\x0A'; /* integer promotion takes place in such case */
 				@<Add char to search text@>@;
 				break;
 			}
@@ -1473,7 +1473,7 @@ if |get_wch| passed a special code or a char, for which |int| is good. The retur
 wint_t c;
 if (get_wch(&c) == KEY_CODE_YES) {
   switch (c) {
-    case KEY_RESIZE:
+    case KEY_RESIZE: /* integer promotion takes place in such case */
 	continue;
     case KEY_LEFT:
         left();
@@ -1577,7 +1577,7 @@ else {
 		backsp();
 		break;
 	case
-		L'\x1e': /* C-6 */
+		L'\x1D': /* C-] */
 		pgup();
 		break;
 	case
