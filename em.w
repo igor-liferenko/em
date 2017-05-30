@@ -1123,7 +1123,7 @@ void search(direction)
     refresh(); /* update the real screen */
     if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
 	switch (c) {
-	  case KEY_RESIZE: /* integer promotion takes place in such case */
+	  case KEY_RESIZE: /* integer promotion takes place in such cases */
 		search_msg(L"Search %ls: %ls",
 		  direction==1?L"Forward":L"Backward",searchtext);
 		display();
@@ -1144,7 +1144,7 @@ void search(direction)
 	    case
               L'\x0D': /* C-m */
 			if (insert_mode) {
-				c = L'\x0A'; /* integer promotion takes place in such case */
+				c = L'\x0A'; /* integer promotion takes place in such cases */
 				@<Add char to search text@>@;
 				break;
 			}
@@ -1249,6 +1249,7 @@ int main(int argc, char **argv)
 	setlocale(LC_CTYPE, "C.UTF-8");
 	if (argc == 1) fatal(L"TODO: create temporary file in tex_tmp (see file tmp in my bin)"
         "and upon exiting em, print the file contents to stdout, and remove file tmp in my bin\n");
+/* HINT: take tmpfile stuff from mpxout.w from metapost source */
 @^TODO@>
 
 	int lineno;
@@ -1325,6 +1326,11 @@ of \.{infocmp -1} to determine terminal capability, then find this capability in
 \.{terminfo(5)} and by analogy see which capability must have \.{F13} and then find
 the sequence for this capability in \.{infocmp -1} and bind this sequence to C-[
 via xkb or something (ask on SO)
+See this:
+{\tt http://www.shallowsky.com/linux/noaltscreen.html} \hfil\break
+{\tt http://collaboration.cmc.ec.gc.ca/science/rpn/biblio/ddj/Website/%
+  \hfil\break\hbox to1em{}articles/SA/v04/i06/a3.htm} \hfil\break
+{\tt http://www.ibb.net/~anne/keyboard.html}
 @^TODO@>
 
 @<Automatically interpret ANSI control sequences@>=
@@ -1473,7 +1479,7 @@ if |get_wch| passed a special code or a char, for which |int| is good. The retur
 wint_t c;
 if (get_wch(&c) == KEY_CODE_YES) {
   switch (c) {
-    case KEY_RESIZE: /* integer promotion takes place in such case */
+    case KEY_RESIZE: /* integer promotion takes place in such cases */
 	continue;
     case KEY_LEFT:
         left();
@@ -1505,7 +1511,8 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_BACKSPACE:
         backsp();
         break;
-    case KEY_F(1):
+    case KEY_F(1): /* TODO: find out how to disable this key in GNOME */
+@^TODO@>
 	top();
 	break;
     case KEY_F(2):
@@ -1518,7 +1525,8 @@ if (get_wch(&c) == KEY_CODE_YES) {
 	search(1);
 	break;
     case KEY_F(11):
-	/* NOTE: it may be used, because xterm permits this */
+	/* TODO: check if |KEY_F(13)| will match Ctrl+F1 and use those */
+@^TODO@>
 	break;
     case KEY_F(12):
 	quit();
