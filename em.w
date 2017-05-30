@@ -1125,7 +1125,7 @@ void search(direction)
 	  case KEY_IC:
 		@<Use Insert key as a switcher@>@;
 		break;
-/* TODO: implement |KEY_F(5)| and |KEY_F(6)| to search backward and forward */
+/* TODO: implement |KEY_F(17)| and |KEY_F(18)| to search backward and forward */
 @^TODO@>
 	}
     }
@@ -1478,24 +1478,20 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_BACKSPACE:
         backsp();
         break;
-    case KEY_F(1): /* TODO: find out how to disable this key in GNOME */
-@^TODO@>
+    case KEY_F(13): /* instead of |F1--F12| use |Shift+F1--F12|, because |F1--F12| and
+        |Ctrl+F1--F12| are overlapped by GNOME */
 	top();
 	break;
-    case KEY_F(2):
+    case KEY_F(14):
 	bottom();
 	break;
-    case KEY_F(5):
+    case KEY_F(17):
 	search(0);
 	break;
-    case KEY_F(6):
+    case KEY_F(18):
 	search(1);
 	break;
-    case KEY_F(11):
-	/* TODO: check via cweb/ncurses-test.w if |KEY_F(13)| will match Ctrl+F1 and use those */
-@^TODO@>
-	break;
-    case KEY_F(12):
+    case KEY_F(24):
 	quit();
 	break;
     default:
