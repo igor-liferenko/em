@@ -699,14 +699,11 @@ void modeline(void)
        clrtoeol();
 }
 
-@ There is indication of pre-existing search, which is done via blinking. This requires
-blinking capability support in your terminal. You can check this by running
-$$\.{tput blink; echo hello world; tput sgr0}$$
-If the `\.{hello world}' is not blinking, then your terminal does not support blinking.
-In such case you may use \.{xterm}, or something else which does.
+@ There is indication of pre-existing search, which is done by hiding the cursor.
 
-I decided to make the previous search text blinking, because this way it imitates ordinary
-cursor\footnote*{it is supposed that ordinary cursor is blinking, which is the case in my setup}
+I decided to hide the cursor, because this way previous search text imitates ordinary
+cursor\footnote*{it is supposed that ordinary cursor is not blinking}
+% NOTE: disable cursor blinking in terminal which I will write
 (with the distinction that
 the ``new'' cursor may occupy more than one cell). This way it makes the intentions clear:
 the search text can be entered as usual (i.e., as
@@ -720,7 +717,6 @@ void dispmsg(void)
 		move(LINES - 1, 0);
 		standout();
 		for(wchar_t *p=msgline; *p!=L'\0'; p++) {
-                        if (p - msgline == msgblink) attron(A_BLINK);
 			if (*p == L'\x0A')
 			  addwstr(L"<NL>");
 			else {
@@ -1078,7 +1074,6 @@ if highlighting must be done.
 
 @<Global...@>=
 wchar_t searchtext[STRBUF_M];
-int msgblink = -1;
 point_t b_search_point;
 int search_active = 0;
 
@@ -1104,18 +1099,16 @@ void search(direction)
   search_active = 1;
   b_search_point = b_point;
 
-  /* FIXME: check if blinking will work correctly in |KEY_RESIZE| event */
+  /* FIXME: check if |curs_set(0)| will work correctly in |KEY_RESIZE| event */
 @^FIXME@>
   if (*searchtext == L'\0' || cpos != 0) {
     search_msg(L"Search %ls: ", direction==1?L"Forward":L"Backward");
   }
   else {
     search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward", searchtext);
-    msgblink = (int) (wcsstr(msgline, L":") - msgline) + 1;
+    curs_set(0); /* make the ``real'' cursor invisible */
   }
   dispmsg();
-  if (msgblink != -1) curs_set(0); /* make the ``real'' cursor invisible */
-  msgblink = -1; /* reset */
 
   while (1) {
     refresh(); /* update the real screen */
@@ -1499,7 +1492,7 @@ if (get_wch(&c) == KEY_CODE_YES) {
 	search(1);
 	break;
     case KEY_F(11):
-	/* TODO: check if |KEY_F(13)| will match Ctrl+F1 and use those */
+	/* TODO: check via cweb/ncurses-test.w if |KEY_F(13)| will match Ctrl+F1 and use those */
 @^TODO@>
 	break;
     case KEY_F(12):
