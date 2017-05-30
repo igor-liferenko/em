@@ -860,11 +860,9 @@ equals to |b_epage| */
 			b_col = j;
 		}
                 if (search_active && b_search_point!=b_point && b_point==b_epage)
-		  b_point < b_search_point ?
-                  attron(COLOR_PAIR(COLOR_SEARCH_PAIR)) : attroff(COLOR_PAIR(COLOR_SEARCH_PAIR));
+		  b_point < b_search_point ? standout() : standend();
 		if (search_active && b_search_point!=b_point && b_search_point==b_epage)
-		  b_point < b_search_point ?
-                  attroff(COLOR_PAIR(COLOR_SEARCH_PAIR)) : attron(COLOR_PAIR(COLOR_SEARCH_PAIR));
+		  b_point < b_search_point ? standend() : standout();
 		p = ptr(b_epage);
 		if (LINES - 1 <= i || b_ebuf <= p) /* maxline */
 			break;
@@ -1221,28 +1219,6 @@ search_insert_mode(insert_mode);
 msgflag = TRUE;
 dispmsg();
 
-@* Color initialization.
-Your terminal must support 256 colors. You can check this by running
-$$\.{echo \$TERM}$$
-If it will not print `\.{xterm-256color}', find a way to enable 256 colors
-for your terminal. For example, in \.{xterm} this is done by adding
-`\.{-tn xterm-256color}' option.
-
-/* FIXME: find out how to determine new color instead of redefining existing one */
-@^FIXME@>
-
-/* FIXME: find out if the first argument of |init_pair| must start with 1 or with 0 */
-@^FIXME@>
-
-@d COLOR_SEARCH COLOR_YELLOW
-@d COLOR_SEARCH_PAIR 1
-
-@<Initialize colors@>=
-start_color(); /* set |COLORS| to the maximum number of colors the terminal can support */
-use_default_colors(); /* reset the screen to pre-existing terminal colors */
-init_color(COLOR_SEARCH, 500, 800, 600);
-init_pair(COLOR_SEARCH_PAIR, COLOR_BLACK, COLOR_SEARCH);
-
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
@@ -1274,8 +1250,6 @@ int main(int argc, char **argv)
         noecho();
 	nonl(); /* return proper value (|0x0d|) from |get_wch| for C-m and ENTER keys */
 	@<Automatically interpret ANSI control sequences@>@;
-
-	@<Initialize colors@>;
 
 	while (!done) {
 		display();
