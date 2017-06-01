@@ -1167,8 +1167,7 @@ void search(direction)
 		break;
 	    case
 		L'\x0A': /* C-j */
-                @<Add char to search text@>;
-                break;
+	    @t\4@>
 	    case
 		L'\x09': /* TAB */
 		@<Add char to search text@>;
