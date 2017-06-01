@@ -720,7 +720,7 @@ void dispmsg(void)
 			if (*p == L'\x0A')
 			  addwstr(L"<NL>");
 			else if (*p == L'\x09')
-			  addwstr(L"^I");
+			  addwstr(L"<TAB>");
 			else {
                           cchar_t my_cchar;
                           memset(&my_cchar, 0, sizeof(my_cchar));
