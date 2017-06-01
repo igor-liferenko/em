@@ -719,6 +719,8 @@ void dispmsg(void)
 		for(wchar_t *p=msgline; *p!=L'\0'; p++) {
 			if (*p == L'\x0A')
 			  addwstr(L"<NL>");
+			else if (*p == L'\x09')
+			  addwstr(L"^I");
 			else {
                           cchar_t my_cchar;
                           memset(&my_cchar, 0, sizeof(my_cchar));
@@ -1165,8 +1167,12 @@ void search(direction)
 		break;
 	    case
 		L'\x0A': /* C-j */
-                @<Add char to search text@>@;
+                @<Add char to search text@>;
                 break;
+	    case
+		L'\x09': /* TAB */
+		@<Add char to search text@>;
+		break;
 	    default:
 		if (iswcntrl(c)) break; /* ignore non-assigned control keys */
 		@<Add char to search text@>@;
