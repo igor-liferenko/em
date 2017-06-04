@@ -276,7 +276,8 @@ int msgflag;
 messages are treated specially.
 
 @<Procedures@>=
-#define search_msg(...) @,@,@, msg(__VA_ARGS__); @+ search_insert_mode(insert_mode);
+#define search_msg(...) @,@,@, msg(__VA_ARGS__); @+ \
+  case_sensitive_search(case_sensitive_search_flag);
 
 void msg(wchar_t *msg, ...)
 {
@@ -287,18 +288,17 @@ void msg(wchar_t *msg, ...)
 	msgflag = TRUE;
 }
 
-@ Search prompt is formatted in accordance with |insert_mode| (see
-|@<Use Insert key as a switcher@>|).
-If this mode is active, in search prompt all letters are uppercased.
-If this mode is not active, in search prompt all letters are lowercased,
+@ Search prompt is formatted in accordance with |case_sensitive_search_flag|.
+If this flag is active, in search prompt all letters are uppercased.
+If this flag is not active, in search prompt all letters are lowercased,
 except first letters of words. The search prompt ends at the first occurrence
 of character `\.:'.
 
 @<Procedures@>=
-void search_insert_mode(int insert_mode)
+void case_sensitive_search(int case_sensitive_search_flag)
 {
   for (wchar_t *k = msgline; *k != L':'; k++)
-    if (insert_mode)
+    if (case_sensitive_search_flag)
       *k = (wchar_t) towupper((wint_t) *k);
     else if (k != msgline && *(k-1) != L' ')
       *k = (wchar_t) towlower((wint_t) *k);
@@ -988,12 +988,10 @@ warning that no occurrences were found.
 On the other hand, if we already know that there are no occurrences, no need to
 reset |search_failed| when direction is changed. Use |no_occurrences| to track this.
 
-If |insert_mode| is active, search is case-sensitive, otherwise it is case-insensitive.
-This is combined with |insert_mode| because case-sensivity works well in
-conjunction with pasting from clipboard, and can be activated in manual search if the need arises
-(by default search is case-insensitive).
-For description of what is |insert_mode| see doc part of section
-|@<Use Insert key as a switcher@>|.
+If |case_sensitive_search_flag| is active, search is case-sensitive, otherwise it is
+case-insensitive.
+For description of what is |case_sensitive_search_flag| see description of procedure
+|case_sensitive_search|.
 
 @<Search forward@>=
 if (direction==0&&!no_occurrences) search_failed=0; /* direction changed */
@@ -1002,7 +1000,7 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 @^FIXME@>
 	point_t pp;
 	wchar_t *s;
-	for (s=searchtext, pp=p; (insert_mode ? *s == *ptr(pp) :
+	for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
 	  towlower((wint_t) *s) == towlower((wint_t) *ptr(pp))) &&
 	  *s !=L'\0' && pp < end_p; s++, pp++) ;
 	if (*s == L'\0') {
@@ -1036,7 +1034,7 @@ for (point_t p=b_point; p > 0;) {
 	p--;
 	point_t pp;
         wchar_t *s;
-	for (s=searchtext, pp=p; (insert_mode ? *s == *ptr(pp) :
+	for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
 	  towlower((wint_t) *s) == towlower((wint_t) *ptr(pp))) &&
 	  *s != L'\0' && pp >= 0; s++, pp++) ;
 	if (*s == L'\0') {
@@ -1096,7 +1094,7 @@ void search(direction)
   int search_failed = 0;
   point_t search_point;
   int no_occurrences = 0;
-  int insert_mode = 0;
+  int case_sensitive_search_flag = 0;
 
   search_active = 1;
   b_search_point = b_point;
@@ -1125,7 +1123,7 @@ void search(direction)
 		@<BackSpace in search@>@;
 		break;
 	  case KEY_IC:
-		@<Use Insert key as a switcher@>@;
+		@<Use Insert key...@>@;
 		break;
 /* TODO: implement |KEY_F(17)| and |KEY_F(18)| to search backward and forward */
 @^TODO@>
@@ -1136,11 +1134,6 @@ void search(direction)
 	switch (c) {
 	    case
               L'\x0D': /* C-m */
-			if (insert_mode) {
-				c = L'\x0A'; /* integer promotion takes place in such cases */
-				@<Add char to search text@>@;
-				break;
-			}
 			if (search_failed) b_point = search_point;
 			search_active = 0;
 			return;
@@ -1167,6 +1160,7 @@ void search(direction)
 		break;
 	    case
 		L'\x0A': /* C-j */
+		/* use this when you want to search newline */
 	    @t\4@>
 	    case
 		L'\x09': /* TAB */
@@ -1195,25 +1189,12 @@ if (cpos < STRBUF_M - 1) {
   dispmsg();
 }
 
-@ Normally, when you want to search newline, you press C-j in search
-mode---this key sends code |0x0A|, which is duly inserted in search text.
-When you want to paste searched text from clipboard, press Insert key
-before the paste, and then after the paste---to restore normal behavior.
-The matter is that code |0x0A| is automatically coverted to |0x0D| when text is
-pasted from buffer. (This behavior is caused by window manager, or
-gnome-terminal---I'm not sure exactly, and I don't know how to disable it;
-maybe this may be even used as a feature---to type |0x0A| character in
-search text the same way as you type it in ondinary text, i.e., by
-pressing C-m key.) Insert key toggles the key which sends |L'\x0D'| between
-adding |L'\x0A'| to search string and normal behavior, i.e., exiting the
-search on the current spot.
-
-The changes to search prompt made in |search_insert_mode|
+@ The changes to search prompt made in |case_sensitive_search|
 are displayed immediately after Insert key is pressed.
 
-@<Use Insert key as a switcher@>=
-insert_mode =! insert_mode;
-search_insert_mode(insert_mode);
+@<Use Insert key as a case-sensivity switcher@>=
+case_sensitive_search_flag = !case_sensitive_search_flag;
+case_sensitive_search(case_sensitive_search_flag);
 msgflag = TRUE;
 dispmsg();
 
