@@ -11,3 +11,5 @@ implement proper job control as said here:
   http://web.archive.org/web/20160329140839/http://www.cons.org/cracauer/sigint.html
 
 when I will finish term, use raw VT100 sequences instead of ncurses
+
+make case-sensivity persist between searches
