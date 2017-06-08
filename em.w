@@ -873,7 +873,10 @@ equals to |b_epage| */
 				j += *p == L'\t' ? 8-(j&7) : 1;
                                 add_wch(&my_cchar);
 			}
-			else {
+			else if (*p != L'\0') { /* this is a hack to work around illicit
+						   zero character sent by term on non-ascii
+						   characters - remove this hack when term will
+						   be fixed */
 				wchar_t *ctrl = wunctrl(&my_cchar);
 				j += (int) wcslen(ctrl);
 				addwstr(ctrl);
