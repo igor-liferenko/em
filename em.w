@@ -1274,16 +1274,11 @@ etc.).
 in programs that I write. (Besides window manager, \.{Esc} key may be used in some
 existing programs.)
 
-TODO: run \.{showkey -a} and press \.{F10}, then find the generated sequence in the output
-of \.{infocmp -1} to determine terminal capability, then find this capability in
-\.{terminfo(5)} and by analogy see which capability must have \.{F13} and then find
-the sequence for this capability in \.{infocmp -1} and bind this sequence to C-[
-via xkb or something (ask on SO)
-See this:
-{\tt http://www.shallowsky.com/linux/noaltscreen.html} \hfil\break
-{\tt http://collaboration.cmc.ec.gc.ca/science/rpn/biblio/ddj/Website/%
-  \hfil\break\hbox to1em{}articles/SA/v04/i06/a3.htm} \hfil\break
-{\tt http://www.ibb.net/~anne/keyboard.html}
+TODO: run \.{showkey -a} and press \.{Shift+F1} (aka \.{F13}) and
+make the ``term'' terminal emulator send this instead of 0x1B on ``\.{Ctrl+[}''.
+Corresponding terminal capability is \.{kf13} (it can be determined by the keycodes
+sequence from the output of \.{infocmp -1}).
+Also see \.{http://unix.stackexchange.com/questions/367994/}
 @^TODO@>
 
 @<Automatically interpret ANSI control sequences@>=
@@ -1465,7 +1460,8 @@ if (get_wch(&c) == KEY_CODE_YES) {
         backsp();
         break;
     case KEY_F(13): /* instead of |F1--F12| use |Shift+F1--F12|, because |F1--F12| and
-        |Ctrl+F1--F12| are overlapped by GNOME */
+        |Ctrl+F1--F12| are overlapped by GNOME (turns out Shift is also overlapped by
+        GNOME on some keys from this range) */
 	top();
 	break;
     case KEY_F(14):
