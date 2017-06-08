@@ -873,10 +873,7 @@ equals to |b_epage| */
 				j += *p == L'\t' ? 8-(j&7) : 1;
                                 add_wch(&my_cchar);
 			}
-			else if (*p != L'\0') { /* this is a hack to work around illicit
-						   zero character sent by term on non-ascii
-						   characters - remove this hack when term will
-						   be fixed */
+			else {
 				wchar_t *ctrl = wunctrl(&my_cchar);
 				j += (int) wcslen(ctrl);
 				addwstr(ctrl);
@@ -940,6 +937,9 @@ void pgup(void)
 void insert(wchar_t c)
 {
 	assert(b_gap <= b_egap);
+	if (c==L'\0') return; /* this is a hack to work around illicit zero character
+				 sent by term on non-ascii characters - remove this hack
+				 when term will be fixed */
 	if (b_gap == b_egap && !growgap(CHUNK)) return; /* if gap size is zero,
 		grow gap */
 	movegap(b_point);
