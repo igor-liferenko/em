@@ -1464,7 +1464,8 @@ if (get_wch(&c) == KEY_CODE_YES) {
         break;
     case KEY_F(13): /* instead of |F1--F12| use |Shift+F1--F12|, because |F1--F12| and
         |Ctrl+F1--F12| are overlapped by GNOME (turns out Shift is also overlapped by
-        GNOME on some keys from this range) */
+        GNOME on some keys from this range, for example F23 and F35 which are F11 are
+        intercepted by GNOME even in term) */
 	top();
 	break;
     case KEY_F(14):
