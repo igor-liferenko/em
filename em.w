@@ -723,7 +723,7 @@ void dispmsg(void)
 			  addwstr(L"<TAB>");
 			else {
                           cchar_t my_cchar;
-                          memset(&my_cchar, 0, sizeof(my_cchar));
+                          memset(&my_cchar, 0, sizeof(cchar_t));
                           my_cchar.chars[0] = *p;
                           my_cchar.chars[1] = L'\0';
                           add_wch(&my_cchar);
@@ -866,7 +866,7 @@ equals to |b_epage| */
 			break;
 		if (*p != L'\r') {
 			cchar_t my_cchar;
-			memset(&my_cchar, 0, sizeof(my_cchar));
+			memset(&my_cchar, 0, sizeof(cchar_t));
 			my_cchar.chars[0] = *p;
 			my_cchar.chars[1] = L'\0';
 			if (iswprint((wint_t) *p) || *p == L'\t' || *p == L'\n') {
@@ -1556,7 +1556,7 @@ else {
 
 @ Utility macros.
 
-@d ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+@d ARRAY_SIZE(a) (sizeof a / sizeof a[0])
 
 @ @<Header files@>=
 /* TODO: sort alphabetically */
