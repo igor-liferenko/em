@@ -1135,8 +1135,7 @@ void search(direction)
     else {
 	curs_set(1);
 	switch (c) {
-	    case
-              L'\x0D': /* C-m */
+	    case@= @>L'\x0D': /* C-m */
 			if (search_failed) b_point = search_point;
 			search_active = 0;
 			return;
@@ -1281,7 +1280,7 @@ TODO: run \.{showkey -a} and press \.{Shift+F1} (aka \.{F13}) and
 make the ``term'' terminal emulator send this instead of 0x1B on ``\.{Ctrl+[}''.
 Corresponding terminal capability is \.{kf13} (it can be determined by the keycodes
 sequence from the output of \.{infocmp -1}).
-Also see \.{http://unix.stackexchange.com/questions/367994/}
+Also see \par \.{http://unix.stackexchange.com/questions/367994/}
 @^TODO@>
 
 @<Automatically interpret ANSI control sequences@>=
