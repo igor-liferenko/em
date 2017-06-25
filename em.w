@@ -367,9 +367,9 @@ newlen = buflen + n;
 @ @<Allocate memory for editing buffer@>=
 assert(newlen >= 0);
 if (buflen == 0) /* if buffer is empty */
-  new = malloc((size_t) newlen * sizeof(wchar_t));
+  new = malloc((size_t) newlen * sizeof (wchar_t));
 else
-  new = realloc(b_buf, (size_t) newlen * sizeof(wchar_t));
+  new = realloc(b_buf, (size_t) newlen * sizeof (wchar_t));
 if (new == NULL) {
   msg(L"malloc: %s\n", strerror(errno));
   return FALSE;
@@ -723,7 +723,7 @@ void dispmsg(void)
 			  addwstr(L"<TAB>");
 			else {
                           cchar_t my_cchar;
-                          memset(&my_cchar, 0, sizeof(cchar_t));
+                          memset(&my_cchar, 0, sizeof (cchar_t));
                           my_cchar.chars[0] = *p;
                           my_cchar.chars[1] = L'\0';
                           add_wch(&my_cchar);
@@ -866,7 +866,7 @@ equals to |b_epage| */
 			break;
 		if (*p != L'\r') {
 			cchar_t my_cchar;
-			memset(&my_cchar, 0, sizeof(cchar_t));
+			memset(&my_cchar, 0, sizeof (cchar_t));
 			my_cchar.chars[0] = *p;
 			my_cchar.chars[1] = L'\0';
 			if (iswprint((wint_t) *p) || *p == L'\t' || *p == L'\n') {
