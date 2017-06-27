@@ -260,9 +260,13 @@ void fatal(wchar_t *msg, ...)
 	noraw();
 	endwin(); /* end curses mode */
 
+	if (argc == 1)
+		if (b_fname != NULL) free(b_fname);
+
 	va_start(args, msg);
 	vwprintf(msg, args);
 	va_end(args);
+
 	exit(EXIT_FAILURE);
 }
 
@@ -423,7 +427,7 @@ void quit(void)
 visible from procedures.
 
 @<Global...@>=
-char *b_fname;
+char *b_fname = NULL;
 
 @ @<Save file name@>=
 b_fname=argv[1];
@@ -1205,27 +1209,26 @@ int main(int argc, char **argv)
 {
 	setlocale(LC_CTYPE, "C.UTF-8");
 	FILE *fp;
-	if (argc == 1) {
+	if (argc == 1) { /* if you need to write something temporarily quickly, first write what
+			    you have in mind to paper, and then use "tmp" to write to a temporary file */
 		char template[] = "/tex_tmp/tmp-XXXXXX";
 		int fd = mkstemp(template);
 		if (fd < 0) fatal(L"error - cannot create temporary file");
-		fp = fdopen(fd, "r");
-@<Get absolute file name@>;
+		fp = fdopen(fd, "r"); /* to use |@<Get absolute file name@>| */
+		@<Get absolute file name@>;
 		b_fname = malloc(ARRAY_SIZE(b_absname));
 		if (b_fname == NULL) fatal(L"error - cannot allocate memory");
 		strcpy(b_fname, b_absname);
 		close(fd);
-		if (initscr() == NULL) { free(b_fname); exit(EXIT_FAILURE); /* start curses mode */ }
+		if (initscr() == NULL) fatal(L"cannot start curses mode");
 		goto essential;
-		/* if you will need to write something temporarily quickly, first write what you have in
-		   mind to paper, and then use "tmp" to write to a temporary file. */
 	}
 	int lineno;
 	if (argc == 3) /* second argument is the line number to be shown when file is opened */
 		if (sscanf (argv[2], "%d", &lineno) != 1)
 		    fatal(L"error - line number not an integer\n");
 
-	if (initscr() == NULL) exit(EXIT_FAILURE); /* start curses mode */
+	if (initscr() == NULL) fatal(L"cannot start curses mode");
 
 	@<Save file name@>@;
 	@<Open file@>@;
