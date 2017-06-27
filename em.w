@@ -1204,11 +1204,22 @@ dispmsg();
 int main(int argc, char **argv)
 {
 	setlocale(LC_CTYPE, "C.UTF-8");
-	if (argc == 1) fatal(L"TODO: create temporary file in tex_tmp (see file tmp in my bin)"
-        "and upon exiting em, print the file contents to stdout, and remove file tmp in my bin\n");
-/* HINT: take tmpfile stuff from mpxout.w from metapost source */
-@^TODO@>
-
+	FILE *fp;
+	if (argc == 1) {
+		char template[] = "/tex_tmp/tmp-XXXXXX";
+		int fd = mkstemp(template);
+		if (fd < 0) fatal(L"error - cannot create temporary file");
+		fp = fdopen(fd, "r");
+@<Get absolute file name@>;
+		b_fname = malloc(ARRAY_SIZE(b_absname));
+		if (b_fname == NULL) fatal(L"error - cannot allocate memory");
+		strcpy(b_fname, b_absname);
+		close(fd);
+		if (initscr() == NULL) { free(b_fname); exit(EXIT_FAILURE); /* start curses mode */ }
+		goto essential;
+		/* if you will need to write something temporarily quickly, first write what you have in
+		   mind to paper, and then use "tmp" to write to a temporary file. */
+	}
 	int lineno;
 	if (argc == 3) /* second argument is the line number to be shown when file is opened */
 		if (sscanf (argv[2], "%d", &lineno) != 1)
@@ -1216,7 +1227,6 @@ int main(int argc, char **argv)
 
 	if (initscr() == NULL) exit(EXIT_FAILURE); /* start curses mode */
 
-	FILE *fp;
 	@<Save file name@>@;
 	@<Open file@>@;
 	@<Get absolute...@>@;
@@ -1226,6 +1236,8 @@ int main(int argc, char **argv)
 	if (argc == 3) @<Move cursor to |lineno|@>@;
 	else @<Ensure that restored position is inside buffer@>;
 	@<Set |b_epage|...@>@;
+
+essential:
 
         raw();
         noecho();
@@ -1241,7 +1253,11 @@ int main(int argc, char **argv)
 	refresh(); /* FIXME: why do we need this? Remove and check what will be. */
 	noraw();
 	endwin(); /* end curses mode */
-
+	
+	if (argc == 1) {
+		printf("%s\n", b_fname);
+		free(b_fname);
+	}
 	return 0;
 }
 
@@ -1562,7 +1578,7 @@ else {
 @ @<Header files@>=
 /* TODO: sort alphabetically */
 @^TODO@>
-#include <stdlib.h> /* |malloc|, |exit|, |EXIT_FAILURE|, |free|, |realloc|, |getenv| */
+#include <stdlib.h> /* |malloc|, |mkstemp|, |exit|, |EXIT_FAILURE|, |free|, |realloc|, |getenv| */
 #include <stdarg.h> /* |va_end|, |va_start| */
 #include <assert.h> /* |assert| */
 #include <ncursesw/curses.h> /* |add_wch|, |addwstr|, |chars|, |clrtoeol|, |COLS|, |endwin|,
