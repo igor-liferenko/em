@@ -260,7 +260,7 @@ void fatal(wchar_t *msg, ...)
 	noraw();
 	endwin(); /* end curses mode */
 
-	if (argc == 1)
+	if (file_is_temporary)
 		if (b_fname != NULL) free(b_fname);
 
 	va_start(args, msg);
@@ -428,6 +428,7 @@ visible from procedures.
 
 @<Global...@>=
 char *b_fname = NULL;
+int file_is_temporary = 0;
 
 @ @<Save file name@>=
 b_fname=argv[1];
@@ -1211,6 +1212,7 @@ int main(int argc, char **argv)
 	FILE *fp;
 	if (argc == 1) { /* if you need to write something temporarily quickly, first write what
 			    you have in mind to paper, and then use "tmp" to write to a temporary file */
+		file_is_temporary = 1;
 		char template[] = "/tex_tmp/tmp-XXXXXX";
 		int fd = mkstemp(template);
 		if (fd < 0) fatal(L"error - cannot create temporary file");
@@ -1257,7 +1259,7 @@ essential:
 	noraw();
 	endwin(); /* end curses mode */
 	
-	if (argc == 1) {
+	if (file_is_temporary) {
 		printf("%s\n", b_fname);
 		free(b_fname);
 	}
