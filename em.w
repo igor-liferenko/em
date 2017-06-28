@@ -1216,10 +1216,9 @@ int main(int argc, char **argv)
 		fclose(fp);
 
 		pid_t pid;
-		int wstatus;
 		if ((pid = fork()) != -1) {
 		  if (pid == 0)	execl("/usr/local/bin/em", "/usr/local/bin/em", b_absname, NULL);
-		  wait(&wstatus);
+		  wait(NULL);
 		  printf("%s\n", b_absname);
 		  exit(EXIT_SUCCESS);
 		}
