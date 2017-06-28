@@ -1211,7 +1211,8 @@ int main(int argc, char **argv)
 	setlocale(LC_CTYPE, "C.UTF-8");
 	FILE *fp;
 	if (argc == 1) { /* if you need to write something temporarily quickly, first write what
-			    you have in mind to paper, and then use "tmp" to write to a temporary file */
+			    you have in mind to paper, and then say "em" to write to a
+			    temporary file */
 		file_is_temporary = 1;
 		char tmpl[] = "/tex_tmp/tmp-XXXXXX";
 		int fd = mkstemp(tmpl);
@@ -1241,7 +1242,7 @@ int main(int argc, char **argv)
 
 essential:
 
-	initscr();
+        initscr();
         raw();
         noecho();
 	nonl(); /* return proper value (|0x0d|) from |get_wch| for C-m and ENTER keys */
