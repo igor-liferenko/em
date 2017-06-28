@@ -1221,16 +1221,13 @@ int main(int argc, char **argv)
 		b_fname = malloc(ARRAY_SIZE(b_absname));
 		if (b_fname == NULL) fatal(L"error - cannot allocate memory");
 		strcpy(b_fname, b_absname);
-		close(fd);
-		if (initscr() == NULL) fatal(L"cannot start curses mode");
+		fclose(fp);
 		goto essential;
 	}
 	int lineno;
 	if (argc == 3) /* second argument is the line number to be shown when file is opened */
 		if (sscanf (argv[2], "%d", &lineno) != 1)
 		    fatal(L"error - line number not an integer\n");
-
-	if (initscr() == NULL) fatal(L"cannot start curses mode");
 
 	@<Save file name@>@;
 	@<Open file@>@;
@@ -1244,6 +1241,7 @@ int main(int argc, char **argv)
 
 essential:
 
+	initscr();
         raw();
         noecho();
 	nonl(); /* return proper value (|0x0d|) from |get_wch| for C-m and ENTER keys */
