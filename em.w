@@ -1219,11 +1219,12 @@ int main(int argc, char **argv)
 		pid_t pid;
 		int wstatus;
 		if ((pid = fork()) != -1) {
-		  if (pid == 0)	execl(argv[0], argv[0], b_absname, NULL);
+		  if (pid == 0)	execl("/usr/local/bin/em", "/usr/local/bin/em", b_absname, NULL);
 		  wait(&wstatus);
 		  printf("%s\n", b_absname);
 		}
 		else fatal(L"fork error\x0a");
+		exit(EXIT_SUCCESS);
 	}
 	int lineno;
 	if (argc == 3) /* second argument is the line number to be shown when file is opened */
