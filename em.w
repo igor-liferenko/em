@@ -1204,30 +1204,35 @@ dispmsg();
 int main(int argc, char **argv)
 {
 	setlocale(LC_CTYPE, "C.UTF-8");
-	FILE *fp;
 	if (argc == 1) { /* if you need to write something temporarily quickly, first write what
 			    you have in mind to paper, and then say "em" and type it (everything
 			    will be stored to an automatically created unique file, whose
 			    name will be printed when you exit EM) */
-		file_is_temporary = 1;
+		FILE *fp;
 		char tmpl[] = "/tex_tmp/tmp-XXXXXX";
 		int fd = mkstemp(tmpl);
 		if (fd < 0) fatal(L"error - cannot create temporary file");
 		fp = fdopen(fd, "r"); /* to use |@<Get absolute file name@>| */
 		@<Get absolute file name@>;
-		b_fname = malloc(ARRAY_SIZE(b_absname));
-		if (b_fname == NULL) fatal(L"error - cannot allocate memory");
-		strcpy(b_fname, b_absname);
 		fclose(fp);
-		goto essential;
+
+		pid_t pid;
+		int wstatus;
+		if ((pid = fork()) != -1) {
+		  if (pid == 0)	execl(argv[0], argv[0], b_absname, NULL);
+		  wait(&wstatus);
+		  printf("%s\n", b_absname);
+		}
+		else fatal(L"fork error\x0a");
 	}
 	int lineno;
 	if (argc == 3) /* second argument is the line number to be shown when file is opened */
 		if (sscanf (argv[2], "%d", &lineno) != 1)
-		    fatal(L"error - line number not an integer\n");
+		    fatal(L"error - line number not an integer\x0a");
 
 	if (initscr() == NULL) exit(EXIT_FAILURE); /* start curses mode */
 
+	FILE *fp;
 	@<Save file name@>@;
 	@<Open file@>@;
 	@<Get absolute...@>@;
@@ -1308,7 +1313,7 @@ variables.
 @^system dependencies@>
 
 @d DB_FILE "/tmp/em.db"
-@d DB_LINE_SIZE 10000
+@d DB_LINE_SIZE 10000 /* must not be less than |PATH_MAX| */
 
 @ @<Global...@>=
 FILE *db_in, *db_out;
@@ -1334,8 +1339,6 @@ if ((db_out=fopen(DB_FILE,"w"))==NULL) {
 int file_is_locked = 0;
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   if (strncmp(db_line, b_absname, strlen(b_absname)) == 0) {
-    /* FIXME: check that |strlen(b_absname)<DB_LINE_SIZE);| */
-@^FIXME@>
       if (sscanf(db_line+strlen(b_absname), "%ld %ld", &b_point, &b_page) != 2)
         file_is_locked = 1;
     continue;
@@ -1588,6 +1591,7 @@ else {
 #include <wchar.h> /* |fgetwc|, |fputwc|, |vswprintf|, |vwprintf|, |wcslen|, |WEOF| */
 #include <wctype.h> /* |iswprint| */
 #include <string.h> /* |strerror|, |strncmp|, |memset|, |strlen|, |strstr| */
+#include <sys/wait.h> /* |wait| */
 #include <errno.h> /* |errno| */
 #include <limits.h> /* |PATH_MAX| */
 #include <unistd.h> /* |unlink|, |readlink|, |fchown|, |getuid| */
