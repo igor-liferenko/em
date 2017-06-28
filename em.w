@@ -1213,8 +1213,8 @@ int main(int argc, char **argv)
 	if (argc == 1) { /* if you need to write something temporarily quickly, first write what
 			    you have in mind to paper, and then use "tmp" to write to a temporary file */
 		file_is_temporary = 1;
-		char template[] = "/tex_tmp/tmp-XXXXXX";
-		int fd = mkstemp(template);
+		char tmpl[] = "/tex_tmp/tmp-XXXXXX";
+		int fd = mkstemp(tmpl);
 		if (fd < 0) fatal(L"error - cannot create temporary file");
 		fp = fdopen(fd, "r"); /* to use |@<Get absolute file name@>| */
 		@<Get absolute file name@>;
@@ -1258,7 +1258,7 @@ essential:
 	refresh(); /* FIXME: why do we need this? Remove and check what will be. */
 	noraw();
 	endwin(); /* end curses mode */
-	
+
 	if (file_is_temporary) {
 		printf("%s\n", b_fname);
 		free(b_fname);
