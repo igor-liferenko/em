@@ -1211,8 +1211,9 @@ int main(int argc, char **argv)
 	setlocale(LC_CTYPE, "C.UTF-8");
 	FILE *fp;
 	if (argc == 1) { /* if you need to write something temporarily quickly, first write what
-			    you have in mind to paper, and then say "em" to write to a
-			    temporary file (its name will be printed when you exit EM) */
+			    you have in mind to paper, and then say "em" and type it (everything
+			    will be stored to an automatically created unique file, whose
+			    name will be printed when you exit EM) */
 		file_is_temporary = 1;
 		char tmpl[] = "/tex_tmp/tmp-XXXXXX";
 		int fd = mkstemp(tmpl);
