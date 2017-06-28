@@ -260,13 +260,9 @@ void fatal(wchar_t *msg, ...)
 	noraw();
 	endwin(); /* end curses mode */
 
-	if (file_is_temporary)
-		if (b_fname != NULL) free(b_fname);
-
 	va_start(args, msg);
 	vwprintf(msg, args);
 	va_end(args);
-
 	exit(EXIT_FAILURE);
 }
 
@@ -427,8 +423,7 @@ void quit(void)
 visible from procedures.
 
 @<Global...@>=
-char *b_fname = NULL;
-int file_is_temporary = 0;
+char *b_fname;
 
 @ @<Save file name@>=
 b_fname=argv[1];
@@ -1231,6 +1226,8 @@ int main(int argc, char **argv)
 		if (sscanf (argv[2], "%d", &lineno) != 1)
 		    fatal(L"error - line number not an integer\n");
 
+	if (initscr() == NULL) exit(EXIT_FAILURE); /* start curses mode */
+
 	@<Save file name@>@;
 	@<Open file@>@;
 	@<Get absolute...@>@;
@@ -1241,9 +1238,6 @@ int main(int argc, char **argv)
 	else @<Ensure that restored position is inside buffer@>;
 	@<Set |b_epage|...@>@;
 
-essential:
-
-        initscr();
         raw();
         noecho();
 	nonl(); /* return proper value (|0x0d|) from |get_wch| for C-m and ENTER keys */
@@ -1259,10 +1253,6 @@ essential:
 	noraw();
 	endwin(); /* end curses mode */
 
-	if (file_is_temporary) {
-		printf("%s\n", b_fname);
-		free(b_fname);
-	}
 	return 0;
 }
 
