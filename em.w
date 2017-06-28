@@ -1210,7 +1210,10 @@ int main(int argc, char **argv)
 			    name will be printed when you exit EM) */
 		char tmpl[] = "/tex_tmp/tmp-XXXXXX";
 		int fd = mkstemp(tmpl);
-		if (fd < 0) fatal(L"error - cannot create temporary file");
+		if (fd == -1) {
+			wprintf(L"mkstemp: %m\x0a");
+			exit(EXIT_FAILURE);
+		}
 		FILE *fp = fdopen(fd, "r"); /* to use |@<Get absolute file name@>| */
 		@<Get absolute file name@>;
 		fclose(fp);
@@ -1222,14 +1225,19 @@ int main(int argc, char **argv)
 		  printf("%s\n", b_absname);
 		  exit(EXIT_SUCCESS);
 		}
-		else fatal(L"fork error\x0a");
+		else {
+			wprintf(L"fork: %m\x0a");
+			exit(EXIT_FAILURE);
+		}
 	}
+
+	if (initscr() == NULL) exit(EXIT_FAILURE); /* screen must be initialized as early as
+		possible - in order to be able to use |fatal| */
+
 	int lineno;
 	if (argc == 3) /* second argument is the line number to be shown when file is opened */
 		if (sscanf (argv[2], "%d", &lineno) != 1)
-		    fatal(L"error - line number not an integer\x0a");
-
-	if (initscr() == NULL) exit(EXIT_FAILURE); /* start curses mode */
+			fatal(L"error - line number not an integer\x0a");
 
 	FILE *fp;
 	@<Save file name@>@;
@@ -1327,7 +1335,7 @@ if (getenv("SUDO_USER")!=NULL && getuid()!=0)
 as root\x0A");
 if ((db_in=fopen(DB_FILE,"a+"))==NULL) { /* |"a+"| creates empty file if it does not exist */
   fclose(fp);
-  fatal(L"Could not open DB file in a+ mode: %s\n", strerror(errno));
+  fatal(L"Could not open DB file in a+ mode: %m\x0a");
 }
 unlink(DB_FILE);
 if ((db_out=fopen(DB_FILE,"w"))==NULL) {
