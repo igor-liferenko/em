@@ -1208,11 +1208,10 @@ int main(int argc, char **argv)
 			    you have in mind to paper, and then say "em" and type it (everything
 			    will be stored to an automatically created unique file, whose
 			    name will be printed when you exit EM) */
-		FILE *fp;
 		char tmpl[] = "/tex_tmp/tmp-XXXXXX";
 		int fd = mkstemp(tmpl);
 		if (fd < 0) fatal(L"error - cannot create temporary file");
-		fp = fdopen(fd, "r"); /* to use |@<Get absolute file name@>| */
+		FILE *fp = fdopen(fd, "r"); /* to use |@<Get absolute file name@>| */
 		@<Get absolute file name@>;
 		fclose(fp);
 
@@ -1222,9 +1221,9 @@ int main(int argc, char **argv)
 		  if (pid == 0)	execl("/usr/local/bin/em", "/usr/local/bin/em", b_absname, NULL);
 		  wait(&wstatus);
 		  printf("%s\n", b_absname);
+		  exit(EXIT_SUCCESS);
 		}
 		else fatal(L"fork error\x0a");
-		exit(EXIT_SUCCESS);
 	}
 	int lineno;
 	if (argc == 3) /* second argument is the line number to be shown when file is opened */
