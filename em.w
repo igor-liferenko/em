@@ -1333,7 +1333,7 @@ variables.
 @^system dependencies@>
 
 @d DB_FILE "/tmp/em.db"
-@d DB_LINE_SIZE 10000 /* must not be less than |PATH_MAX| */
+@d DB_LINE_SIZE PATH_MAX + 100
 
 @ @<Global...@>=
 FILE *db_in, *db_out;
