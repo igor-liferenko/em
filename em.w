@@ -1256,9 +1256,15 @@ name will be printed when you exit EM).
                         wprintf(L"mkstemp: %m\x0a");
                         exit(EXIT_FAILURE);
                 }
-                FILE *fp = fdopen(fd, "r"); /* to use |@<Get absolute file name@>| */
-                @<Get absolute file name@>;
-                fclose(fp);
+		char tmpfname[PATH_MAX+1];
+		ssize_t r;
+		snprintf(tmpfname, ARRAY_SIZE(tmpfname), "/proc/self/fd/%d", fd);
+		if ((r = readlink(tmpfname, b_absname, ARRAY_SIZE(b_absname) - 1)) == -1) {
+		  wprintf(L"Could not get absolute path.\x0a");
+		  exit(EXIT_FAILURE);
+		}
+		b_absname[r] = '\0';
+                close(fd);
 
                 pid_t pid;
                 if ((pid = fork()) != -1) {
