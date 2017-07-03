@@ -1270,7 +1270,7 @@ name will be printed when you exit EM).
                 pid_t pid;
                 if ((pid = fork()) != -1) {
                   if (pid == 0) {
-			execl("/usr/local/bin/em", "/usr/local/bin/em", b_absname, NULL);
+			execl("/usr/local/bin/em", "em", b_absname, (char *) NULL);
 			wprintf(L"execl: %m\x0a");
 			exit(EXIT_FAILURE);
 		  }
