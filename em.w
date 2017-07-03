@@ -1135,7 +1135,8 @@ void search(direction)
     else {
 	curs_set(1);
 	switch (c) {
-	    case@= @>L'\x0D': /* C-m */
+	    case
+	      L'\x0D': /* C-m */
 			if (search_failed) b_point = search_point;
 			search_active = 0;
 			return;
