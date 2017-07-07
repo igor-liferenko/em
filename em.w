@@ -937,9 +937,6 @@ void pgup(void)
 void insert(wchar_t c)
 {
 	assert(b_gap <= b_egap);
-	if (c==L'\0') return; /* this is a hack to work around illicit zero character
-				 sent by term on non-ascii characters - remove this hack
-				 when term will be fixed */
 	if (b_gap == b_egap && !growgap(CHUNK)) return; /* if gap size is zero,
 		grow gap */
 	movegap(b_point);
