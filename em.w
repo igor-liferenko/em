@@ -443,7 +443,7 @@ char tmpfname[PATH_MAX+1];
 ssize_t r;
 snprintf(tmpfname, ARRAY_SIZE(tmpfname), "/proc/self/fd/%d", fileno(fp));
 if ((r=readlink(tmpfname, b_absname, ARRAY_SIZE(b_absname)-1))==-1)
-  fatal(L"Could not get absolute path.\x0a");
+  fatal(L"Could not get absolute path.\n");
 b_absname[r]='\0';
 
 @ TODO: if file does not exist, do not create it right away - create it only in
@@ -453,7 +453,7 @@ b_absname[r]='\0';
 @<Open file@>=
 if ((fp = fopen(b_fname, "r")) == NULL)
   if ((fp = fopen(b_fname, "w")) == NULL) /* create file if it does not exist */
-    fatal(L"Failed to open file \"%s\".\x0a", b_fname);
+    fatal(L"Failed to open file \"%s\".\n", b_fname);
 
 @ @<Close file@>=
 fclose(fp);
@@ -584,7 +584,7 @@ point_t lnbegin(point_t off)
 	wchar_t *p;
 	do
 		p = ptr(--off);
-	while (b_buf < p && *p != L'\x0A');
+	while (b_buf < p && *p != L'\n');
 	return (b_buf < p ? ++off : 0);
 }
 
@@ -597,7 +597,7 @@ point_t lnend(point_t off)
   wchar_t *p;
   do
     p = ptr(off++);
-  while (b_ebuf > p && *p != L'\x0A');
+  while (b_ebuf > p && *p != L'\n');
   return (b_ebuf > p ? --off : pos(b_ebuf));
 }
 
@@ -719,7 +719,7 @@ void dispmsg(void)
 		move(LINES - 1, 0);
 		standout();
 		for(wchar_t *p=msgline; *p!=L'\0'; p++) {
-			if (*p == L'\x0A')
+			if (*p == L'\n')
 			  addwstr(L"<NL>");
 			else if (*p == L'\x09')
 			  addwstr(L"<TAB>");
@@ -822,7 +822,7 @@ void display(void)
 /* FIXME: when cursor is on bottom line (except when it is in the end of this line)
 and C-m is pressed, the cursor goes
 to new line but the page is not scrolled one line up as it should be;
-make so that |down| will be called if character |L'\x0A'| is inserted and |b_point|
+make so that |down| will be called if character |L'\n'| is inserted and |b_point|
 equals to |b_epage| */
 @^FIXME@>
 	wchar_t *p;
@@ -1213,7 +1213,7 @@ int main(int argc, char **argv)
 	int lineno;
 	if (argc == 3) /* second argument is the line number to be shown when file is opened */
 		if (sscanf (argv[2], "%d", &lineno) != 1)
-			fatal(L"error - line number not an integer\x0a");
+			fatal(L"error - line number not an integer\n");
 
 	FILE *fp;
 	@<Save file name@>@;
@@ -1253,14 +1253,14 @@ name will be printed when you exit EM).
 		char tmpl[] = "/tex_tmp/tmp-XXXXXX";
                 int fd = mkstemp(tmpl);
                 if (fd == -1) {
-                        wprintf(L"mkstemp: %m\x0a");
+                        wprintf(L"mkstemp: %m\n");
                         exit(EXIT_FAILURE);
                 }
 		char tmpfname[PATH_MAX+1];
 		ssize_t r;
 		snprintf(tmpfname, ARRAY_SIZE(tmpfname), "/proc/self/fd/%d", fd);
 		if ((r = readlink(tmpfname, b_absname, ARRAY_SIZE(b_absname) - 1)) == -1) {
-		  wprintf(L"Could not get absolute path.\x0a");
+		  wprintf(L"Could not get absolute path.\n");
 		  exit(EXIT_FAILURE);
 		}
 		b_absname[r] = '\0';
@@ -1270,14 +1270,14 @@ name will be printed when you exit EM).
                 if ((pid = fork()) != -1) {
                   if (pid == 0) {
 			execl("/usr/local/bin/em", "em", b_absname, (char *) NULL);
-			wprintf(L"execl: %m\x0a");
+			wprintf(L"execl: %m\n");
 			exit(EXIT_FAILURE);
 		  }
                   wait(NULL);
                   printf("%s\n", b_absname);
                   exit(EXIT_SUCCESS);
                 }
-                wprintf(L"fork: %m\x0a");
+                wprintf(L"fork: %m\n");
                 exit(EXIT_FAILURE);
 }
 
@@ -1345,10 +1345,10 @@ before the call to |fatal|.
 @<Restore cursor...@>=
 if (getenv("SUDO_USER")!=NULL && getuid()!=0)
   fatal(L"DB_FILE must have ownership of default user, so it may be run under sudo only \
-as root\x0A");
+as root\n");
 if ((db_in=fopen(DB_FILE,"a+"))==NULL) { /* |"a+"| creates empty file if it does not exist */
   fclose(fp);
-  fatal(L"Could not open DB file in a+ mode: %m\x0a");
+  fatal(L"Could not open DB file in a+ mode: %m\n");
 }
 unlink(DB_FILE);
 if ((db_out=fopen(DB_FILE,"w"))==NULL) {
@@ -1577,12 +1577,12 @@ else {
 		pgdown();
 		break;
 	case
-		L'\x1a': /* C-z */
+		L'\x1A': /* C-z */
 		quit();
 		break;
 	case
-		L'\x0d': /* C-m */
-		insert(L'\x0a');
+		L'\x0D': /* C-m */
+		insert(L'\n');
 		break;
 	default:
 		insert((wchar_t) c);
