@@ -373,7 +373,7 @@ if (buflen == 0) /* if buffer is empty */
 else
   new = realloc(b_buf, (size_t) newlen * sizeof (wchar_t));
 if (new == NULL) {
-  msg(L"malloc: %s\n", strerror(errno));
+  msg(L"malloc: %m\n");
   return FALSE;
 }
 
@@ -1354,7 +1354,7 @@ unlink(DB_FILE);
 if ((db_out=fopen(DB_FILE,"w"))==NULL) {
   fclose(fp);
   fclose(db_in);
-  fatal(L"Could not open DB file for writing: %s\n", strerror(errno));
+  fatal(L"Could not open DB file for writing: %m\n");
 }
 int file_is_locked = 0;
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
@@ -1410,11 +1410,11 @@ b_epage=pos(b_ebuf);
 
 @<Remove lock and save cursor@>=
 if ((db_in=fopen(DB_FILE,"r"))==NULL)
-  fatal(L"Could not open DB file for reading: %s\n", strerror(errno));
+  fatal(L"Could not open DB file for reading: %m\n");
 unlink(DB_FILE);
 if ((db_out=fopen(DB_FILE,"w"))==NULL) {
   fclose(db_in);
-  fatal(L"Could not open DB file for writing: %s\n", strerror(errno));
+  fatal(L"Could not open DB file for writing: %m\n");
 }
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   if (strncmp(db_line, b_absname, strlen(b_absname)) == 0)
@@ -1610,7 +1610,7 @@ else {
 #include <locale.h> /* |LC_CTYPE|, |setlocale| */
 #include <wchar.h> /* |fgetwc|, |fputwc|, |vswprintf|, |vwprintf|, |wcslen|, |WEOF| */
 #include <wctype.h> /* |iswprint| */
-#include <string.h> /* |strerror|, |strncmp|, |memset|, |strlen|, |strstr| */
+#include <string.h> /* |strncmp|, |memset|, |strlen|, |strstr| */
 #include <sys/wait.h> /* |wait| */
 #include <errno.h> /* |errno| */
 #include <limits.h> /* |PATH_MAX| */
