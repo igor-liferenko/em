@@ -313,8 +313,8 @@ wchar_t *ptr(point_t offset)
 /* TODO: use |size_t| typedef for |point_t| when you will find out why this |assert| fails
    sometimes; for this check all places where this function is called and see if wrong
    value can sneak in
-HINT: this fails when you delete the first character in file and then move to the bottom line with
-C-n or down arrow not pressing any other keys */
+HINT: this fails when you delete the first character in file and then move down after you moved
+to the bottom line */
 @^TODO@>
 	return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
 }
