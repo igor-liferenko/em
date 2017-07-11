@@ -1366,7 +1366,8 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   fprintf(db_out,"%s",db_line);
 }
 fclose(db_in);
-fprintf(db_out,"%s lock\n",b_absname);
+fprintf(db_out,"%s lock\n",b_absname); /* FIXME: ensure that real file name is put to |b_absname|
+  in case opened file is a symlink */
 @<Assure correct ownership of |DB_FILE|@>@;
 fclose(db_out);
 if (file_is_locked)
