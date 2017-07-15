@@ -447,11 +447,17 @@ if ((r=readlink(tmpfname, b_absname, ARRAY_SIZE(b_absname)-1))==-1)
 b_absname[r]='\0';
 
 @ TODO: if file does not exist, do not create it right away - create it only in
-|@<Write file@>|.
+|@<Write file@>|. For this remove fopen..."w" and when saving file ensure that
+a check is done if file exists and create it and if it cannot be created ensure that
+buffer is not closed and a warning in message line is printed, allowing to input another file
+name
 @^TODO@>
 
+`\.{r+}' is used instead of `\.{r}' to be able to detect if we are trying to open a
+directory. The matter is that |fopen| fails on a directory only if mode requires write access.
+
 @<Open file@>=
-if ((fp = fopen(b_fname, "r")) == NULL)
+if ((fp = fopen(b_fname, "r+")) == NULL)
   if ((fp = fopen(b_fname, "w")) == NULL) /* create file if it does not exist */
     fatal(L"Failed to open file \"%s\".\n", b_fname);
 
