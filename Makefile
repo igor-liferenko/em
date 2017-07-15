@@ -1,5 +1,5 @@
 em: em.c
-	clang -g -o em em.c -lncursesw -D_XOPEN_SOURCE=600
+	gcc -g -o em em.c -lncursesw -D_XOPEN_SOURCE=600
 	mv -f em /usr/local/bin/
 
 .PHONY: $(wildcard *.eps)
