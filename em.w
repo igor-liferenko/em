@@ -1140,38 +1140,31 @@ void search(direction)
     else {
 	curs_set(1);
 	switch (c) {
-	    case
-	      L'\x0D': /* C-m */
+	    case '\x0D': /* C-m */
 			if (search_failed) b_point = search_point;
 			search_active = 0;
 			return;
-	    case
-              L'\x07': /* C-g */
+	    case '\x07': /* C-g */
 			b_point = o_point;
 			search_active = 0;
 			return;
-	    case
-		L'\x12': /* C-r */
+	    case '\x12': /* C-r */
 			direction=0;
 			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
 			@<Search backward@>@;
 			break;
-	    case
-		L'\x13': /* C-s */
+	    case '\x13': /* C-s */
 			direction=1;
 			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
 			@<Search forward@>@;
 			break;
-	    case
-		L'\x08': /* C-h */
+	    case '\x08': /* C-h */
 		@<BackSpace in search@>@;
 		break;
-	    case
-		L'\x0A': /* C-j */
+	    case '\x0A': /* C-j */
 		/* use this when you want to search newline */
 	    @t\4@>
-	    case
-		L'\x09': /* TAB */
+	    case '\x09': /* TAB */
 		@<Add char to search text@>;
 		break;
 	    default:
@@ -1527,67 +1520,52 @@ if (get_wch(&c) == KEY_CODE_YES) {
 }
 else {
   switch (c) {
-	case
-		L'\x18': /* C-x */
+	case '\x18': /* C-x */
 #if 1==0
 		@<Remove lock and save cursor@>@;
 		done = 1; /* quit without saving */
 #endif
 		break;
-	case
-		L'\x12': /* C-r */
+	case '\x12': /* C-r */
 		search(0);
 		break;
-	case
-		L'\x13': /* C-s */
+	case '\x13': /* C-s */
 		search(1);
 		break;
-	case
-		L'\x10': /* C-p */
+	case '\x10': /* C-p */
 		up();
 		break;
-	case
-		L'\x0e': /* C-n */
+	case '\x0e': /* C-n */
 		down();
 		break;
-	case
-		L'\x02': /* C-b */
+	case '\x02': /* C-b */
 		left();
 		break;
-	case
-		L'\x06': /* C-f */
+	case '\x06': /* C-f */
 		right();
 		break;
-	case
-		L'\x05': /* C-e */
+	case '\x05': /* C-e */
 		b_point = lnend(b_point);
 		break;
-	case
-		L'\x01': /* C-a */
+	case '\x01': /* C-a */
 		b_point = lnbegin(b_point);
 		break;
-	case
-		L'\x04': /* C-d */
+	case '\x04': /* C-d */
 		delete();
 		break;
-	case
-		L'\x08': /* C-h */
+	case '\x08': /* C-h */
 		backsp();
 		break;
-	case
-		L'\x1D': /* C-] */
+	case '\x1D': /* C-] */
 		pgup();
 		break;
-	case
-		L'\x16': /* C-v */
+	case '\x16': /* C-v */
 		pgdown();
 		break;
-	case
-		L'\x1A': /* C-z */
+	case '\x1A': /* C-z */
 		quit();
 		break;
-	case
-		L'\x0D': /* C-m */
+	case '\x0D': /* C-m */
 		insert(L'\n');
 		break;
 	default:
