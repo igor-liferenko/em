@@ -563,7 +563,7 @@ if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) { /* if gap size
   @<Remove lock and save cursor@>@;
   fatal(L"Failed to allocate required memory.\n");
 }
-for (; i < buf_end-buf; i++)
+for (i = 0; i < buf_end-buf; i++)
   *b_gap++ = buf[i];
 
 @ If necessary, append newline to editing buffer after reading the file.
