@@ -544,12 +544,12 @@ way to convert input data from UTF-8 than processing it byte-by-byte.
 This is the necessary price to pay for using wide-character buffer.
 
 @<Read file@>=
-wint_t c;
+wint_t ch;
 int i = 0;
 while (1) {
   buf_end = buf;
-  while (buf_end - buf < CHUNK && (c = fgetwc(fp)) != WEOF)
-    *buf_end++ = (wchar_t) c;
+  while (buf_end - buf < CHUNK && (ch = fgetwc(fp)) != WEOF)
+    *buf_end++ = (wchar_t) ch;
   if (buf_end == buf) break; /* end of file */
   @<Copy contents of |buf| to editing buffer@>@;
 }
@@ -563,7 +563,7 @@ if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) { /* if gap size
   @<Remove lock and save cursor@>@;
   fatal(L"Failed to allocate required memory.\n");
 }
-for (i = 0; i < buf_end-buf; i++)
+for (; i < buf_end-buf; i++)
   *b_gap++ = buf[i];
 
 @ If necessary, append newline to editing buffer after reading the file.
@@ -1437,7 +1437,7 @@ fclose(db_out);
 
 @ @<Position cursor...@>=
 b_page=b_point;
-for (int i=(LINES-1)/2;i>0;i--)
+for (int k=(LINES-1)/2;k>0;k--)
   b_page=upup(b_page);
 
 @ Here, besides reading user input, we handle resize event. We pass
