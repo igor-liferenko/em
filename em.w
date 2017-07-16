@@ -1378,8 +1378,10 @@ argument - make proper error message in such case */
 @ If the program is run under \.{sudo},
 then after changing |DB_FILE| change its ownership back to the user who invoked \.{sudo}.
 
-@<Assure...@>=
+@<Global...@>=
 struct passwd *sudo;
+
+@ @<Assure...@>=
 if (getenv("SUDO_USER")!=NULL)
   if ((sudo=getpwnam(getenv("SUDO_USER")))!=NULL)
     fchown(fileno(db_out),sudo->pw_uid,sudo->pw_gid);
