@@ -1,5 +1,5 @@
 em: em.c
-	clang -g -o em em.c -lncursesw -D_XOPEN_SOURCE=600 # TODO: selectively disable unnecessary warnings
+	clang -g -o em em.c -lncursesw -D_XOPEN_SOURCE=600
 	cp em /usr/local/bin/
 
 .PHONY: $(wildcard *.eps)
