@@ -455,6 +455,7 @@ name
 
 `\.{r+}' is used instead of `\.{r}' to be able to detect if we are trying to open a
 directory. The matter is that |fopen| fails on a directory only if mode requires write access.
+@^system dependencies@>
 
 @<Open file@>=
 if ((fp = fopen(b_fname, "r+")) == NULL)
@@ -1140,11 +1141,11 @@ void search(direction)
     else {
 	curs_set(1);
 	switch (c) {
-	    case 0x0d: /* C-m */
+	    case 0x0d: /* \.{\^M} */
 			if (search_failed) b_point = search_point;
 			search_active = 0;
 			return;
-	    case 0x07: /* C-g */
+	    case 0x07: /* \.{\^G} */
 			b_point = o_point;
 			search_active = 0;
 			return;
