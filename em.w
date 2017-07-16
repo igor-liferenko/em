@@ -1101,7 +1101,7 @@ void search(direction)
   wint_t c;
   point_t o_point = b_point;
   int search_failed = 0;
-  point_t search_point;
+  point_t search_point = b_point;
   int no_occurrences = 0;
   int case_sensitive_search_flag = 0;
 
