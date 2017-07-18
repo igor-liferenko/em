@@ -544,12 +544,12 @@ way to convert input data from UTF-8 than processing it byte-by-byte.
 This is the necessary price to pay for using wide-character buffer.
 
 @<Read file@>=
-wint_t ch;
+wint_t c;
 int i = 0;
 while (1) {
   buf_end = buf;
-  while (buf_end - buf < CHUNK && (ch = fgetwc(fp)) != WEOF)
-    *buf_end++ = (wchar_t) ch;
+  while (buf_end - buf < CHUNK && (c = fgetwc(fp)) != WEOF)
+    *buf_end++ = (wchar_t) c;
   if (buf_end == buf) break; /* end of file */
   @<Copy contents of |buf| to editing buffer@>@;
 }
@@ -1379,10 +1379,8 @@ argument - make proper error message in such case */
 @ If the program is run under \.{sudo},
 then after changing |DB_FILE| change its ownership back to the user who invoked \.{sudo}.
 
-@<Global...@>=
+@<Assure...@>=
 struct passwd *sudo;
-
-@ @<Assure...@>=
 if (getenv("SUDO_USER")!=NULL)
   if ((sudo=getpwnam(getenv("SUDO_USER")))!=NULL)
     fchown(fileno(db_out),sudo->pw_uid,sudo->pw_gid);
@@ -1440,7 +1438,7 @@ fclose(db_out);
 
 @ @<Position cursor...@>=
 b_page=b_point;
-for (int k=(LINES-1)/2;k>0;k--)
+for (int i=(LINES-1)/2;i>0;i--)
   b_page=upup(b_page);
 
 @ Here, besides reading user input, we handle resize event. We pass
