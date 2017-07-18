@@ -450,7 +450,7 @@ b_absname[r]='\0';
 |@<Write file@>|. For this remove fopen..."w" and when saving file ensure that
 a check is done if file exists and create it and if it cannot be created ensure that
 buffer is not closed and a warning in message line is printed, allowing to input another file
-name
+name.
 @^TODO@>
 
 `\.{r+}' is used instead of `\.{r}' to be able to detect if we are trying to open a
