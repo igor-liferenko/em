@@ -1,6 +1,6 @@
 em: em.c
 	clang -g -o $@ $< -lncursesw -D_XOPEN_SOURCE=600
-	cp em /usr/local/bin/
+	cp $@ /usr/local/bin/
 
 .PHONY: $(wildcard *.eps)
 
