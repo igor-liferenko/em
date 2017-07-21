@@ -22,7 +22,7 @@ to reformat tangled output:
 
 perl -i -pe 's!/\*.*\*/$!\n$&!' em.c
 perl -i -ne 'if(/^#line \d+/){undef$prev}else{if(defined$prev){print$prev}$prev=$_}if(eof){print unless m!^/\*.*\*/$!}' em.c
-cat -s em.c | indent -kr > em.tmp && mv em.tmp em.c
+cat -s em.c | clang-format > em.tmp && mv em.tmp em.c
 perl -i -0777 -pe 's/^\s*//' em.c
 perl -i -0777 -pe 's/\s+\\(?=\n\n)//g' em.c; perl -i -0777 -pe 's/\s+\\(?=\n\n)//g' em.c
 
