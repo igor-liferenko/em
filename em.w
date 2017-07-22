@@ -457,8 +457,8 @@ name.
 directory. The matter is that |fopen| fails on a directory only if mode requires write access.
 @^system dependencies@>
 
-TODO: BUT we have a problem with `\.{r+}' if we try to open a read-only file !!! Think how to reconcile
-these.
+TODO: BUT we have a problem with `\.{r+}' if we try to open a read-only file !!! Think how
+to reconcile these.
 @^TODO@>
 
 @<Open file@>=
