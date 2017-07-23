@@ -1,6 +1,6 @@
 em: em.c
 ifeq ($(MAKECMDGOALS),)
-	@echo No cross compiler - use \"make em\"
+	@echo NoOp
 else
 	clang -g -o $@ $< -lncursesw -D_XOPEN_SOURCE=600
 	cp $@ /usr/local/bin/
