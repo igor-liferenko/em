@@ -1500,24 +1500,19 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_BACKSPACE:
         backsp();
         break;
-    case KEY_F(13): /* instead of |F1--F12| use |Shift+F1--F12|, because |F1--F12| and
-        |Ctrl+F1--F12| are overlapped by GNOME (turns out Shift is also overlapped by
-        GNOME on some keys from this range, for example F23 and F35 which are F11 are
-        intercepted by GNOME even in term)
-	NOTE: seems like it can be fixed in term.w by removing event handlers for corresponding
-        events, so using |F1--F12| may be possible */
+    case KEY_F(1): /* NOTE: only \.{wlterm} does not override |F1-F12| */
 	top();
 	break;
-    case KEY_F(14):
+    case KEY_F(2):
 	bottom();
 	break;
-    case KEY_F(17):
+    case KEY_F(5):
 	search(0);
 	break;
-    case KEY_F(18):
+    case KEY_F(6):
 	search(1);
 	break;
-    case KEY_F(24):
+    case KEY_F(12):
 	quit();
 	break;
     default:
