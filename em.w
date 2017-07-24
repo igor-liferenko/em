@@ -1600,7 +1600,6 @@ else {
 #include <sys/wait.h> /* |wait| */
 #include <errno.h> /* |errno| */
 #include <limits.h> /* |PATH_MAX| */
-#include <unistd.h> /* |unlink|, |readlink|, |fchown|, |getuid| */
-#include <sys/types.h> /* |pid_t| */
+#include <unistd.h> /* |unlink|, |readlink|, |fchown|, |getuid|, |pid_t| */
 
 @* Index.
