@@ -6,6 +6,7 @@
 @s delete normal @q this is an exception to make it work with original CWEB @>
 @s new normal @q this is an exception to make it work with original CWEB @>
 @s cchar_t int
+@s pid_t int
 
 @* Buffer-gap algorithm. EM is a text editor. It is implemented
 using wide-character API and ncurses library. EM uses ``buffer-gap''
@@ -1600,5 +1601,6 @@ else {
 #include <errno.h> /* |errno| */
 #include <limits.h> /* |PATH_MAX| */
 #include <unistd.h> /* |unlink|, |readlink|, |fchown|, |getuid| */
+#include <sys/types.h> /* |pid_t| */
 
 @* Index.
