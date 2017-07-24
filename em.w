@@ -1500,7 +1500,7 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_BACKSPACE:
         backsp();
         break;
-    case KEY_F(1): /* NOTE: only \.{wlterm} does not override |F1-F12| */
+    case KEY_F(1):
 	top();
 	break;
     case KEY_F(2):
