@@ -509,6 +509,11 @@ TODO: before saving check if file was modified since it was read and ask
 if owerwrite must be done (see git lg here how asking was implemented earlier)
 @^TODO@>
 
+TODO: remove file completely before saving and create it again if it is opened
+(check via lsof or something like that).
+Use \.{a.sh} and \.{b.sh} check at \.{https://stackoverflow.com/questions/3398258/}
+@^TODO@>
+
 @<Write file@>=
 point_t n;
 for (n = 0; n < length; n++)
