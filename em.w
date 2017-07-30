@@ -1151,32 +1151,33 @@ void search(direction)
     }
     else {
 	curs_set(1);
-	switch (c) {
-	    case 0x0d: /* \.{\^M} */
+	switch (c) { /* see {\sl libtsm\/} source for how keyboard codes are mapped to the following
+                        codes */
+
+	    case 0x0d:
 			if (search_failed) b_point = search_point;
 			search_active = 0;
 			return;
-	    case 0x07: /* \.{\^G} */
+	    case 0x07:
 			b_point = o_point;
 			search_active = 0;
 			return;
-	    case 0x12: /* C-r */
+	    case 0x12:
 			direction=0;
 			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
 			@<Search backward@>@;
 			break;
-	    case 0x13: /* C-s */
+	    case 0x13:
 			direction=1;
 			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
 			@<Search forward@>@;
 			break;
-	    case 0x08: /* C-h */
+	    case 0x08:
 		@<BackSpace in search@>@;
 		break;
-	    case 0x0a: /* C-j */
-		/* use this when you want to search newline */
+	    case 0x0a:
 	    @t\4@>
-	    case 0x09: /* TAB */
+	    case 0x09:
 		@<Add char to search text@>;
 		break;
 	    default:
@@ -1239,7 +1240,7 @@ int main(int argc, char **argv)
 
         raw();
         noecho();
-	nonl(); /* return proper value (|0x0d|) from |get_wch| for C-m and ENTER keys */
+	nonl(); /* do not substitute code |0x0a|, received from terminal via |get_wch|, to |0x0d| */
 	@<Automatically interpret ANSI control sequences@>@;
 
 	while (!done) {
@@ -1369,8 +1370,8 @@ if ((db_out=fopen(DB_FILE,"w"))==NULL) {
 }
 int file_is_locked = 0;
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
-  if (strncmp(db_line, b_absname, strlen(b_absname)) == 0) { /* FIXME: make so that sub-name will not
-        fall into this condition, like \.{/tmp/abc} and \.{/tmp/ab} */
+  if (strncmp(db_line, b_absname, strlen(b_absname)) == 0) { /* FIXME: make so that sub-name
+        will not fall into this condition, like \.{/tmp/abc} and \.{/tmp/ab} */
 @^FIXME@>
       if (sscanf(db_line+strlen(b_absname), "%ld %ld", &b_point, &b_page) != 2)
         file_is_locked = 1;
@@ -1528,53 +1529,54 @@ if (get_wch(&c) == KEY_CODE_YES) {
   }
 }
 else {
-  switch (c) {
-	case 0x18: /* C-x */
+  switch (c) { /* see {\sl libtsm\/} source for how keyboard codes are mapped to the following
+                  codes */
+	case 0x18:
 #if 1==0
 		@<Remove lock and save cursor@>@;
 		done = 1; /* quit without saving */
 #endif
 		break;
-	case 0x12: /* C-r */
+	case 0x12:
 		search(0);
 		break;
-	case 0x13: /* C-s */
+	case 0x13:
 		search(1);
 		break;
-	case 0x10: /* C-p */
+	case 0x10:
 		up();
 		break;
-	case 0x0e: /* C-n */
+	case 0x0e:
 		down();
 		break;
-	case 0x02: /* C-b */
+	case 0x02:
 		left();
 		break;
-	case 0x06: /* C-f */
+	case 0x06:
 		right();
 		break;
-	case 0x05: /* C-e */
+	case 0x05:
 		b_point = lnend(b_point);
 		break;
-	case 0x01: /* C-a */
+	case 0x01:
 		b_point = lnbegin(b_point);
 		break;
-	case 0x04: /* C-d */
+	case 0x04:
 		delete();
 		break;
-	case 0x08: /* C-h */
+	case 0x08:
 		backsp();
 		break;
-	case 0x1d: /* C-] */
+	case 0x1d:
 		pgup();
 		break;
-	case 0x16: /* C-v */
+	case 0x16:
 		pgdown();
 		break;
-	case 0x1a: /* C-z */
+	case 0x1a:
 		quit();
 		break;
-	case 0x0d: /* C-m */
+	case 0x0d:
 		insert(L'\n');
 		break;
 	default:
