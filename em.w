@@ -510,7 +510,7 @@ if owerwrite must be done (see git lg here how asking was implemented earlier)
 @^TODO@>
 
 TODO: remove file completely before saving and create it again if it is opened
-(check via lsof or something like that).
+(check via lsof or something like that), and restore all attributes.
 Use \.{a.sh} and \.{b.sh} check at \.{https://stackoverflow.com/questions/3398258/}
 @^TODO@>
 
