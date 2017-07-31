@@ -1240,7 +1240,8 @@ int main(int argc, char **argv)
 
         raw();
         noecho();
-	nonl(); /* do not substitute code |0x0a|, received from terminal via |get_wch|, to |0x0d| */
+	nonl(); /* |get_wch| must not change behind our back code |0x0a|, received from
+                   terminal, to |0x0d| */
 	@<Automatically interpret ANSI control sequences@>@;
 
 	while (!done) {
