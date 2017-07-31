@@ -1323,9 +1323,9 @@ interpreting not very clear naming scheme in which \.{khome} is equivalent to \.
 etc.).
 @^system dependencies@>
 
-\.{Esc} key, like \.{F1}, is reserved for window manager and must not be used
+\.{Esc} key is reserved for window manager and must not be used
 in programs that I write. (Besides window manager, \.{Esc} key may be used in some
-existing programs.)
+programs out there.)
 
 TODO: run \.{showkey -a} and press \.{Shift+F1} (aka \.{F13}) and
 make the ``term'' terminal emulator send this instead of 0x1B on ``\.{Ctrl+[}''.
