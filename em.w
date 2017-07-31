@@ -1136,6 +1136,8 @@ void search(direction)
     refresh(); /* update the real screen */
     if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
 	switch (c) {
+/* TODO: use hexadecimal values instead of symbolic constants below */
+@^TODO@>
 	  case KEY_RESIZE: /* integer promotion takes place in such cases */
 		search_msg(L"Search %ls: %ls",
 		  direction==1?L"Forward":L"Backward",searchtext);
@@ -1153,9 +1155,7 @@ void search(direction)
     }
     else {
 	curs_set(1);
-	switch (c) { /* see {\sl libtsm\/} source for how keyboard codes are mapped to the following
-                        codes */
-
+	switch (c) {
 	    case 0x0d:
 			if (search_failed) b_point = search_point;
 			search_active = 0;
@@ -1478,7 +1478,10 @@ if |get_wch| passed a special code or a char, for which |int| is good. The retur
 
 @<Handle key@>=
 wint_t c;
+  /* see {\sl libtsm\/} source for how keyboard codes are mapped to the following codes */
 if (get_wch(&c) == KEY_CODE_YES) {
+/* TODO: use hexadecimal values instead of symbolic constants below */
+@^TODO@>
   switch (c) {
     case KEY_RESIZE: /* integer promotion takes place in such cases */
 	continue;
@@ -1527,13 +1530,15 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_F(12):
 	quit();
 	break;
+    case 0x157:
+        top();
+        break;
     default:
 	msg(L"Not bound");
   }
 }
 else {
-  switch (c) { /* see {\sl libtsm\/} source for how keyboard codes are mapped to the following
-                  codes */
+  switch (c) {
 	case 0x18:
 #if 1==0
 		@<Remove lock and save cursor@>@;
@@ -1570,9 +1575,9 @@ else {
 	case 0x08:
 		backsp();
 		break;
-	case 0x1d:
-		pgup();
-		break;
+        case 0x1d:
+                bottom();
+                break;
 	case 0x16:
 		pgdown();
 		break;
