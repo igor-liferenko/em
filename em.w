@@ -1135,8 +1135,8 @@ void search(direction)
   while (1) {
     refresh(); /* update the real screen */
     if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
-	switch (c) { /* these are abstract values, assigned by {\sl ncurses\/} library
-                        while decoding escape sequences */
+	switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/}
+                        library while decoding escape sequences */
 	  case KEY_RESIZE: /* integer promotion takes place in such cases */
 		search_msg(L"Search %ls: %ls",
 		  direction==1?L"Forward":L"Backward",searchtext);
@@ -1327,13 +1327,6 @@ etc.).
 in programs that I write. (Besides window manager, \.{Esc} key may be used in some
 programs out there.)
 
-TODO: run \.{showkey -a} and press \.{Shift+F1} (aka \.{F13}) and
-make the ``term'' terminal emulator send this instead of 0x1B on ``\.{Ctrl+[}''.
-Corresponding terminal capability is \.{kf13} (it can be determined by the keycodes
-sequence from the output of \.{infocmp -1}).
-Also see \par \.{http://unix.stackexchange.com/questions/367994/}
-@^TODO@>
-
 @<Automatically interpret ANSI control sequences@>=
 keypad(stdscr,TRUE);
 
@@ -1479,7 +1472,7 @@ if |get_wch| passed a special code or a char, for which |int| is good. The retur
 @<Handle key@>=
 wint_t c;
 if (get_wch(&c) == KEY_CODE_YES) {
-  switch (c) { /* these are abstract values, assigned by {\sl ncurses\/} library
+  switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/} library
                   while decoding escape sequences */
     case KEY_RESIZE: /* integer promotion takes place in such cases */
 	continue;
