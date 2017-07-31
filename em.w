@@ -510,8 +510,8 @@ if owerwrite must be done (see git lg here how asking was implemented earlier)
 @^TODO@>
 
 TODO: always remove file completely before saving and create it again with the same attributes.
-This is necessary to be able to edit running scripts, and this will do no harm in other cases, so
-do it always.
+This is necessary to be able to edit running scripts, debugging sessions, etc..;
+this will do no harm in other cases, so do it always.
 Use \.{a.sh} and \.{b.sh} check at \.{https://stackoverflow.com/questions/3398258/}
 And do that if file was unchanged, just quit without doing anything to the file.
 @^TODO@>
@@ -1309,7 +1309,11 @@ sequences and keyboard buttons by which they are generated:
 \.{Home} and \.{End} buttons are automatically translated into
 internal codes |KEY_HOME| and
 |KEY_END| respectively by {\sl ncurses}, based on terminfo database (see with
-\.{infocmp -1}).
+\.{showkey -a} plus \.{infocmp -1}).
+TODO: understand why End key is not in terminfo database (\.{\^[[F}), although
+Home key is (\.{\^[[H}). In other words, there are capabilities khome and home,
+but there is only kend capability. How ncurses determines this if it is not
+in terminfo database (although it is correctly determined as |KEY_END|)?
 
 \.{Esc} key is reserved for window manager and must not be used
 in programs that I write. (Besides window manager, \.{Esc} key may be used in some
