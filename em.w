@@ -1242,7 +1242,7 @@ int main(int argc, char **argv)
 
         raw();
         noecho();
-	nonl(); /* return  |0x0a| instead of |0x0d| from |get_wch| */
+	nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
 	@<Automatically interpret ANSI control sequences@>@;
 
 	while (!done) {
