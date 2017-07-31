@@ -1135,9 +1135,8 @@ void search(direction)
   while (1) {
     refresh(); /* update the real screen */
     if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
-	switch (c) {
-/* TODO: use hexadecimal values instead of symbolic constants below */
-@^TODO@>
+	switch (c) { /* these are abstract values, assigned by {\sl ncurses\/} library
+                        while decoding escape sequences */
 	  case KEY_RESIZE: /* integer promotion takes place in such cases */
 		search_msg(L"Search %ls: %ls",
 		  direction==1?L"Forward":L"Backward",searchtext);
@@ -1149,13 +1148,14 @@ void search(direction)
 	  case KEY_IC:
 		@<Use Insert key...@>@;
 		break;
-/* TODO: implement |KEY_F(17)| and |KEY_F(18)| to search backward and forward */
+/* TODO: implement |KEY_F(5)| and |KEY_F(6)| to search backward and forward */
 @^TODO@>
 	}
     }
     else {
 	curs_set(1);
-	switch (c) {
+	switch (c) { /* see {\sl libtsm\/} source for how keyboard codes are mapped
+                        to the following codes */
 	    case 0x0d:
 			if (search_failed) b_point = search_point;
 			search_active = 0;
@@ -1478,11 +1478,9 @@ if |get_wch| passed a special code or a char, for which |int| is good. The retur
 
 @<Handle key@>=
 wint_t c;
-  /* see {\sl libtsm\/} source for how keyboard codes are mapped to the following codes */
 if (get_wch(&c) == KEY_CODE_YES) {
-/* TODO: use hexadecimal values instead of symbolic constants below */
-@^TODO@>
-  switch (c) {
+  switch (c) { /* these are abstract values, assigned by {\sl ncurses\/} library
+                  while decoding escape sequences */
     case KEY_RESIZE: /* integer promotion takes place in such cases */
 	continue;
     case KEY_LEFT:
@@ -1530,7 +1528,7 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_F(12):
 	quit();
 	break;
-    case 0x157:
+    case KEY_ENTER:
         top();
         break;
     default:
@@ -1538,7 +1536,8 @@ if (get_wch(&c) == KEY_CODE_YES) {
   }
 }
 else {
-  switch (c) {
+  switch (c) { /* see {\sl libtsm\/} source for how keyboard codes are mapped
+                  to the following codes */
 	case 0x18:
 #if 1==0
 		@<Remove lock and save cursor@>@;
