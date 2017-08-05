@@ -1136,7 +1136,7 @@ void search(direction)
     refresh(); /* update the real screen */
     if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
 	switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/}
-                        library while decoding escape sequences */
+                        library while decoding escape sequences via terminfo database */
 	  case KEY_RESIZE: /* integer promotion takes place in such cases */
 		search_msg(L"Search %ls: %ls",
 		  direction==1?L"Forward":L"Backward",searchtext);
@@ -1465,7 +1465,7 @@ if |get_wch| passed a special code or a char, for which |int| is good. The retur
 wint_t c;
 if (get_wch(&c) == KEY_CODE_YES) {
   switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/} library
-                  while decoding escape sequences */
+                  while decoding escape sequences via terminfo database */
     case KEY_RESIZE: /* integer promotion takes place in such cases */
 	continue;
     case KEY_LEFT:
