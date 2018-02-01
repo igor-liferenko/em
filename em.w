@@ -1,8 +1,8 @@
 \let\lheader\rheader
 \datethis
 
-@s wint_t int @q this is an exception to make it work with original CWEB @>
-@s ssize_t int @q this is an exception to make it work with original CWEB @>
+@s wint_t int
+@s ssize_t int
 @s delete normal @q this is an exception to make it work with original CWEB @>
 @s new normal @q this is an exception to make it work with original CWEB @>
 @s cchar_t int
