@@ -1312,9 +1312,11 @@ internal codes |KEY_HOME| and
 |KEY_END| respectively by {\sl ncurses}, based on terminfo database (see with
 \.{showkey -a} plus \.{infocmp -1}).
 TODO: understand why End key is not in terminfo database (\.{\^[[F}), although
-Home key is (\.{\^[[H}). In other words, there are capabilities khome and home,
-but there is only kend capability. How ncurses determines this if it is not
+Home key is (\.{\^[[H}). In other words, there are capabilities {\sl khome\/} and {\sl home},
+but there is only {\sl kend\/} capability. How ncurses determines this if it is not
 in terminfo database (although it is correctly determined as |KEY_END|)?
+see https://unix.stackexchange.com/questions/383061/
+@^TODO@>
 
 \.{Esc} key is reserved for window manager and must not be used
 in programs that I write. (Besides window manager, \.{Esc} key may be used in some
