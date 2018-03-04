@@ -1,3 +1,8 @@
 when I will finish term, use raw VT100 sequences instead of ncurses
 
 make case-sensivity persist between searches
+
+add this to .inputrc and fix bash or readline so that it honors the DEL key:
+  "\e[3~": backward-delete-char
+  DEL: delete-char
+and then change em.w to use the same actions
