@@ -1143,13 +1143,14 @@ void search(direction)
 		display();
 		continue;
 	  case KEY_BACKSPACE:
-		@<BackSpace in search@>@;
+		if (cpos == 0) continue;
+		searchtext[--cpos] = L'\0';
+		search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
+		dispmsg();
 		break;
 	  case KEY_IC:
 		@<Use Insert key...@>@;
 		break;
-/* TODO: implement |KEY_F(5)| and |KEY_F(6)| to search backward and forward */
-@^TODO@>
 	}
     }
     else {
@@ -1174,9 +1175,6 @@ void search(direction)
 			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
 			@<Search forward@>@;
 			break;
-	    case 0x08:
-		@<BackSpace in search@>@;
-		break;
 	    case 0x0a:
 	    @t\4@>
 	    case 0x09:
@@ -1189,13 +1187,6 @@ void search(direction)
     }
   }
 }
-
-@ @<BackSpace in search@>=
-if (cpos == 0)
-  continue;
-searchtext[--cpos] = L'\0';
-search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
-dispmsg();
 
 @ @<Add char to search text@>=
 if (cpos < STRBUF_M - 1) {
@@ -1521,24 +1512,6 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_BACKSPACE:
         backsp();
         break;
-    case KEY_F(1):
-	top();
-	break;
-    case KEY_F(2):
-	bottom();
-	break;
-    case KEY_F(5):
-	search(0);
-	break;
-    case KEY_F(6):
-	search(1);
-	break;
-    case KEY_F(12):
-	quit();
-	break;
-    case KEY_ENTER:
-        top();
-        break;
     default:
 	msg(L"Not bound");
   }
@@ -1579,10 +1552,10 @@ else {
 	case 0x04:
 		delete();
 		break;
-	case 0x08:
-		backsp();
+	case 0x08: /* C-[ */
+		top();
 		break;
-        case 0x1d:
+        case 0x1d: /* C-] */
                 bottom();
                 break;
 	case 0x16:
