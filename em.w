@@ -8,7 +8,14 @@
 @s cchar_t int
 @s pid_t int
 
-@* Buffer-gap algorithm. EM is a text editor. It is implemented
+@* 
+
+
+TODO: make so that if window is wider than 100 characters, | characters will be displayed in position 101 via |add_wch(WACS_VLINE);|
+
+
+
+Buffer-gap algorithm. EM is a text editor. It is implemented
 using wide-character API and ncurses library. EM uses ``buffer-gap''
 algorithm to represent file in memory. Following is the description
 of how it works.
