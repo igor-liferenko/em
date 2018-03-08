@@ -1547,14 +1547,17 @@ else {
 	case 0x04:
 		delete();
 		break;
-	case 0x08: /* C-[ */
+	case 0x08: /* \.{\^[} */
 		top();
 		break;
-        case 0x1d: /* C-] */
+        case 0x1d: /* \.{\^]} */
                 bottom();
                 break;
+	case 0x17:
+		pgup(); /* \.{\^W} */
+		break;
 	case 0x16:
-		pgdown();
+		pgdown(); /* \.{\^V} */
 		break;
 	case 0x1a:
 		quit();
