@@ -8,7 +8,7 @@
 @s cchar_t int
 @s pid_t int
 
-\font\emfont=cmff10
+\font\emfont=manfnt
 \def\EM/{{\emfont EM}}
 
 @* Buffer-gap algorithm. EM is a text editor. It is implemented
