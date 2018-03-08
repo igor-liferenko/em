@@ -8,14 +8,10 @@
 @s cchar_t int
 @s pid_t int
 
-@* 
+\font\emfont=cmff10
+\def\EM/{{\emfont EM}}
 
-
-TODO: make so that if window is wider than 100 characters, | characters will be displayed in position 101 via |add_wch(WACS_VLINE);|
-
-
-
-Buffer-gap algorithm. EM is a text editor. It is implemented
+@* Buffer-gap algorithm. EM is a text editor. It is implemented
 using wide-character API and ncurses library. EM uses ``buffer-gap''
 algorithm to represent file in memory. Following is the description
 of how it works.
@@ -1295,28 +1291,23 @@ name will be printed when you exit EM).
 
 @ Make {\sl ncurses\/} automatically
 translate the escape sequences into internal codes.
-|keypad| also puts the terminal into application mode (via {\sl smkx\/}).
-FIXME: which function restores the terminal into normal mode (via {\sl rmkx\/})?
-@^FIXME@>
 
-Control sequences\footnote\dag{The control sequences associated with buttons depend
-on the mode - application or normal.}
-beginning with escape character (code |0x1b|, aka \.{^[}) are generated
+Escape sequences
+are generated
 by terminal
 in response to pressing on certain buttons.
-Here are some examples of the identity between control code
-sequences and keyboard buttons by which they are generated:
+Here is an example of the mapping between escape
+sequence and keyboard button by which it is generated:
 \medskip
-{\tt\obeylines\obeyspaces
-|0x1B 0x4F 0x48 ==| Home
-|0x1B 0x4F 0x46 ==| End
-}
+{\tt\obeyspaces|0x1B 0x4F 0x48 ==| Home}
 \medskip
 
-These sequences will be automatically translated into
-internal codes |KEY_HOME| and
-|KEY_END| (via terminfo\footnote*{The terminfo database can be viewed with \.{infocmp -1}).}
-capabilities {\sl khome\/} and {\sl kend} respectively).
+{\sl ncurses\/} recognizes the key as \.{KEY\_HOME} because \EM/
+will call the |keypad|
+function to initialize the terminal using the {\sl smkx\/}\footnote*{see \.{terminfo(5)}}
+(the mnemonic means ``start
+keyboard-transmit mode''). That may/may not actually turn on application mode. Linux
+console's terminal description does not, xterm's does.
 
 @<Automatically interpret ANSI control sequences@>=
 keypad(stdscr, TRUE);
