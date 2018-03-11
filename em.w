@@ -445,8 +445,8 @@ char b_absname[PATH_MAX+1];
 @ @<Get absolute file name@>=
 char tmpfname[PATH_MAX+1];
 ssize_t r;
-snprintf(tmpfname, sizeof tmpfname / sizeof @[@](char), "/proc/self/fd/%d", fileno(fp));
-if ((r=readlink(tmpfname, b_absname, sizeof b_absname / sizeof @[@](char) - 1))==-1)
+snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fileno(fp));
+if ((r=readlink(tmpfname, b_absname, sizeof b_absname - 1))==-1)
   fatal(L"Could not get absolute path.\n");
 b_absname[r]='\0';
 
@@ -1265,8 +1265,8 @@ name will be printed when you exit EM).
                 }
 		char tmpfname[PATH_MAX+1];
 		ssize_t r;
-		snprintf(tmpfname, sizeof tmpfname / sizeof @[@](char), "/proc/self/fd/%d", fd);
-		if ((r = readlink(tmpfname, b_absname, sizeof b_absname / sizeof @[@](char) - 1))
+		snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fd);
+		if ((r = readlink(tmpfname, b_absname, sizeof b_absname - 1))
                   == -1) {
 		  wprintf(L"Could not get absolute path.\n");
 		  exit(EXIT_FAILURE);
