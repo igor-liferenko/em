@@ -931,12 +931,12 @@ equals to |b_epage| */
 }
 
 @ @<Procedures@>=
-void top(void) {@+ b_point = 0; @+}
-void bottom(void) {@+ b_epage = b_point = pos(b_ebuf); @+}
-void left(void) {@+ if (0 < b_point) b_point--; @+}
-void right(void) {@+ if (b_point < pos(b_ebuf)) b_point++; @+}
-void up(void) {@+ b_point = lncolumn(upup(b_point), b_col); @+}
-void down(void) {@+ b_point = lncolumn(dndn(b_point), b_col); @+}
+void top(void) @+ {@+ b_point = 0; @+}
+void bottom(void) @+ {@+ b_epage = b_point = pos(b_ebuf); @+}
+void left(void) @+ {@+ if (0 < b_point) b_point--; @+}
+void right(void) @+ {@+ if (b_point < pos(b_ebuf)) b_point++; @+}
+void up(void) @+ {@+ b_point = lncolumn(upup(b_point), b_col); @+}
+void down(void) @+ {@+ b_point = lncolumn(dndn(b_point), b_col); @+}
 
 @ @<Procedures@>=
 void pgdown(void)
@@ -1520,31 +1520,31 @@ else {
 		done = 1; /* quit without saving */
 #endif
 		break;
-	case 0x12:
+	case 0x12: @/
 		search(0);
 		break;
-	case 0x13:
+	case 0x13: @/
 		search(1);
 		break;
-	case 0x10:
+	case 0x10: @/
 		up();
 		break;
-	case 0x0e:
+	case 0x0e: @/
 		down();
 		break;
-	case 0x02:
+	case 0x02: @/
 		left();
 		break;
-	case 0x06:
+	case 0x06: @/
 		right();
 		break;
-	case 0x05:
+	case 0x05: @/
 		b_point = lnend(b_point);
 		break;
-	case 0x01:
+	case 0x01: @/
 		b_point = lnbegin(b_point);
 		break;
-	case 0x04:
+	case 0x04: @/
 		delete();
 		break;
 	case 0x08: /* \.{\^[} */
@@ -1553,16 +1553,16 @@ else {
         case 0x1d: /* \.{\^]} */
                 bottom();
                 break;
-	case 0x17:
-		pgup(); /* \.{\^W} */
+	case 0x17: /* \.{\^W} */
+		pgup();
 		break;
-	case 0x16:
-		pgdown(); /* \.{\^V} */
+	case 0x16: /* \.{\^V} */
+		pgdown();
 		break;
-	case 0x1a:
+	case 0x1a: /* \.{\^Z} */
 		quit();
 		break;
-	case 0x0d:
+	case 0x0d: @/
 		insert(L'\n');
 		break;
 	default:
