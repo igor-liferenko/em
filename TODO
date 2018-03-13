@@ -1,1 +1,3 @@
 make case-sensivity persist between searches (if we use string of previous search - without typing new string)
+
+using a screen recorder record how window with an opened file is maximized, and then analyze in slow motion - there seems to be a problem with re-wrapping sometimes
