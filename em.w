@@ -237,7 +237,7 @@ editor because of its simplicity and efficient use of memory.
 @<Main program@>@;
 
 @ @<Typedef declarations@>=
-typedef ssize_t point_t;
+typedef size_t point_t;
 
 @ @<Global...@>=
 point_t b_point = 0;          /* the point */
@@ -314,12 +314,6 @@ void case_sensitive_search(int case_sensitive_search_flag)
 wchar_t *ptr(point_t offset)
 {
 	assert(offset >= 0);
-/* TODO: use |size_t| typedef for |point_t| when you will find out why this |assert| fails
-   sometimes; for this check all places where this function is called and see if wrong
-   value can sneak in
-HINT: this fails when you delete the first character in file and then move down after you moved
-to the bottom line */
-@^TODO@>
 	return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
 }
 
@@ -330,7 +324,9 @@ point_t pos(wchar_t *cp)
 {
 	assert(b_buf <= cp && cp <= b_ebuf);
 	assert(cp < b_gap || cp >= b_egap);
-	return (cp - b_buf - (cp < b_egap ? 0 : b_egap - b_gap));
+        if (cp < b_egap) assert(cp - b_buf >= 0);
+        else assert(cp - b_buf - (b_egap - b_gap) >= 0);
+	return (point_t) (cp - b_buf - (cp < b_egap ? 0 : b_egap - b_gap));
 }
 
 @ Enlarge gap by n chars, position of gap cannot change.
@@ -350,9 +346,9 @@ int growgap(point_t n)
 	assert(b_gap <= b_egap);
 	assert(b_egap <= b_ebuf);
 
-	xgap = b_gap - b_buf;
-	xegap = b_egap - b_buf;
-	buflen = b_ebuf - b_buf;
+	xgap = (point_t) (b_gap - b_buf);
+	xegap = (point_t) (b_egap - b_buf);
+	buflen = (point_t) (b_ebuf - b_buf);
     
 	@<Calculate new length |newlen| of gap@>@;
 	@<Allocate memory for editing buffer@>@;
@@ -572,7 +568,7 @@ while (1) {
 b_flags = (char)~B_MODIFIED;
 
 @ @<Copy contents of |buf|...@>=
-if (b_egap - b_gap < buf_end-buf && !growgap(buf_end-buf)) { /* if gap size
+if (b_egap - b_gap < buf_end-buf && !growgap((point_t)(buf_end-buf))) { /* if gap size
     is not sufficient, grow gap */
   fclose(fp);
   @<Remove lock and save cursor@>@;
@@ -681,10 +677,10 @@ point_t upup(point_t off)
 	point_t curr = lnbegin(off);
 	point_t seg = segstart(curr, off);
 	if (curr < seg)
-		off = segstart(curr, seg-1>=0?seg-1:0); /* previous line (is considered the
+		off = segstart(curr, seg>0?seg-1:0); /* previous line (is considered the
                   case that current line may be wrapped) */
 	else
-		off = segstart(lnbegin(curr-1>=0?curr-1:0), curr-1>=0?curr-1:0); /* previous
+		off = segstart(lnbegin(curr>0?curr-1:0), curr>0?curr-1:0); /* previous
                   line (is considered the case that previous line may be wrapped) */
 	return off;
 }
@@ -1059,7 +1055,7 @@ for (point_t p=b_point; p > 0;) {
         wchar_t *s;
 	for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
 	  towlower((wint_t) *s) == towlower((wint_t) *ptr(pp))) &&
-	  *s != L'\0' && pp >= 0; s++, pp++) ;
+	  *s != L'\0'; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = p;
           b_search_point = pp;
