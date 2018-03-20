@@ -597,6 +597,8 @@ in turn is executed right before the wanted file is opened). Upon exiting
 the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
 
 @ Reverse scan for beginning of real line containing offset.
+Use |0<pos(p)| to check beginning of buffer, because checking |b_buf<p|
+does not consider the case when gap is in the beginning of buffer.
 
 @<Procedures@>=
 point_t lnbegin(point_t off)
@@ -604,15 +606,10 @@ point_t lnbegin(point_t off)
 	assert(off >= 0);
 	if (off == 0) return off;
 	wchar_t *p;
-	do {
-          off--;
-          if (off == -1) return 0;
-/* FIXME: why |b_buf| is pointing to deleted character?
-It prevents the |b_buf < p| test in |while| to match and the loop goes to next iteration */
-	  p = ptr(off);
-        }
-	while (b_buf < p && *p != L'\n');
-	return (b_buf < p ? ++off : 0);
+	do
+	  p = ptr(--off);
+	while (0 < pos(p) && *p != L'\n');
+	return (0 < pos(p) ? ++off : 0);
 }
 
 @ Forward scan for end of real line containing offset.
@@ -893,7 +890,7 @@ equals to |b_epage| */
 		p = ptr(b_epage);
 		if (LINES - 1 <= i || b_ebuf <= p) /* maxline */
 			break;
-		if (*p != L'\r') {
+//???		if (*p != L'\r') {
 			cchar_t my_cchar;
 			memset(&my_cchar, 0, sizeof my_cchar);
 			my_cchar.chars[0] = *p;
@@ -907,7 +904,7 @@ equals to |b_epage| */
 				j += (int) wcslen(ctrl);
 				addwstr(ctrl);
 			}
-		}
+//		}
 		if (*p == L'\n' || COLS <= j) {
 			j -= COLS;
 			if (j < 0)
