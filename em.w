@@ -597,8 +597,6 @@ in turn is executed right before the wanted file is opened). Upon exiting
 the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
 
 @ Reverse scan for beginning of real line containing offset.
-Use |0<pos(p)| to check beginning of buffer, because checking |b_buf<p|
-does not consider the case when gap is in the beginning of buffer.
 
 @<Procedures@>=
 point_t lnbegin(point_t off)
@@ -607,9 +605,9 @@ point_t lnbegin(point_t off)
 	if (off == 0) return off;
 	wchar_t *p;
 	do
-	  p = ptr(--off);
-	while (0 < pos(p) && *p != L'\n');
-	return (0 < pos(p) ? ++off : 0);
+	  off--;
+	while (0 < off && *ptr(off) != L'\n');
+	return (0 < off ? ++off : 0);
 }
 
 @ Forward scan for end of real line containing offset.
