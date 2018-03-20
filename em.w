@@ -607,7 +607,8 @@ point_t lnbegin(point_t off)
 	do {
           off--;
           if (off == -1) return 0;
-/* FIXME: why b_buf is pointing to deleted character? */
+/* FIXME: why |b_buf| is pointing to deleted character?
+It prevents the |b_buf < p| test in |while| to match and the loop goes to next iteration */
 	  p = ptr(off);
         }
 	while (b_buf < p && *p != L'\n');
