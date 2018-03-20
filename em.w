@@ -313,7 +313,6 @@ void case_sensitive_search(int case_sensitive_search_flag)
 @<Procedures@>=
 wchar_t *ptr(point_t offset)
 {
-	assert(offset >= 0);
 	return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
 }
 
@@ -597,7 +596,6 @@ the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
 @<Procedures@>=
 point_t lnbegin(point_t off)
 {
-	assert(off >= 0);
 	if (off == 0) return off;
 	do
 	  off--;
