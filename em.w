@@ -604,8 +604,12 @@ point_t lnbegin(point_t off)
 	assert(off >= 0);
 	if (off == 0) return off;
 	wchar_t *p;
-	do
-		p = ptr(--off);
+	do {
+          off--;
+          if (off == -1) return 0;
+/* FIXME: why b_buf is pointing to deleted character? */
+	  p = ptr(off);
+        }
 	while (b_buf < p && *p != L'\n');
 	return (b_buf < p ? ++off : 0);
 }
