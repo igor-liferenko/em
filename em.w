@@ -603,7 +603,6 @@ point_t lnbegin(point_t off)
 {
 	assert(off >= 0);
 	if (off == 0) return off;
-	wchar_t *p;
 	do
 	  off--;
 	while (0 < off && *ptr(off) != L'\n');
