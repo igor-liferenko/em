@@ -881,21 +881,19 @@ equals to |b_epage| */
 		p = ptr(b_epage);
 		if (LINES - 1 <= i || b_ebuf <= p) /* maxline */
 			break;
-//???		if (*p != L'\r') {
-			cchar_t my_cchar;
-			memset(&my_cchar, 0, sizeof my_cchar);
-			my_cchar.chars[0] = *p;
-			my_cchar.chars[1] = L'\0';
-			if (iswprint((wint_t) *p) || *p == L'\t' || *p == L'\n') {
-				j += *p == L'\t' ? 8-(j&7) : 1;
-                                add_wch(&my_cchar);
-			}
-			else {
-				wchar_t *ctrl = wunctrl(&my_cchar);
-				j += (int) wcslen(ctrl);
-				addwstr(ctrl);
-			}
-//		}
+		cchar_t my_cchar;
+		memset(&my_cchar, 0, sizeof my_cchar);
+		my_cchar.chars[0] = *p;
+		my_cchar.chars[1] = L'\0';
+		if (iswprint((wint_t) *p) || *p == L'\t' || *p == L'\n') {
+			j += *p == L'\t' ? 8-(j&7) : 1;
+			add_wch(&my_cchar);
+		}
+		else {
+			wchar_t *ctrl = wunctrl(&my_cchar);
+			j += (int) wcslen(ctrl);
+			addwstr(ctrl);
+		}
 		if (*p == L'\n' || COLS <= j) {
 			j -= COLS;
 			if (j < 0)
