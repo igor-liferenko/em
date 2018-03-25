@@ -323,8 +323,8 @@ point_t pos(wchar_t *cp)
 {
 	assert(b_buf <= cp && cp <= b_ebuf);
 	assert(cp < b_gap || cp >= b_egap);
-        if (cp < b_egap) assert(cp - b_buf >= 0);
-        else assert(cp - b_buf - (b_egap - b_gap) >= 0);
+	if (cp < b_egap) assert(cp - b_buf >= 0);
+	else assert(cp - b_buf - (b_egap - b_gap) >= 0);
 	return (point_t) (cp - b_buf - (cp < b_egap ? 0 : b_egap - b_gap));
 }
 
