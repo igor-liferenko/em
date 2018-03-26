@@ -1,12 +1,8 @@
 \let\lheader\rheader
 \datethis
 
-@s wint_t int
-@s ssize_t int
 @s delete normal @q unreserve a C++ keyword @>
 @s new normal @q unreserve a C++ keyword @>
-@s cchar_t int
-@s pid_t int
 
 \font\emfont=manfnt
 \def\EM/{{\emfont EM}}
