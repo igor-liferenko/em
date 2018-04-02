@@ -1141,14 +1141,16 @@ void search(direction)
 	  case KEY_IC:
 		@<Use Insert key...@>@;
 		break;
+	  case KEY_ENTER:
+		@<ENTER in search@>@;
+		return;
 	}
     }
     else {
 	curs_set(1);
 	switch (c) {
 	    case 0x0d:
-			if (search_failed) b_point = search_point;
-			search_active = 0;
+			@<ENTER in search@>@;
 			return;
 	    case 0x07:
 			b_point = o_point;
@@ -1176,6 +1178,10 @@ void search(direction)
     }
   }
 }
+
+@ @<ENTER in search@>=
+if (search_failed) b_point = search_point;
+search_active = 0;
 
 @ @<Add char to search text@>=
 if (cpos < STRBUF_M - 1) {
@@ -1495,6 +1501,9 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_BACKSPACE:
         backsp();
         break;
+    case KEY_ENTER: @/
+	insert(L'\n');
+	break;
     default:
 	msg(L"Not bound");
   }
