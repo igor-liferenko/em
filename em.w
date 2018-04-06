@@ -1142,7 +1142,8 @@ void search(direction)
 		@<Use Insert key...@>@;
 		break;
 	  case KEY_ENTER:
-		@<ENTER in search@>@;
+		if (search_failed) b_point = search_point;
+		search_active = 0;
 		return;
 	}
     }
@@ -1150,7 +1151,8 @@ void search(direction)
 	curs_set(1);
 	switch (c) {
 	    case 0x0d:
-			@<ENTER in search@>@;
+			if (search_failed) b_point = search_point;
+			search_active = 0;
 			return;
 	    case 0x07:
 			b_point = o_point;
@@ -1178,10 +1180,6 @@ void search(direction)
     }
   }
 }
-
-@ @<ENTER in search@>=
-if (search_failed) b_point = search_point;
-search_active = 0;
 
 @ @<Add char to search text@>=
 if (cpos < STRBUF_M - 1) {
