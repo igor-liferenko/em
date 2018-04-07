@@ -1499,11 +1499,11 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_BACKSPACE:
         backsp();
         break;
-    case KEY_ENTER: @/
-	insert(L'\n');
-	break;
+    case KEY_ENTER:
+        insert(L'\n');
+        break;
     default:
-	msg(L"Not bound");
+        msg(L"Not bound");
   }
 }
 else {
