@@ -566,7 +566,7 @@ while (1) {
   @<Copy contents of |buf| to editing buffer@>@;
 }
 @<Add trailing newline to input from non-empty file if it is not present@>@;
-b_flags = (uint8_t) ~B_MODIFIED;
+b_flags &= ~B_MODIFIED;
 
 @ @<Copy contents of |buf|...@>=
 if (b_egap - b_gap < buf_end-buf && !growgap((point_t)(buf_end-buf))) { /* if gap size
@@ -959,7 +959,7 @@ void insert(wchar_t c)
 	movegap(b_point);
 	*b_gap++ = c;
 	b_point++;
-	b_flags = (uint8_t) B_MODIFIED;
+	b_flags |= B_MODIFIED;
 }
 
 @ @<Procedures@>=
@@ -969,7 +969,7 @@ void backsp(void)
 	if (b_buf < b_gap)
 		b_gap--;
 	b_point = pos(b_egap);
-	b_flags = (uint8_t) B_MODIFIED;
+	b_flags |= B_MODIFIED;
 }
 
 @ @<Procedures@>=
@@ -978,7 +978,7 @@ void delete(void)
 	movegap(b_point);
 	if (b_egap < b_ebuf)
 		b_point = pos(++b_egap);
-	b_flags = (uint8_t) B_MODIFIED;
+	b_flags |= B_MODIFIED;
 }
 
 @* Searching text.
@@ -1401,7 +1401,7 @@ But this check can only be done after the file is read, in order that the buffer
 is allocated.
 
 TODO: instead of this check do this: if file is closed without saving and it was
-changed after it was opened (|if (b_flags & (uint8_t) B_MODIFIED)|),
+changed after it was opened (|if (b_flags & B_MODIFIED)|),
 saved cursor position must be the same as it was read from |DB_FILE|.
 @^TODO@>
 
