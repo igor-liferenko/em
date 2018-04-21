@@ -551,7 +551,8 @@ This is the necessary price to pay for using wide-character buffer.
 
 NOTE: see how to properly read a file in cweb-git/utf8/comm-utf8.ch
 (+ see
-"git lg 5def6c2dda2f86f2cfc059e288f088de7f97f488..96e2fb5682743285097426eb05fa4123d72c48a3
+"git lg 5def6c2dda2f86f2cfc059e288f088de7f97f488..%
+96e2fb5682743285097426eb05fa4123d72c48a3
 utf8/comm-utf8.ch" how my thoughts were evolving on this topic)
 
 @<Read file@>=
@@ -1552,13 +1553,13 @@ else {
         case 0x1d: /* \vb{Ctrl}+\vb{]} */
                 bottom();
                 break;
-	case 0x17: /* \vb{Ctrl}+\vb{w} */
+	case 0x17: /* \vb{Ctrl}+\vb{W} */
 		pgup();
 		break;
-	case 0x16: /* \vb{Ctrl}+\vb{v} */
+	case 0x16: /* \vb{Ctrl}+\vb{V} */
 		pgdown();
 		break;
-	case 0x1a: /* \vb{Ctrl}+\vb{z} */
+	case 0x1a: /* \vb{Ctrl}+\vb{Z} */
 		quit();
 		break;
 	case 0x0d: @/
