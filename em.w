@@ -283,7 +283,7 @@ void msg(wchar_t *msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
-	vswprintf(msgline, sizeof msgline / sizeof @[@](wchar_t), msg, args);
+	vswprintf(msgline, sizeof msgline / sizeof (wchar_t), msg, args);
 	va_end(args);
 	msgflag = TRUE;
 }
@@ -299,9 +299,9 @@ void case_sensitive_search(int case_sensitive_search_flag)
 {
   for (wchar_t *k = msgline; *k != L':'; k++)
     if (case_sensitive_search_flag)
-      *k = (wchar_t) towupper((wint_t) *k);
+      *k = towupper(*k);
     else if (k != msgline && *(k-1) != L' ')
-      *k = (wchar_t) towlower((wint_t) *k);
+      *k = towlower(*k);
 }
 
 @ Given a buffer offset, convert it to a pointer into the buffer.
@@ -364,9 +364,9 @@ newlen = buflen + n;
 @ @<Allocate memory for editing buffer@>=
 assert(newlen >= 0);
 if (buflen == 0) /* if buffer is empty */
-  new = malloc((size_t) newlen * sizeof @[@](wchar_t));
+  new = malloc((size_t) newlen * sizeof (wchar_t));
 else
-  new = realloc(b_buf, (size_t) newlen * sizeof @[@](wchar_t));
+  new = realloc(b_buf, (size_t) newlen * sizeof (wchar_t));
 if (new == NULL) {
   msg(L"malloc: %m\n");
   return FALSE;
@@ -556,12 +556,12 @@ NOTE: see how to properly read a file in cweb-git/utf8/comm-utf8.ch
 utf8/comm-utf8.ch" how my thoughts were evolving on this topic)
 
 @<Read file@>=
-wint_t c;
+wchar_t c;
 int i = 0;
 while (1) {
   buf_end = buf;
   while (buf_end - buf < CHUNK && (c = fgetwc(fp)) != WEOF)
-    *buf_end++ = (wchar_t) c;
+    *buf_end++ = c;
   if (buf_end == buf) break; /* end of file */
   @<Copy contents of |buf| to editing buffer@>@;
 }
@@ -887,7 +887,7 @@ equals to |b_epage| */
 		memset(&my_cchar, 0, sizeof my_cchar);
 		my_cchar.chars[0] = *p;
 		my_cchar.chars[1] = L'\0';
-		if (iswprint((wint_t) *p) || *p == L'\t' || *p == L'\n') {
+		if (iswprint(*p) || *p == L'\t' || *p == L'\n') {
 			j += *p == L'\t' ? 8-(j&7) : 1;
 			add_wch(&my_cchar);
 		}
@@ -1018,7 +1018,7 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 	point_t pp;
 	wchar_t *s;
 	for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
-	  towlower((wint_t) *s) == towlower((wint_t) *ptr(pp))) &&
+	  towlower(*s) == towlower(*ptr(pp))) &&
 	  *s !=L'\0' && pp < end_p; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = pp;
@@ -1052,7 +1052,7 @@ for (point_t p=b_point; p > 0;) {
 	point_t pp;
         wchar_t *s;
 	for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
-	  towlower((wint_t) *s) == towlower((wint_t) *ptr(pp))) &&
+	  towlower(*s) == towlower(*ptr(pp))) &&
 	  *s != L'\0'; s++, pp++) ;
 	if (*s == L'\0') {
           b_point = p;
@@ -1106,7 +1106,7 @@ void search(direction)
    int direction; /* 1 = forward; 0 = backward */
 {
   int cpos = 0;
-  wint_t c;
+  wchar_t c;
   point_t o_point = b_point;
   int search_failed = 0;
   point_t search_point; /* FIXME: can it be used uninitialized in |switch| below? */
@@ -1189,7 +1189,7 @@ void search(direction)
 
 @ @<Add char to search text@>=
 if (cpos < STRBUF_M - 1) {
-  searchtext[cpos++] = (wchar_t) c;
+  searchtext[cpos++] = c;
   searchtext[cpos] = L'\0';
   search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
   dispmsg();
@@ -1449,27 +1449,12 @@ b_page=b_point;
 for (int i=(LINES-1)/2;i>0;i--)
   b_page=upup(b_page);
 
-@ Here, besides reading user input, we handle resize event. We pass
-reference to variable of type
-|wint_t| to |get_wch| instead of type |wchar_t|, because |get_wch| takes
-|wint_t *| argument. While this would have been possible to typecast
-|wchar_t| to |wint_t|, this is impossible to typecast pointer. So, we
-have to use the variable of type |wint_t|. Why ncurses authors decided to use |wint_t *|
-instead of |wchar_t *| as the argument? Answer:
-because |wchar_t| may be |typedef| for |char|, and we need to store the special code,
-which will not fit into |wchar_t| in such case. So, |wint_t| is necassary.
-For |get_wch| it was
-decided not to use |wint_t| for return value to store the special code (like it is in \\{getch})
-because each implementation has its own sizes for |wint_t| and |wchar_t|, so
-it is impossible to have a constant to store the special code (except |WEOF|).
-And it is good to keep the same values for |KEY_RESIZE| etc which are used for
-\\{getch} anyway.
-So, they decided to distinguish via the return value
-if |get_wch| passed a special code or a char, for which |int| is good. The return value is
-|KEY_CODE_YES| if a special code is passed in the argument.
+@ Here, besides reading user input, we handle resize event.
+
+If |get_wch| processed a function key, it returns |KEY_CODE_YES|.
 
 @<Handle key@>=
-wint_t c;
+wchar_t c;
 if (get_wch(&c) == KEY_CODE_YES) {
   switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/} library
                   while decoding escape sequences via terminfo database */
@@ -1512,7 +1497,7 @@ if (get_wch(&c) == KEY_CODE_YES) {
         msg(L"Not bound");
   }
 }
-else {
+else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   switch (c) {
 	case 0x18:
 #if 1==0
@@ -1566,7 +1551,7 @@ else {
 		insert(L'\n');
 		break;
 	default:
-		insert((wchar_t) c);
+		insert(c);
   }
 }
 
