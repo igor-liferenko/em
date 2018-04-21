@@ -1546,19 +1546,19 @@ else {
 	case 0x04: @/
 		delete();
 		break;
-	case 0x08: /* \.{\^[} */
+	case 0x08: /* \vb{Ctrl}+\vb{[} */
 		top();
 		break;
-        case 0x1d: /* \.{\^]} */
+        case 0x1d: /* \vb{Ctrl}+\vb{]} */
                 bottom();
                 break;
-	case 0x17: /* \.{\^W} */
+	case 0x17: /* \vb{Ctrl}+\vb{w} */
 		pgup();
 		break;
-	case 0x16: /* \.{\^V} */
+	case 0x16: /* \vb{Ctrl}+\vb{v} */
 		pgdown();
 		break;
-	case 0x1a: /* \.{\^Z} */
+	case 0x1a: /* \vb{Ctrl}+\vb{z} */
 		quit();
 		break;
 	case 0x0d: @/
