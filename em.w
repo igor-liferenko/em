@@ -550,10 +550,7 @@ way to convert input data from UTF-8 than processing it byte-by-byte.
 This is the necessary price to pay for using wide-character buffer.
 
 NOTE: see how to properly read a file in cweb-git/utf8/comm-utf8.ch
-(+ see
-"git lg 5def6c2dda2f86f2cfc059e288f088de7f97f488..%
-96e2fb5682743285097426eb05fa4123d72c48a3
-utf8/comm-utf8.ch" how my thoughts were evolving on this topic)
+(+ see "git lg 5def6c..96e2fb utf8/comm-utf8.ch" how my thoughts on this topic evolved)
 
 @<Read file@>=
 wchar_t c;
