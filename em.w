@@ -1133,7 +1133,7 @@ void search(direction)
     if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
 	switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/}
                         library while decoding escape sequences via terminfo database */
-	  case KEY_RESIZE: /* integer promotion takes place in such cases */
+	  case KEY_RESIZE:
 		search_msg(L"Search %ls: %ls",
 		  direction==1?L"Forward":L"Backward",searchtext);
 		display();
@@ -1458,7 +1458,7 @@ wchar_t c;
 if (get_wch(&c) == KEY_CODE_YES) {
   switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/} library
                   while decoding escape sequences via terminfo database */
-    case KEY_RESIZE: /* integer promotion takes place in such cases */
+    case KEY_RESIZE:
 	continue;
     case KEY_LEFT:
         left();
