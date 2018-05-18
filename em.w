@@ -1229,8 +1229,8 @@ int main(int argc, char **argv)
 
         raw();
         noecho(); /* TODO: see getch(3NCURSES) for a discussion of
--          how echo/noecho interact with cbreak and nocbreak
-	(|raw|/|noraw| are almost the same as cbreak/nocbreak) */
+		how echo/noecho interact with cbreak and nocbreak
+		(|raw|/|noraw| are almost the same as cbreak/nocbreak) */
 	nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
 	@<Automatically interpret ANSI control sequences@>@;
 
