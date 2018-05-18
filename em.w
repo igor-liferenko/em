@@ -1166,7 +1166,7 @@ void search(direction)
 			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
 			@<Search backward@>@;
 			break;
-	    case 0x0c:
+	    case 0x13:
 			direction=1;
 			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
 			@<Search forward@>@;
@@ -1507,7 +1507,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 	case 0x12: @/
 		search(0);
 		break;
-	case 0x0c: /* \vb{Ctrl}+\vb{L} */
+	case 0x13: /* \vb{Ctrl}+\vb{S} */
 		search(1);
 		break;
 	case 0x10: @/
