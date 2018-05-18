@@ -257,7 +257,7 @@ void fatal(wchar_t *msg, ...)
 
 	move(LINES-1, 0);
 	refresh(); /* update the real screen */
-	noraw();
+	nocbreak(); /* TODO: interpret interrupt,  quit,  suspend */
 	endwin(); /* end curses mode */
 
 	va_start(args, msg);
@@ -1166,7 +1166,7 @@ void search(direction)
 			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
 			@<Search backward@>@;
 			break;
-	    case 0x13:
+	    case 0x0c:
 			direction=1;
 			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
 			@<Search forward@>@;
@@ -1227,8 +1227,10 @@ int main(int argc, char **argv)
 	else @<Ensure that restored position is inside buffer@>;
 	@<Set |b_epage|...@>@;
 
-        raw();
-        noecho();
+        cbreak(); /* TODO: do not interpret interrupt,  quit,  suspend */
+        noecho(); /* TODO: see getch(3NCURSES) for a discussion of
+          how these routines interact with cbreak and nocbreak */
+@^TODO@>
 	nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
 	@<Automatically interpret ANSI control sequences@>@;
 
@@ -1239,7 +1241,7 @@ int main(int argc, char **argv)
 
 	move(LINES - 1, 0);
 	refresh(); /* FIXME: why do we need this? Remove and check what will be. */
-	noraw();
+	nocbreak(); /* TODO: interpret interrupt,  quit,  suspend */
 	endwin(); /* end curses mode */
 
 	return 0;
@@ -1505,7 +1507,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 	case 0x12: @/
 		search(0);
 		break;
-	case 0x13: @/
+	case 0x0c: /* \vb{Ctrl}+\vb{L} */
 		search(1);
 		break;
 	case 0x10: @/
