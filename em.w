@@ -257,7 +257,7 @@ void fatal(wchar_t *msg, ...)
 
 	move(LINES-1, 0);
 	refresh(); /* update the real screen */
-	nocbreak(); /* TODO: interpret interrupt,  quit,  suspend */
+	noraw();
 	endwin(); /* end curses mode */
 
 	va_start(args, msg);
@@ -1227,10 +1227,10 @@ int main(int argc, char **argv)
 	else @<Ensure that restored position is inside buffer@>;
 	@<Set |b_epage|...@>@;
 
-        cbreak(); /* TODO: do not interpret interrupt,  quit,  suspend */
+        raw();
         noecho(); /* TODO: see getch(3NCURSES) for a discussion of
-          how these routines interact with cbreak and nocbreak */
-@^TODO@>
+-          how echo/noecho interact with cbreak and nocbreak
+	(|raw|/|noraw| are almost the same as cbreak/nocbreak) */
 	nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
 	@<Automatically interpret ANSI control sequences@>@;
 
@@ -1241,7 +1241,7 @@ int main(int argc, char **argv)
 
 	move(LINES - 1, 0);
 	refresh(); /* FIXME: why do we need this? Remove and check what will be. */
-	nocbreak(); /* TODO: interpret interrupt,  quit,  suspend */
+	noraw();
 	endwin(); /* end curses mode */
 
 	return 0;
