@@ -1,4 +1,4 @@
-outputtemplate:="%j.eps"; prologues:=3;
+%outputtemplate:="%j.eps"; prologues:=3;
 fontmapline "+lhr10 <lhr10.pfb";
 
 beginfig(1)
