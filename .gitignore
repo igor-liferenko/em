@@ -8,3 +8,5 @@ em
 *.scn
 *.tex
 *.toc
+*.[0-9]
+*.mpx
