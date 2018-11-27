@@ -4,26 +4,45 @@ fontmapline "+lhr10 <cmr10.pfb";
 beginfig(1)
 u=1cm;
 z1=(0,0);
-label.bot(btex b\_buf etex, z1-(0,.2u));
+label.bot(btex \font\x=cmssq8 \x b\_buf etex, z1+.3u*down);
 z2=(4u,0);
-label.bot(btex b\_gap etex, z2-(0,.2u));
-z3=(8u,0);
-label.bot(btex b\_egap etex, z3-(0,.2u));
-z4=(12u,0);
-label.bot(btex b\_ebuf etex, z4-(0,.2u));
-z5=(.5[x1,x2],.5u);
-z6=(.5[x1,x3],1.2u);
-z7=(.5[x1,x4],1.85u);
-label.top("xgap", z5);
-label.top("xegap", z6);
-label.top("buflen", z7);
+label.bot(btex \font\x=cmssq8 \x b\_gap etex, z2+.3u*down);
+z3=(7.75u,0);
+label.bot(btex \font\x=cmssq8 \x b\_egap etex, z3+.3u*down);
+z4=(13.35u,0);
+label.bot(btex \font\x=cmssq8 \x b\_ebuf etex, z4+.3u*down);
+z5=(.5[x1,x2],.3u);
+label.top(btex \font\x=cmssq8 \x xgap etex, z5);
+
+% begin curly braces:
+
 pickup pencircle scaled .4pt;
-draw z1 .. controls (x1+.2u,.6u) and (x5-.5u,y5-.3u) .. z5;
-draw z5 .. controls (x5+.5u,y5-.3u) and (x2-.2u,.6u) .. z2;
-draw z1 .. controls (x1+.1u,1.5u) and (x6-.5u,y6-.5u) .. z6;
-draw z6 .. controls (x6+.5u,y6-.5u) and (x3-.1u,1.5u) .. z3;
-draw z1 .. controls (x1+.1u,2.4u) and (x7-.5u,y7-.5u) .. z7;
-draw z7 .. controls (x7+.5u,y7-.5u) and (x4-.1u,2.4u) .. z4;
+pair a; pair b; pair c; pair d;
+
+a:=(x1,y5); b:=z5+down rotated -30 scaled .3u;
+c:=b reflectedabout (z5,(x5,0));
+d:=a reflectedabout (z5,(x5,0));
+draw z1 .. controls a and b .. z5;
+draw z5 .. controls c and d .. z2;
+
+z6=(.5[x1,x3],.85u);
+a:=(x1,1.2u); b:=z6+down rotated -30 scaled .5u;
+c:=b reflectedabout (z6,(x6,0));
+d:=a reflectedabout (z6,(x6,0));
+draw z1 .. controls a and b .. z6;
+draw z6 .. controls c and d .. z3;
+label.top(btex \font\x=cmssq8 \x xegap etex, z6);
+
+z7=(.5[x1,x4],1.6u);
+a:=(x1,2u); b:=z7+down rotated -30 scaled .7u;
+c:=b reflectedabout (z7,(x7,0));
+d:=a reflectedabout (z7,(x7,0));
+draw z1 .. controls a and b .. z7;
+draw z7 .. controls c and d .. z4;
+label.top(btex \font\x=cmssq8 \x buflen etex, z7);
+
+% end curly braces
+
 pickup pencircle scaled .8pt;
 draw z1 .. z4;
 pickup pencircle scaled 12pt;
