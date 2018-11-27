@@ -1,16 +1,15 @@
 %outputtemplate:="%j.eps"; prologues:=3;
-fontmapline "+lhr10 <cmr10.pfb";
 
 beginfig(1)
 u=1cm;
 z1=(0,0);
-label.bot(btex \font\x=cmss10 \x b\_buf etex, z1+.2u*down);
+label.bot(btex \font\x=cmss10 \x b\_buf etex, z1+down*.2u);
 z2=(4u,0);
-label.bot(btex \font\x=cmss10 \x b\_gap etex, z2+.2u*down);
+label.bot(btex \font\x=cmss10 \x b\_gap etex, z2+down*.2u);
 z3=(7.75u,0);
-label.bot(btex \font\x=cmss10 \x b\_egap etex, z3+.2u*down);
+label.bot(btex \font\x=cmss10 \x b\_egap etex, z3+down*.2u);
 z4=(13.35u,0);
-label.bot(btex \font\x=cmss10 \x b\_ebuf etex, z4+.2u*down);
+label.bot(btex \font\x=cmss10 \x b\_ebuf etex, z4+down*.2u);
 
 % begin curly braces
 
