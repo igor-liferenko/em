@@ -4,13 +4,13 @@ fontmapline "+lhr10 <cmr10.pfb";
 beginfig(1)
 u=1cm;
 z1=(0,0);
-label.bot(btex \font\x=cmssq8 \x b\_buf etex, z1+.3u*down);
+label.bot(btex \font\x=cmssq8 \x b\_buf etex, z1+.2u*down);
 z2=(4u,0);
-label.bot(btex \font\x=cmssq8 \x b\_gap etex, z2+.3u*down);
+label.bot(btex \font\x=cmssq8 \x b\_gap etex, z2+.2u*down);
 z3=(7.75u,0);
-label.bot(btex \font\x=cmssq8 \x b\_egap etex, z3+.3u*down);
+label.bot(btex \font\x=cmssq8 \x b\_egap etex, z3+.2u*down);
 z4=(13.35u,0);
-label.bot(btex \font\x=cmssq8 \x b\_ebuf etex, z4+.3u*down);
+label.bot(btex \font\x=cmssq8 \x b\_ebuf etex, z4+.2u*down);
 z5=(.5[x1,x2],.3u);
 label.top(btex \font\x=cmssq8 \x xgap etex, z5);
 
