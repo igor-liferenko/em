@@ -18,7 +18,7 @@ pickup pencircle scaled .4pt;
 pair a; pair b; pair c; pair d;
 
 z5=(.5[x1,x2],.3u);
-a:=(x1,y5); b:=z5+down rotated -30 scaled .3u;
+a:=(x1,.35u); b:=z5+down rotated -30 scaled .3u;
 c:=b reflectedabout (z5,(x5,0));
 d:=a reflectedabout (z5,(x5,0));
 draw z1 .. controls a and b .. z5;
