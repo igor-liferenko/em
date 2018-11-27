@@ -4,13 +4,13 @@ fontmapline "+lhr10 <cmr10.pfb";
 beginfig(1)
 u=1cm;
 z1=(0,0);
-label.bot(btex \font\x=cmssq8 \x b\_buf etex, z1+.2u*down);
+label.bot(btex \font\x=cmss10 \x b\_buf etex, z1+.2u*down);
 z2=(4u,0);
-label.bot(btex \font\x=cmssq8 \x b\_gap etex, z2+.2u*down);
+label.bot(btex \font\x=cmss10 \x b\_gap etex, z2+.2u*down);
 z3=(7.75u,0);
-label.bot(btex \font\x=cmssq8 \x b\_egap etex, z3+.2u*down);
+label.bot(btex \font\x=cmss10 \x b\_egap etex, z3+.2u*down);
 z4=(13.35u,0);
-label.bot(btex \font\x=cmssq8 \x b\_ebuf etex, z4+.2u*down);
+label.bot(btex \font\x=cmss10 \x b\_ebuf etex, z4+.2u*down);
 
 % begin curly braces
 
@@ -23,7 +23,7 @@ c:=b reflectedabout (z5,(x5,0));
 d:=a reflectedabout (z5,(x5,0));
 draw z1 .. controls a and b .. z5;
 draw z5 .. controls c and d .. z2;
-label.top("xgap" infont "cmssq8", z5);
+label.top("xgap" infont "cmss10", z5);
 
 z6=(.5[x1,x3],.85u);
 a:=(x1,1.2u); b:=z6+down rotated -30 scaled .5u;
@@ -31,7 +31,7 @@ c:=b reflectedabout (z6,(x6,0));
 d:=a reflectedabout (z6,(x6,0));
 draw z1 .. controls a and b .. z6;
 draw z6 .. controls c and d .. z3;
-label.top("xegap" infont "cmssq8", z6);
+label.top("xegap" infont "cmss10", z6);
 
 z7=(.5[x1,x4],1.5u);
 a:=(x1,2.1u); b:=z7+down rotated -30 scaled .7u;
@@ -39,7 +39,7 @@ c:=b reflectedabout (z7,(x7,0));
 d:=a reflectedabout (z7,(x7,0));
 draw z1 .. controls a and b .. z7;
 draw z7 .. controls c and d .. z4;
-label.top("buflen" infont "cmssq8", z7);
+label.top("buflen" infont "cmss10", z7);
 
 % end curly braces
 
