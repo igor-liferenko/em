@@ -328,8 +328,8 @@ point_t pos(wchar_t *cp)
 TODO: check that |(size_t)newlen*sizeof(wchar_t)| does not cause overflow.
 @^TODO@>
 
-$$\hbox to12.42cm{\vbox to2.75cm{\vfil\special{psfile=em.1
-  clip llx=-12 lly=-18 urx=354 ury=63 rhi=779}}\hfil}$$ % - 2.75
+$$\hbox to14.21cm{\vbox to2.46944444444444cm{\vfil\special{psfile=em.1
+  clip llx=-11 lly=-16 urx=392 ury=54 rwi=4030}}\hfil}$$
 
 @<Procedures@>=
 int growgap(point_t n)
