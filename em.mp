@@ -1,6 +1,6 @@
 %outputtemplate:="%j.eps"; prologues:=3;
 
-verbatimtex \font\tenrm=cmss10 \rm etex
+verbatimtex \font\tenss=cmss10 \tenss etex
 
 beginfig(1)
 z1=(0,0);
