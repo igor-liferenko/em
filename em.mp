@@ -25,7 +25,7 @@ draw z1 .. controls a and b .. z5;
 draw z5 .. controls c and d .. z2;
 label.top(btex xgap etex, z5);
 
-z6=(.5[x1,x3],24pt);
+z6=(.5[x1,x3],27pt);
 a:=(x1,34pt); b:=z6+down rotated -30 scaled 14pt;
 c:=b reflectedabout (z6,(x6,0));
 d:=a reflectedabout (z6,(x6,0));
@@ -33,8 +33,8 @@ draw z1 .. controls a and b .. z6;
 draw z6 .. controls c and d .. z3;
 label.top(btex xegap etex, z6);
 
-z7=(.5[x1,x4],43pt);
-a:=(x1,60pt); b:=z7+down rotated -30 scaled 20pt;
+z7=(.5[x1,x4],47pt);
+a:=(x1,62pt); b:=z7+down rotated -30 scaled 20pt;
 c:=b reflectedabout (z7,(x7,0));
 d:=a reflectedabout (z7,(x7,0));
 draw z1 .. controls a and b .. z7;
