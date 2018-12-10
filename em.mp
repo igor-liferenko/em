@@ -2,7 +2,7 @@
 
 verbatimtex \font\tenss=cmss10 \tenss etex
 
-beginfig(1)
+beginfig(1);
 z1=(0,0);
 label.bot(btex b\_buf etex, z1+down*6pt);
 z2=(4cm,0);
