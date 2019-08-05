@@ -1212,7 +1212,8 @@ int main(int argc, char **argv)
 		possible - in order to be able to use |fatal| */
 
 	int lineno;
-	if (argc == 3) /* second argument is the line number to be shown when file is opened */
+	if (argc >= 3) /* second argument is the line number to be shown when file is opened;
+			ignore the rest arguments, if any */
 		if (sscanf(argv[2], "%d", &lineno) != 1)
 			fatal(L"error - line number not an integer\n");
 
