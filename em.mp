@@ -1,4 +1,5 @@
 %outputtemplate:="%j.eps"; prologues:=3;
+fontmapfile "pdftex.map";
 
 verbatimtex \font\tenss=cmss10 \tenss etex
 
