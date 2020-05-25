@@ -952,7 +952,7 @@ void insert(wchar_t c)
 {
 	assert(b_gap <= b_egap);
 	if (b_gap == b_egap && !growgap(CHUNK)) return; /* if gap size is zero,
-		grow gap */
+          grow gap */
 	movegap(b_point);
 	*b_gap++ = c;
 	b_point++;
@@ -1209,11 +1209,11 @@ int main(int argc, char **argv)
 	if (argc == 1) @<Open temporary file@>@;
 
 	if (initscr() == NULL) exit(EXIT_FAILURE); /* screen must be initialized as early as
-		possible - in order to be able to use |fatal| */
+          possible - in order to be able to use |fatal| */
 
 	int lineno;
 	if (argc >= 3) /* second argument is the line number to be shown when file is opened;
-			ignore the rest arguments, if any */
+          ignore the rest arguments, if any */
 		if (sscanf(argv[2], "%d", &lineno) != 1)
 			fatal(L"error - line number not an integer\n");
 
@@ -1230,8 +1230,8 @@ int main(int argc, char **argv)
 
         raw();
         noecho(); /* TODO: see getch(3NCURSES) for a discussion of
-		how echo/noecho interact with cbreak and nocbreak
-		(|raw|/|noraw| are almost the same as cbreak/nocbreak) */
+          how echo/noecho interact with cbreak and nocbreak
+          (|raw|/|noraw| are almost the same as cbreak/nocbreak) */
 	nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
 	@<Automatically interpret ANSI control sequences@>@;
 
