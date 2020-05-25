@@ -566,7 +566,7 @@ while (1) {
 b_flags &= ~B_MODIFIED;
 
 @ @<Copy contents of |buf|...@>=
-if (b_egap - b_gap < buf_end-buf && !growgap((point_t)@[(buf_end-buf)@])) { /* if gap size
+if (b_egap - b_gap < buf_end-buf && !growgap((point_t) @[(buf_end-buf)@])) { /* if gap size
     is not sufficient, grow gap */
   fclose(fp);
   @<Remove lock and save cursor@>@;
