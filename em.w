@@ -283,7 +283,7 @@ void msg(wchar_t *msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
-	vswprintf(msgline, sizeof msgline / sizeof (wchar_t), msg, args);
+	vswprintf(msgline, sizeof msgline / sizeof @[(wchar_t)@], msg, args);
 	va_end(args);
 	msgflag = TRUE;
 }
@@ -325,7 +325,7 @@ point_t pos(wchar_t *cp)
 }
 
 @ Enlarge gap by n chars, position of gap cannot change.
-TODO: check that |(size_t)newlen*sizeof(wchar_t)| does not cause overflow.
+TODO: check that |(size_t)newlen*sizeof@[(wchar_t)@]| does not cause overflow.
 @^TODO@>
 
 $$\hbox to14.25cm{\vbox to2.75cm{\vfil\special{psfile=em.1
@@ -364,9 +364,9 @@ newlen = buflen + n;
 @ @<Allocate memory for editing buffer@>=
 assert(newlen >= 0);
 if (buflen == 0) /* if buffer is empty */
-  new = malloc((size_t) newlen * sizeof (wchar_t));
+  new = malloc((size_t) newlen * sizeof @[(wchar_t)@]);
 else
-  new = realloc(b_buf, (size_t) newlen * sizeof (wchar_t));
+  new = realloc(b_buf, (size_t) newlen * sizeof @[(wchar_t)@]);
 if (new == NULL) {
   msg(L"malloc: %m\n");
   return FALSE;
