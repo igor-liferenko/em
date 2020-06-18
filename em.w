@@ -3,6 +3,7 @@
 
 @s delete normal @q unreserve a C++ keyword @>
 @s new normal @q unreserve a C++ keyword @>
+@s uint8_t int
 
 \font\emfont=manfnt
 \def\EM/{{\emfont EM}}
