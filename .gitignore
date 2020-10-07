@@ -11,3 +11,4 @@ em
 *.[0-9]
 *.mpx
 *.eps
+.gdb_history
