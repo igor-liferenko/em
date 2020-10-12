@@ -438,8 +438,9 @@ char b_absname[PATH_MAX+1];
 char tmpfname[PATH_MAX+1];
 ssize_t r;
 snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fileno(fp));
-if ((r=readlink(tmpfname, b_absname, sizeof b_absname - 1))==-1)
+if ((r=readlink(tmpfname, b_absname, sizeof b_absname))==-1)
   fatal(L"Could not get absolute path.\n");
+if (r == sizeof b_absname) fatal(L"Buffer too small.\n");
 b_absname[r]='\0';
 
 @ TODO: if file does not exist, do not create it right away - create it only in
