@@ -1339,29 +1339,8 @@ if ((db_out=fopen(DB_FILE,"w"))==NULL) {
 }
 int file_is_locked = 0;
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
-  if (strncmp(db_line, b_absname, strlen(b_absname)) == 0) { /* FIXME: make so that sub-name
-        will not fall into this condition, like \.{/tmp/abc} and \.{/tmp/ab} */
-@^FIXME@>
-
-/* To reproduce the bug (is it a separate bug?): { } { } { } { } { } { } { } { } { } { } { } { } */
-/* \.{\$ em /tmp/xyz { } { } { } { } { } { } { } { } { } { } { } { }
-{ } { } { } { } { } { } { } { } { } { } { } { } } */
-/* \.{\$ em /tmp/xyza { } { } { } { } { } { } { } { } { } { } { } { }
-{ } { } { } { } { } { } { } { } { } { } { } { } } */
-/* \.{\$ em /tmp/xyz { } { } { } { } { } { } { } { } { } { } { } { }
-{ } { } { } { } { } { } { } { } { } { } { } { } } */
-/* \.{File is locked. { } { } { } { } { } { } { } { } { } { } { } { }
-{ } { } { } { } { } { } { } { } { } { } { } { } } */
-/* \.{\$ grep xyz /tmp/em.db { } { } { } { } { } { } { } { } { } { } { } { }
-{ } { } { } { } { } { } { } { } { } { } { } { } } */
-/* \.{/tmp/xyz lock { } { } { } { } { } { } { } { } { } { } { } { }
-{ } { } { } { } { } { } { } { } { } { } { } { } } */
-
-/* FIXME: fix that if in \.{/tmp/em.db} is, e.g., \.{/home/user/0000-git/code/coral.w 2727 1908},
-   and we do \.{em coral} from \.{/home/user/0000-git/code/}, it writes
-   \.{File is locked.} and in \.{/tmp/em.db} the line is changed to
-   \.{/home/user/0000-git/code/coral lock} */
-@^FIXME@>
+  if (strlen(b_absname) == (strchr(db_line, ' ')-db_line) &&
+      strncmp(db_line, b_absname, strlen(b_absname)) == 0) {
       if (sscanf(db_line+strlen(b_absname), "%ld %ld", &b_point, &b_page) != 2)
         file_is_locked = 1;
     continue;
