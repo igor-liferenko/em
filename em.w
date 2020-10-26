@@ -426,22 +426,20 @@ char *b_fname;
 @ @<Save file name@>=
 b_fname=argv[1];
 
-@ Get absolute name of opened file to use it in |DB_FILE|. For this we
-use facilities provided by the OS---via |fopen| call. Then we use
-|readlink| to get full path from \.{proc} filesystem by file descriptor.
+@ Get absolute name of opened file to use it in |DB_FILE|. Absolute name
+is the destination of the symlink \.{/proc/self/fd/<file descriptor>}.
 @^system dependencies@>
 
 @<Global...@>=
 char b_absname[PATH_MAX+1];
 
 @ @<Get absolute file name@>=
-char tmpfname[PATH_MAX+1];
-ssize_t r;
-snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fileno(fp));
-if ((r=readlink(tmpfname, b_absname, sizeof b_absname))==-1)
+char tmpfname[30];
+if (snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fileno(fp)) >= sizeof tmpfname)
+  fatal(L"Buffer `tmpfname' too small.\n");
+if (readlink(tmpfname, b_absname, sizeof b_absname) == -1)
   fatal(L"Could not get absolute path.\n");
-if (r == sizeof b_absname) fatal(L"Buffer too small.\n");
-b_absname[r]='\0';
+if (b_absname[sizeof b_absname - 1]) fatal(L"Buffer `b_absname' too small.\n");
 
 @ TODO: if file does not exist, do not create it right away - create it only in
 |@<Write file@>|. For this remove fopen..."w" and when saving file ensure that
@@ -1250,11 +1248,9 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-@ If you need to write something temporarily quickly, first write what
-you have in mind to paper, and then say "em" and type it (everything
-will be stored to an automatically created unique file, whose
-name will be printed when you exit EM).
-
+@ If you call `em' without arguments, everything will be stored to
+a unique temporary file, whose name will be printed when you exit `em'.
+@s pid_t int
 @<Open temporary file@>= {
 		char tmpl[] = "/tex_tmp/tmp-XXXXXX";
                 int fd = mkstemp(tmpl);
@@ -1262,30 +1258,25 @@ name will be printed when you exit EM).
                         wprintf(L"mkstemp: %m\n");
                         exit(EXIT_FAILURE);
                 }
-		char tmpfname[PATH_MAX+1];
-		ssize_t r;
-		snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fd);
-		if ((r = readlink(tmpfname, b_absname, sizeof b_absname - 1))
-                  == -1) {
-		  wprintf(L"Could not get absolute path.\n");
-		  exit(EXIT_FAILURE);
-		}
-		b_absname[r] = '\0';
+		char tmpfname[30];
+		if (snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fd) >= sizeof tmpfname)
+                  wprintf(L"Buffer `tmpfname' too small.\n"), exit(EXIT_FAILURE);
+		if (readlink(tmpfname, b_absname, sizeof b_absname - 1) == -1)
+		  wprintf(L"Could not get absolute path.\n"), exit(EXIT_FAILURE);
+		if (b_absname[sizeof b_absname - 1])
+                  wprintf(L"Buffer `b_absname' too small.\n"), exit(EXIT_FAILURE);
                 close(fd);
 
                 pid_t pid;
-                if ((pid = fork()) != -1) {
-                  if (pid == 0) {
+                if ((pid = fork()) == -1) wprintf(L"fork: %m\n"), exit(EXIT_FAILURE);
+                if (pid == 0) {
 			execl("/usr/local/bin/em", "em", b_absname, (char *) NULL);
 			wprintf(L"execl: %m\n");
 			exit(EXIT_FAILURE);
-		  }
-                  wait(NULL);
-                  printf("%s\n", b_absname);
-                  exit(EXIT_SUCCESS);
-                }
-                wprintf(L"fork: %m\n");
-                exit(EXIT_FAILURE);
+	        }
+                wait(NULL);
+                printf("%s\n", b_absname);
+                exit(EXIT_SUCCESS);
 }
 
 @ Make {\sl ncurses\/} automatically
