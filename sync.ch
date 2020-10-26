@@ -7,13 +7,13 @@
 @<Open file@>=
 char unlinkfname[PATH_MAX+1];
 if (strlen(b_fname) >= 2 && strcmp(".w", b_fname+strlen(b_fname)-2) == 0) {
-  strcat(strcpy(unlinkfname, b_fname, strlen(b_fname)-2), ".tex");
+  sprintf(unlinkfname, "%.*s.tex", (int)strlen(b_fname)-2, b_fname);
   unlink(unlinkfname);
-  strcat(strcpy(unlinkfname, b_fname, strlen(b_fname)-2), ".c");
+  sprintf(unlinkfname, "%.*s.c", (int)strlen(b_fname)-2, b_fname);
   unlink(unlinkfname);
 }
 if (strlen(b_fname) >= 4 && strcmp(".tex", b_fname+strlen(b_fname)-4) == 0) {
-  strcat(strcpy(unlinkfname, b_fname, strlen(b_fname)-4), ".dvi");
+  sprintf(unlinkfname, "%.*s.dvi", (int)strlen(b_fname)-4, b_fname);
   unlink(unlinkfname);
 }
 @z
