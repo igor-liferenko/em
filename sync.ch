@@ -1,6 +1,7 @@
 1) remove .tex and .c files if .w file is opened - this is to avoid confusion when ctangle is run instead of cweave and vice versa
-2) remove .dvi file if .tex file is opened - this is to avoid waste of paper when last-minute changes are done to .tex file and then 'prt' is called
-3) remove .*gf and .*pk and .tfm files if .mf file is opened (just in case - by analogy with previous)
+2) remove .dvi file if .tex file is opened - this is to avoid waste of paper when last-minute changes are done to .tex file and then 'prt' is called and because TeX's output may be empty
+3) remove .*gf and .*pk and .tfm files if .mf file is opened - this is to make bin/mf wrapper analogous to bin/tex wrapper
+
 @x
 @<Open file@>=
 @y
