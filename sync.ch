@@ -4,29 +4,26 @@ not before opening as now
 @x
 @<Open file@>=
 @y
-@d rm(ext) sprintf(cmd, "%.*s." #ext, len, b_fname); unlink(cmd)
+@d pat(n, e) sprintf(pat, "^%.*s%s", (int)(strlen(b_fname)-n), b_fname, e);
 @<Open file@>=
-char cmd[1000];
-if (strlen(b_fname) >= 4 && strcmp(".tex", b_fname+strlen(b_fname)-4) == 0) {
-  int len = strlen(b_fname)-4;
-  rm (dvi);
-}
-if (strlen(b_fname) >= 3 && strcmp(".mf", b_fname+strlen(b_fname)-3) == 0) {
-  int len = strlen(b_fname)-3;
-  rm (tfm);
-  rm (dvi);
-
+char pat[1000];
   DIR *d;
   struct dirent *dir;
   d = opendir(".");
   if (d) {
     while ((dir = readdir(d)) != NULL) {
-      if (match(dir->d_name, "\\.\\d+gf$")) unlink(dir->d_name);
-      if (match(dir->d_name, "\\.\\d+pk$")) unlink(dir->d_name);
+      if (match(b_fname, "\\.tex$")) {
+        pat(4, "\\.dvi$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+      }
+      if (match(b_fname, "\\.mf$")) {
+        pat(3, "\\.tfm$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+        pat(3, "\\.\\d+gf$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+        pat(3, "\\.\\d+pk$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+        pat(3, "\\.dvi$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+      }
     }
     closedir(d);
   }
-}
 @z
 
 @x
