@@ -1,29 +1,70 @@
-TODO: check md5sum of file before opening and after closing and if differ, remove after closing,
-not before opening as now
+If file is .tex or .mf, check md5sum of the file before opening and after closing and if differ,
+remove corresponding dependent files.
 
 @x
 @<Open file@>=
 @y
-@d pat(n, e) sprintf(pat, "^%.*s%s", (int)(strlen(b_fname)-n), b_fname, e)
 @<Open file@>=
-char pat[1000];
-  DIR *d;
-  struct dirent *dir;
-  d = opendir(".");
-  if (d) {
-    while ((dir = readdir(d)) != NULL) {
-      if (match(b_fname, "\\.tex$")) {
-        pat(4, "\\.dvi$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
-      }
-      if (match(b_fname, "\\.mf$")) {
-        pat(3, "\\.tfm$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
-        pat(3, "\\.\\d+gf$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
-        pat(3, "\\.\\d+pk$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
-        pat(3, "\\.dvi$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
-      }
-    }
-    closedir(d);
+int extlen = 0;
+if (match(b_fname, "\\.tex$")) extlen = 4;
+if (match(b_fname, "\\.mf$")) extlen = 3;
+  unsigned char c1[MD5_DIGEST_LENGTH];
+if (extlen) {
+  FILE *inFile = fopen(b_fname, "r");
+  MD5_CTX mdContext;
+  int bytes;
+  unsigned char data[1024];
+  if (inFile != NULL) {
+    MD5_Init(&mdContext);
+    while ((bytes = fread(data, 1, 1024, inFile)) != 0)
+        MD5_Update(&mdContext, data, bytes);
+    MD5_Final(c1, &mdContext);
+    fclose (inFile);
   }
+}
+@z
+
+@x
+@ @<Close file@>=
+fclose(fp);
+@y
+@ @d pat(e) sprintf(pat, "^%.*s%s", (int)(strlen(b_fname)-extlen), b_fname, e)
+@<Close file@>=
+fclose(fp);
+if (extlen) {
+  unsigned char c2[MD5_DIGEST_LENGTH];
+  FILE *inFile = fopen(b_fname, "r");
+  MD5_CTX mdContext;
+  int bytes;
+  unsigned char data[1024];
+  if (inFile != NULL) {
+    MD5_Init(&mdContext);
+    while ((bytes = fread(data, 1, 1024, inFile)) != 0)
+        MD5_Update(&mdContext, data, bytes);
+    MD5_Final(c2, &mdContext);
+    fclose (inFile);
+  }
+  if (strncmp(c1, c2, MD5_DIGEST_LENGTH) != 0) {
+    char pat[1000];
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(".");
+    if (d) {
+      while ((dir = readdir(d)) != NULL) {
+        if (extlen == 4) {
+          pat("\\.dvi$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+        }
+        if (extlen == 3) {
+          pat("\\.tfm$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+          pat("\\.\\d+gf$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+          pat("\\.\\d+pk$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+          pat("\\.dvi$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+        }
+      }
+      closedir(d);
+    }
+  }
+}
 @z
 
 @x
@@ -68,6 +109,7 @@ int match(char *str, char *pattern)
 @ @<Header files@>=
 @y
 @ @<Header files@>=
-#include <dirent.h>
+#include <openssl/md5.h>
 #include <pcre2.h>
+#include <dirent.h>
 @z
