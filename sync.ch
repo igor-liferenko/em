@@ -2,13 +2,10 @@ If file is .tex or .mf, check md5sum of the file before opening and after closin
 remove corresponding dependent files.
 
 @x
-@ @<Procedures@>=
 void quit(void)
 {
   @<Save buffer@>@;
 @y
-@ @d pat(e) sprintf(pat, "^%.*s%s", (int)(strlen(b_fname)-extlen), b_fname, e)
-@<Procedures@>=
 int match(char *str, char *pattern)
 {
         pcre2_code *re;
@@ -42,12 +39,19 @@ int match(char *str, char *pattern)
   return retval >= 0;
 }
 int extlen;
+#define pat(e) sprintf(pat, "^%.*s%s", (int)(strlen(b_fname)-extlen), b_fname, e)
+int c1_ok;
+unsigned char c1[MD5_DIGEST_LENGTH];
 void quit(void)
 {
   @<Save buffer@>@;
 if (extlen) {
   int c2_ok = 0;
   unsigned char c2[MD5_DIGEST_LENGTH];
+  FILE *inFile;
+  MD5_CTX mdContext;
+  int bytes;
+  unsigned char data[1024];
   if ((inFile = fopen(b_fname, "r")) != NULL) {
     c2_ok = 1;
     MD5_Init(&mdContext);
@@ -85,13 +89,11 @@ if (extlen) {
 @<Open file@>=
 if (match(b_fname, "\\.tex$")) extlen = 4;
 if (match(b_fname, "\\.mf$")) extlen = 3;
-  int c1_ok = 0;
-  unsigned char c1[MD5_DIGEST_LENGTH];
+if (extlen) {
   FILE *inFile;
   MD5_CTX mdContext;
   int bytes;
   unsigned char data[1024];
-if (extlen) {
   if ((inFile = fopen(b_fname, "r")) != NULL) {
     c1_ok = 1;
     MD5_Init(&mdContext);
