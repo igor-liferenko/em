@@ -453,7 +453,8 @@ directory. The matter is that |fopen| fails on a directory only if mode requires
 @^system dependencies@>
 
 TODO: BUT we have a problem with `\.{r+}' if we try to open a read-only file !!! Think how
-to reconcile these.
+to reconcile these. HINT: check if a file is a directory before opening a file - see
+https://stackoverflow.com/a/4553076
 @^TODO@>
 
 @<Open file@>=
@@ -1466,6 +1467,11 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_ENTER:
         insert(L'\n');
         break;
+    case 1076: @q keypad middle key (actually keypad enter key due to patched
+                  /usr/share/X11/xkb/keycodes/evdev) FIXME: which constant corresponds to it? @>
+               /* exit with a single key */
+	quit();
+        break;
     default:
         msg(L"Not bound");
   }
@@ -1474,7 +1480,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   switch (c) {
 	case 0x18:
 #if 0
-		@<Remove lock and save cursor@>@;
+		/*|@<Remove lock and save cursor@>|*/
 		done = 1; /* quit without saving */
 #endif
 		break;
