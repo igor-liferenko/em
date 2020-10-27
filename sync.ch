@@ -4,7 +4,7 @@ not before opening as now
 @x
 @<Open file@>=
 @y
-@d pat(n, e) sprintf(pat, "^%.*s%s", (int)(strlen(b_fname)-n), b_fname, e);
+@d pat(n, e) sprintf(pat, "^%.*s%s", (int)(strlen(b_fname)-n), b_fname, e)
 @<Open file@>=
 char pat[1000];
   DIR *d;
@@ -70,3 +70,4 @@ int match(char *str, char *pattern)
 @ @<Header files@>=
 #include <dirent.h>
 #include <pcre2.h>
+@z
