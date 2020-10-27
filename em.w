@@ -1467,13 +1467,13 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_ENTER:
         insert(L'\n');
         break;
-    case 574: @q keypad middle key (actually keypad enter key due to patched
+    case 01076: @q keypad middle key (actually keypad enter key due to patched
                   /usr/share/X11/xkb/keycodes/evdev) FIXME: which constant corresponds to it? @>
                /* exit with a single key */
 	quit();
         break;
     default:
-        msg(L"Not bound");
+        msg(L"Not bound"); @q msg(L"oct: %o", c); @>
   }
 }
 else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
