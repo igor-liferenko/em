@@ -2,74 +2,12 @@ If file is .tex or .mf, check md5sum of the file before opening and after closin
 remove corresponding dependent files.
 
 @x
-@<Open file@>=
-@y
-@<Open file@>=
-int extlen = 0;
-if (match(b_fname, "\\.tex$")) extlen = 4;
-if (match(b_fname, "\\.mf$")) extlen = 3;
-  unsigned char c1[MD5_DIGEST_LENGTH];
-if (extlen) {
-  FILE *inFile = fopen(b_fname, "r");
-  MD5_CTX mdContext;
-  int bytes;
-  unsigned char data[1024];
-  if (inFile != NULL) {
-    MD5_Init(&mdContext);
-    while ((bytes = fread(data, 1, 1024, inFile)) != 0)
-        MD5_Update(&mdContext, data, bytes);
-    MD5_Final(c1, &mdContext);
-    fclose (inFile);
-  }
-}
-@z
-
-@x
-@ @<Close file@>=
-fclose(fp);
+@ @<Procedures@>=
+void quit(void)
+{
+  @<Save buffer@>@;
 @y
 @ @d pat(e) sprintf(pat, "^%.*s%s", (int)(strlen(b_fname)-extlen), b_fname, e)
-@<Close file@>=
-fclose(fp);
-if (extlen) {
-  unsigned char c2[MD5_DIGEST_LENGTH];
-  FILE *inFile = fopen(b_fname, "r");
-  MD5_CTX mdContext;
-  int bytes;
-  unsigned char data[1024];
-  if (inFile != NULL) {
-    MD5_Init(&mdContext);
-    while ((bytes = fread(data, 1, 1024, inFile)) != 0)
-        MD5_Update(&mdContext, data, bytes);
-    MD5_Final(c2, &mdContext);
-    fclose (inFile);
-  }
-  if (strncmp(c1, c2, MD5_DIGEST_LENGTH) != 0) {
-    char pat[1000];
-    DIR *d;
-    struct dirent *dir;
-    d = opendir(".");
-    if (d) {
-      while ((dir = readdir(d)) != NULL) {
-        if (extlen == 4) {
-          pat("\\.dvi$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
-        }
-        if (extlen == 3) {
-          pat("\\.tfm$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
-          pat("\\.\\d+gf$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
-          pat("\\.\\d+pk$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
-          pat("\\.dvi$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
-        }
-      }
-      closedir(d);
-    }
-  }
-}
-@z
-
-@x
-@<Procedures@>=
-@y
 @<Procedures@>=
 int match(char *str, char *pattern)
 {
@@ -102,6 +40,66 @@ int match(char *str, char *pattern)
         pcre2_code_free(re);
   }
   return retval >= 0;
+}
+int extlen;
+void quit(void)
+{
+  @<Save buffer@>@;
+if (extlen) {
+  int c2_ok = 0;
+  unsigned char c2[MD5_DIGEST_LENGTH];
+  if ((inFile = fopen(b_fname, "r")) != NULL) {
+    c2_ok = 1;
+    MD5_Init(&mdContext);
+    while ((bytes = fread(data, 1, 1024, inFile)) != 0)
+        MD5_Update(&mdContext, data, bytes);
+    MD5_Final(c2, &mdContext);
+    fclose (inFile);
+  }
+  if (c1_ok && c2_ok && strncmp(c1, c2, MD5_DIGEST_LENGTH) != 0) {
+    char pat[1000];
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(".");
+    if (d) {
+      while ((dir = readdir(d)) != NULL) {
+        if (extlen == 4) {
+          pat("\\.dvi$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+        }
+        if (extlen == 3) {
+          pat("\\.tfm$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+          pat("\\.\\d+gf$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+          pat("\\.\\d+pk$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+          pat("\\.dvi$"); if (match(dir->d_name, pat)) unlink(dir->d_name);
+        }
+      }
+      closedir(d);
+    }
+  }
+}
+@z
+
+@x
+@<Open file@>=
+@y
+@<Open file@>=
+if (match(b_fname, "\\.tex$")) extlen = 4;
+if (match(b_fname, "\\.mf$")) extlen = 3;
+  int c1_ok = 0;
+  unsigned char c1[MD5_DIGEST_LENGTH];
+  FILE *inFile;
+  MD5_CTX mdContext;
+  int bytes;
+  unsigned char data[1024];
+if (extlen) {
+  if ((inFile = fopen(b_fname, "r")) != NULL) {
+    c1_ok = 1;
+    MD5_Init(&mdContext);
+    while ((bytes = fread(data, 1, 1024, inFile)) != 0)
+        MD5_Update(&mdContext, data, bytes);
+    MD5_Final(c1, &mdContext);
+    fclose (inFile);
+  }
 }
 @z
 
