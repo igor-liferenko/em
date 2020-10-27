@@ -1467,7 +1467,7 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_ENTER:
         insert(L'\n');
         break;
-    case 1076: @q keypad middle key (actually keypad enter key due to patched
+    case 574: @q keypad middle key (actually keypad enter key due to patched
                   /usr/share/X11/xkb/keycodes/evdev) FIXME: which constant corresponds to it? @>
                /* exit with a single key */
 	quit();
