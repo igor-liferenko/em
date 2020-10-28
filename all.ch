@@ -1,6 +1,3 @@
-If file is .tex or .mf, check md5sum of the file before opening and after closing and if differ,
-remove corresponding dependent files.
-
 @x
 void quit(void)
 {
@@ -106,6 +103,15 @@ if (extlen) {
 @z
 
 @x
+if ((fp = fopen(b_fname, "r+")) == NULL)
+  if ((fp = fopen(b_fname, "w")) == NULL) /* create file if it does not exist */
+@y
+if (strstr(b_fname, "/gvfs/")) exit(1);
+if ((fp = fopen(b_fname, "r+")) == NULL)
+  if ((fp = fopen(b_fname, "w")) == NULL) /* create file if it does not exist */
+@z
+
+@x
 @ @<Header files@>=
 @y
 @ @<Header files@>=
@@ -113,3 +119,4 @@ if (extlen) {
 #include <pcre2.h>
 #include <dirent.h>
 @z
+

@@ -502,7 +502,6 @@ if (b_buf < b_gap && *(b_gap-1) != L'\n')
 |@<Read file@>|.
 TODO: before saving check if file was modified since it was read and ask
 if owerwrite must be done (see git lg here how asking was implemented earlier)
-(and edit sync.ch not to remove files if file was unchanged)
 @^TODO@>
 
 TODO: always remove file completely before saving and create it again with the same attributes.
