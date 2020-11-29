@@ -1349,6 +1349,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   }
   fprintf(db_out,"%s",db_line);
 }
+/* TODO: fix bug that if x is opened after xy, xy disappears from em.db */
 fclose(db_in);
 fprintf(db_out,"%s lock\n",b_absname);
 @<Assure correct ownership of |DB_FILE|@>@;
