@@ -1249,7 +1249,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-@ If you call `em' without arguments, everything will be stored to
+@ If you call \.{em} without arguments, everything will be stored to
 a unique temporary file, whose name will be printed when you exit `em'.
 @s pid_t int
 @<Open temporary file@>= {
