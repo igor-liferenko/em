@@ -78,11 +78,11 @@ size of the gap for deletions.  In case it isn't obvious, this makes
 insertion and deletion incredible simple to implement.  To insert a
 character C at position POS in a buffer, you would do something like this:
 
-	/* Move the gap to position POS.  That is, make the first half
-	   be POS characters long. */
-	BufferMoveGap(b, pos);
-	b->data[b->firstHalf++] = c;
-	b->gapSize -= 1;
+ /* Move the gap to position POS.  That is, make the first half
+    be POS characters long. */
+ BufferMoveGap(b, pos);
+ b->data[b->firstHalf++] = c;
+ b->gapSize -= 1;
 
 There, done.  The gap is now one character smaller because we made the
 first half bigger while sticking in the character we wished to insert.
@@ -93,8 +93,8 @@ even easier.  To delete N characters at POS, all you do is make the gap
 bigger!  That is, by making the gap bigger, you take away from characters
 that used to be part of the buffer.
 
-	BufferMoveGap(b, pos);
-	b->gapSize += n;
+ BufferMoveGap(b, pos);
+ b->gapSize += n;
 
 That is delete, folks.
 
@@ -111,7 +111,7 @@ file.  The gap only has to be moved when you are doing edit operations.
 
 To examine the contents of a buffer, you can define a macro:
 
-	BufferCharAt(b, pos)
+ BufferCharAt(b, pos)
 
 All this does it check to see whether pos is in the first half or the
 second half, and then index that one HUGE array of characters correctly.
@@ -134,7 +134,7 @@ are placed at opposite ends of the buffer, with the "gap" in between them
 representing the cursor point.  For example, here's a sixteen-character
 buffer containing the words "The net", with the cursor on the letter 'n'.:
 
-			The ---------net
+   The ---------net
 
 (I'm using the '-' character to represent the spaces making up the gap.)
 
@@ -144,16 +144,16 @@ cursor left as you type would insert at the top edge of the gap.  For example,
 if I wanted to change the word "net" to "Usenet", I would start by typing the
 letter 'U', and the editor would change the buffer to look like this:
 
-			The U--------net
+   The U--------net
 
      This represents the string "The Unet", with the cursor still on the 'n'.
 Typing an 's' character would bring us to the following:
 
-			The Us-------net
+   The Us-------net
 
      And finally, the 'e' character brings us to this:
 
-			The Use------net
+   The Use------net
 
      But now we decide that we want to completely change tack and change the
 phrase from "The Usenet" to "The Usenix".  To do this, we will first have to
@@ -162,17 +162,17 @@ move our cursor to the right one spot, so we don't waste time retyping an
 letters "across" the gap.  In this case, we're moving the cursor toward the
 end of the phrase, so we move the 'n' across the gap, to the top end.
 
-			The Usen------et
+   The Usen------et
 
      Now we're ready to delete the 'e' and the 't'.  To do this, we just
 widen the gap at the bottom edge, wiping out the appropriate character.
 After deleting the 'e', the buffer looks like this:
 
-			The Usen-------t
+   The Usen-------t
 
      And after deleting the 't', the buffer looks like this:
 
-			The Usen--------
+   The Usen--------
 
      (Note that the gap now extends all the way to the edge of the buffer.
 This means that the file now reads "The Usen", with the cursor at the very
@@ -184,20 +184,20 @@ gap is widening at the top instead of the bottom.
      Now we add the letters 'i' and 'x', giving us the following buffer
 snapshots after each key is pressed:
 
-			The Useni-------
+   The Useni-------
 
-			The Usenix------
+   The Usenix------
 
      Now we've made our changes.  Moving the cursor back to the top of the
 file means moving the characters across the buffer in the other direction,
 starting with the 'x', like this:
 
-			The Useni------x
+   The Useni------x
 
      Finally, after doing this once for each of the letters in the buffer,
 we're at the top of the file, and the buffer looks like this:
 
-			------The Usenix
+   ------The Usenix
 
      Of course, there are many details yet to consider.  Real buffers will be
 much larger than this, probably starting at 64K and stopping at whatever size
@@ -254,17 +254,17 @@ int done;
 @ @<Procedures@>=
 void fatal(wchar_t *msg, ...)
 {
-	va_list args;
+ va_list args;
 
-	move(LINES-1, 0);
-	refresh(); /* update the real screen */
-	noraw();
-	endwin(); /* end curses mode */
+ move(LINES-1, 0);
+ refresh(); /* update the real screen */
+ noraw();
+ endwin(); /* end curses mode */
 
-	va_start(args, msg);
-	vwprintf(msg, args);
-	va_end(args);
-	exit(EXIT_FAILURE);
+ va_start(args, msg);
+ vwprintf(msg, args);
+ va_end(args);
+ exit(EXIT_FAILURE);
 }
 
 @ @d MSGBUF 512
@@ -282,11 +282,11 @@ messages are treated specially.
 
 void msg(wchar_t *msg, ...)
 {
-	va_list args;
-	va_start(args, msg);
-	vswprintf(msgline, sizeof msgline / sizeof (wchar_t), msg, args);
-	va_end(args);
-	msgflag = TRUE;
+ va_list args;
+ va_start(args, msg);
+ vswprintf(msgline, sizeof msgline / sizeof (wchar_t), msg, args);
+ va_end(args);
+ msgflag = TRUE;
 }
 
 @ Search prompt is formatted in accordance with |case_sensitive_search_flag|.
@@ -310,7 +310,7 @@ void case_sensitive_search(int case_sensitive_search_flag)
 @<Procedures@>=
 wchar_t *ptr(point_t offset)
 {
-	return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
+ return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
 }
 
 @ Given a pointer into the buffer, convert it to a buffer offset.
@@ -318,11 +318,11 @@ wchar_t *ptr(point_t offset)
 @<Procedures@>=
 point_t pos(wchar_t *cp)
 {
-	assert(b_buf <= cp && cp <= b_ebuf);
-	assert(cp < b_gap || cp >= b_egap);
-	if (cp < b_egap) assert(cp - b_buf >= 0);
-	else assert(cp - b_buf - (b_egap - b_gap) >= 0);
-	return (point_t) (cp - b_buf - (cp < b_egap ? 0 : b_egap - b_gap));
+ assert(b_buf <= cp && cp <= b_ebuf);
+ assert(cp < b_gap || cp >= b_egap);
+ if (cp < b_egap) assert(cp - b_buf >= 0);
+ else assert(cp - b_buf - (b_egap - b_gap) >= 0);
+ return (point_t) (cp - b_buf - (cp < b_egap ? 0 : b_egap - b_gap));
 }
 
 @ Enlarge gap by n chars, position of gap cannot change.
@@ -335,23 +335,23 @@ $$\hbox to14.25cm{\vbox to2.75cm{\vfil\special{psfile=em.1
 @<Procedures@>=
 int growgap(point_t n)
 {
-	wchar_t *new;
-	point_t buflen, newlen, xgap, xegap;
-		
-	assert(b_buf <= b_gap);
-	assert(b_gap <= b_egap);
-	assert(b_egap <= b_ebuf);
+ wchar_t *new;
+ point_t buflen, newlen, xgap, xegap;
+  
+ assert(b_buf <= b_gap);
+ assert(b_gap <= b_egap);
+ assert(b_egap <= b_ebuf);
 
-	xgap = (point_t) (b_gap - b_buf);
-	xegap = (point_t) (b_egap - b_buf);
-	buflen = (point_t) (b_ebuf - b_buf);
+ xgap = (point_t) (b_gap - b_buf);
+ xegap = (point_t) (b_egap - b_buf);
+ buflen = (point_t) (b_ebuf - b_buf);
     
-	@<Calculate new length |newlen| of gap@>@;
-	@<Allocate memory for editing buffer@>@;
-	@<Relocate pointers in new buffer and append the new
-	  extension to the end of the gap@>@;
+ @<Calculate new length |newlen| of gap@>@;
+ @<Allocate memory for editing buffer@>@;
+ @<Relocate pointers in new buffer and append the new
+   extension to the end of the gap@>@;
 
-	return TRUE;
+ return TRUE;
 }
 
 @ Reduce number of reallocs by growing by a minimum amount.
@@ -386,7 +386,7 @@ b_buf = new;
 b_gap = b_buf + xgap;
 b_egap = b_buf + newlen;
 while (xegap < buflen--)
-	*--b_egap = *--b_ebuf;
+ *--b_egap = *--b_ebuf;
 b_ebuf = b_buf + newlen;
 assert(b_buf <= b_gap);
 assert(b_gap < b_egap);          /* gap must exist */
@@ -394,17 +394,17 @@ assert(b_egap <= b_ebuf);
 
 @ @<Procedures@>=
 void movegap(offset)
-	point_t offset; /* number of characters before the gap */
+ point_t offset; /* number of characters before the gap */
 {
-	wchar_t *p = ptr(offset);
-	assert(p <= b_ebuf);
-	while (p < b_gap)
-		*--b_egap = *--b_gap;
-	while (b_egap < p)
-		*b_gap++ = *b_egap++;
-	assert(b_gap <= b_egap);
-	assert(b_buf <= b_gap);
-	assert(b_egap <= b_ebuf);
+ wchar_t *p = ptr(offset);
+ assert(p <= b_ebuf);
+ while (p < b_gap)
+  *--b_egap = *--b_gap;
+ while (b_egap < p)
+  *b_gap++ = *b_egap++;
+ assert(b_gap <= b_egap);
+ assert(b_buf <= b_gap);
+ assert(b_egap <= b_ebuf);
 }
 
 @ @<Procedures@>=
@@ -596,11 +596,11 @@ the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
 @<Procedures@>=
 point_t lnbegin(point_t off)
 {
-	if (off == 0) return off;
-	do
-	  off--;
-	while (0 < off && *ptr(off) != L'\n');
-	return (0 < off ? ++off : 0);
+ if (off == 0) return off;
+ do
+   off--;
+ while (0 < off && *ptr(off) != L'\n');
+ return (0 < off ? ++off : 0);
 }
 
 @ Forward scan for end of real line containing offset.
@@ -623,23 +623,23 @@ which contains the point `finish'.
 @<Procedures@>=
 point_t segstart(point_t start, point_t finish)
 {
-	wchar_t *p;
-	int c = 0;
-	point_t scan = start;
+ wchar_t *p;
+ int c = 0;
+ point_t scan = start;
 
-	while (scan < finish) {
-		p = ptr(scan);
-		if (*p == '\n') {
-			c = 0;
-			start = scan+1;
-		} else if (COLS <= c) {
-			c = 0;
-			start = scan;
-		}
-		++scan;
-		c += *p == '\t' ? 8 - (c & 7) : 1;
-	}
-	return (c < COLS ? start : finish);
+ while (scan < finish) {
+  p = ptr(scan);
+  if (*p == '\n') {
+   c = 0;
+   start = scan+1;
+  } else if (COLS <= c) {
+   c = 0;
+   start = scan;
+  }
+  ++scan;
+  c += *p == '\t' ? 8 - (c & 7) : 1;
+ }
+ return (c < COLS ? start : finish);
 }
 
 @ Forward scan for start of logical line segment following `finish'.
@@ -650,20 +650,20 @@ after that part of line, which contains the point `finish'.
 @<Procedures@>=
 point_t segnext(point_t start, point_t finish)
 {
-	wchar_t *p;
-	int c = 0;
+ wchar_t *p;
+ int c = 0;
 
-	point_t scan = segstart(start, finish);
-	while (1) {
-		p = ptr(scan);
-		if (b_ebuf <= p || COLS <= c)
-			break;
-		scan++;
-		if (*p == L'\n')
-			break;
-		c += *p == L'\t' ? 8 - (c & 7) : 1;
-	}
-	return (p < b_ebuf ? scan : pos(b_ebuf));
+ point_t scan = segstart(start, finish);
+ while (1) {
+  p = ptr(scan);
+  if (b_ebuf <= p || COLS <= c)
+   break;
+  scan++;
+  if (*p == L'\n')
+   break;
+  c += *p == L'\t' ? 8 - (c & 7) : 1;
+ }
+ return (p < b_ebuf ? scan : pos(b_ebuf));
 }
 
 @ Find the beginning of previous line.
@@ -672,15 +672,15 @@ In other words, move up one screen line.
 @<Procedures@>=
 point_t upup(point_t off)
 {
-	point_t curr = lnbegin(off);
-	point_t seg = segstart(curr, off);
-	if (curr < seg)
-		off = segstart(curr, seg>0?seg-1:0); /* previous line (is considered the
+ point_t curr = lnbegin(off);
+ point_t seg = segstart(curr, off);
+ if (curr < seg)
+  off = segstart(curr, seg>0?seg-1:0); /* previous line (is considered the
                   case that current line may be wrapped) */
-	else
-		off = segstart(lnbegin(curr>0?curr-1:0), curr>0?curr-1:0); /* previous
+ else
+  off = segstart(lnbegin(curr>0?curr-1:0), curr>0?curr-1:0); /* previous
                   line (is considered the case that previous line may be wrapped) */
-	return off;
+ return off;
 }
 
 @ Find the beginning of next line.
@@ -689,7 +689,7 @@ In other words, move down one screen line.
 @<Procedures@>=
 point_t dndn(point_t off)
 {
-	return segnext(lnbegin(off), off);
+ return segnext(lnbegin(off), off);
 }
 
 @ Return the offset of a column on the specified line.
@@ -697,13 +697,13 @@ point_t dndn(point_t off)
 @<Procedures@>=
 point_t lncolumn(point_t offset, int column)
 {
-	int c = 0;
-	wchar_t *p;
-	while ((p = ptr(offset)) < b_ebuf && *p != L'\n' && c < column) {
-		c += *p == L'\t' ? 8 - (c & 7) : 1;
-		++offset;
-	}
-	return offset;
+ int c = 0;
+ wchar_t *p;
+ while ((p = ptr(offset)) < b_ebuf && *p != L'\n' && c < column) {
+  c += *p == L'\t' ? 8 - (c & 7) : 1;
+  ++offset;
+ }
+ return offset;
 }
 
 @ @<Procedures@>=
@@ -730,26 +730,26 @@ C-s or C-r is pressed.
 @<Procedures@>=
 void dispmsg(void)
 {
-	if (msgflag) {
-		move(LINES - 1, 0);
-		standout();
-		for(wchar_t *p=msgline; *p!=L'\0'; p++) {
-			if (*p == L'\n')
-			  addwstr(L"<NL>");
-			else if (*p == L'\x09')
-			  addwstr(L"<TAB>");
-			else {
+ if (msgflag) {
+  move(LINES - 1, 0);
+  standout();
+  for(wchar_t *p=msgline; *p!=L'\0'; p++) {
+   if (*p == L'\n')
+     addwstr(L"<NL>");
+   else if (*p == L'\x09')
+     addwstr(L"<TAB>");
+   else {
                           cchar_t my_cchar;
                           memset(&my_cchar, 0, sizeof my_cchar);
                           my_cchar.chars[0] = *p;
                           my_cchar.chars[1] = L'\0';
                           add_wch(&my_cchar);
-			}
-		}
-		standend();
-		clrtoeol();
-		msgflag = FALSE;
-	}
+   }
+  }
+  standend();
+  clrtoeol();
+  msgflag = FALSE;
+ }
 }
 
 @* Redisplay algorithm. Here's how buffer gap redisplay algorithm works.
@@ -772,11 +772,11 @@ but it does handle wrapping lines at character or word bounderies.
 The redisplay algorithm maintains one of those spans for each line in the
 window.  Each line in the window is layed out and redrawn iff
 
-	1) The span we used to represent this line has its modified flag
-	   set.
+ 1) The span we used to represent this line has its modified flag
+    set.
 
-	2) The buffer position we have reached is different from what it
-	   was the last time we displayed this line, OR
+ 2) The buffer position we have reached is different from what it
+    was the last time we displayed this line, OR
 
 1) happens when an insertion or deletion happened in that line, and 2)
 happens when a change in a previous line causes a ripple through into
@@ -794,12 +794,12 @@ word wrap mode, it backs up to the last space character and returns the
 first character after that.  In normal character wrapping mode, it just
 returns the next character.
 
-	[This is different from emacs fill mode, which inserts newlines
-	 into the document.  This new way doesn't insert newlines.  This
-	 is nice because the entire paragraph is always filled.  It's
-	 easy to make it so when you're typing in the middle of a HUGE
-	 word which wraps, and then type a space, the left half of the
-	 word might just pop up to the previous line if there is room.]
+ [This is different from emacs fill mode, which inserts newlines
+  into the document.  This new way doesn't insert newlines.  This
+  is nice because the entire paragraph is always filled.  It's
+  easy to make it so when you're typing in the middle of a HUGE
+  word which wraps, and then type a space, the left half of the
+  word might just pop up to the previous line if there is room.]
 
 What's the overhead?  It's maintaining these spans.  It turns out editors
 tend to maintain spans or marks for other reasons, so this isn't all that
@@ -840,85 +840,85 @@ to new line but the page is not scrolled one line up as it should be;
 make so that |down| will be called if character |L'\n'| is inserted and |b_point|
 equals to |b_epage| */
 @^FIXME@>
-	wchar_t *p;
-	int i, j, k;
+ wchar_t *p;
+ int i, j, k;
 
-	/* find start of screen, handle scroll up off page or top of file  */
-	/* point is always within |b_page| and |b_epage| */
-	if (b_point < b_page)
-		b_page = segstart(lnbegin(b_point), b_point);
+ /* find start of screen, handle scroll up off page or top of file  */
+ /* point is always within |b_page| and |b_epage| */
+ if (b_point < b_page)
+  b_page = segstart(lnbegin(b_point), b_point);
 
-	/* reframe when scrolled off bottom */
-	if (b_epage <= b_point) {
-		b_page = dndn(b_point); /* find end of screen plus one */
-		if (pos(b_ebuf) <= b_page) { /* if we scoll to EOF we show 1
+ /* reframe when scrolled off bottom */
+ if (b_epage <= b_point) {
+  b_page = dndn(b_point); /* find end of screen plus one */
+  if (pos(b_ebuf) <= b_page) { /* if we scoll to EOF we show 1
                   blank line at bottom of screen */
-			b_page = pos(b_ebuf);
-			i = LINES - 2;
-		}
-		else
-			i = LINES - 1;
-		while (0 < i--) /* scan backwards the required number of lines */
-			b_page = upup(b_page);
-	}
+   b_page = pos(b_ebuf);
+   i = LINES - 2;
+  }
+  else
+   i = LINES - 1;
+  while (0 < i--) /* scan backwards the required number of lines */
+   b_page = upup(b_page);
+ }
 
-	move(0, 0); /* start from top of window */
-	i = 0;
-	j = 0;
-	b_epage = b_page;
-	
-	/* paint screen from top of page until we hit maxline */ 
-	while (1) {
-		/* reached point - store the cursor position */
-		if (b_point == b_epage) {
-			b_row = i;
-			b_col = j;
-		}
+ move(0, 0); /* start from top of window */
+ i = 0;
+ j = 0;
+ b_epage = b_page;
+ 
+ /* paint screen from top of page until we hit maxline */ 
+ while (1) {
+  /* reached point - store the cursor position */
+  if (b_point == b_epage) {
+   b_row = i;
+   b_col = j;
+  }
                 if (search_active && b_search_point!=b_point && b_point==b_epage)
-		  b_point < b_search_point ? standout() : standend();
-		if (search_active && b_search_point!=b_point && b_search_point==b_epage)
-		  b_point < b_search_point ? standend() : standout();
-		p = ptr(b_epage);
-		if (LINES - 1 <= i || b_ebuf <= p) /* maxline */
-			break;
-		cchar_t my_cchar;
-		memset(&my_cchar, 0, sizeof my_cchar);
-		my_cchar.chars[0] = *p;
-		my_cchar.chars[1] = L'\0';
-		if (iswprint(*p) || *p == L'\t' || *p == L'\n') {
-			j += *p == L'\t' ? 8-(j&7) : 1;
-			add_wch(&my_cchar);
-		}
-		else {
-			wchar_t *ctrl = wunctrl(&my_cchar);
-			j += (int) wcslen(ctrl);
-			addwstr(ctrl);
-		}
-		if (*p == L'\n' || COLS <= j) {
-			j -= COLS;
-			if (j < 0)
-				j = 0;
-			i++;
-		}
-		b_epage++;
-	}
+    b_point < b_search_point ? standout() : standend();
+  if (search_active && b_search_point!=b_point && b_search_point==b_epage)
+    b_point < b_search_point ? standend() : standout();
+  p = ptr(b_epage);
+  if (LINES - 1 <= i || b_ebuf <= p) /* maxline */
+   break;
+  cchar_t my_cchar;
+  memset(&my_cchar, 0, sizeof my_cchar);
+  my_cchar.chars[0] = *p;
+  my_cchar.chars[1] = L'\0';
+  if (iswprint(*p) || *p == L'\t' || *p == L'\n') {
+   j += *p == L'\t' ? 8-(j&7) : 1;
+   add_wch(&my_cchar);
+  }
+  else {
+   wchar_t *ctrl = wunctrl(&my_cchar);
+   j += (int) wcslen(ctrl);
+   addwstr(ctrl);
+  }
+  if (*p == L'\n' || COLS <= j) {
+   j -= COLS;
+   if (j < 0)
+    j = 0;
+   i++;
+  }
+  b_epage++;
+ }
 
-	/* replacement for clrtobot() to bottom of window */
-	for (k=i; k < LINES - 1; k++) {
-		move(k, j); /* clear from very last char not start of line */
-		clrtoeol();
-		j = 0; /* thereafter start of line */
-	}
+ /* replacement for clrtobot() to bottom of window */
+ for (k=i; k < LINES - 1; k++) {
+  move(k, j); /* clear from very last char not start of line */
+  clrtoeol();
+  j = 0; /* thereafter start of line */
+ }
 
-	modeline();
-	dispmsg();
+ modeline();
+ dispmsg();
         if (search_active) { /* override |b_row| and |b_col|, in order that cursor will be
                                 put to msg line */
           b_row = LINES - 1;
           b_col = (int) wcslen(msgline);
         }
-	move(b_row, b_col); /* set cursor */
-	refresh(); /* update the real screen */
+ move(b_row, b_col); /* set cursor */
+ refresh(); /* update the real screen */
 }
 
 @ @<Procedures@>=
@@ -932,51 +932,51 @@ void down(void) @+ {@+ b_point = lncolumn(dndn(b_point), b_col); @+}
 @ @<Procedures@>=
 void pgdown(void)
 {
-	b_page = b_point = upup(b_epage);
-	while (0 < b_row--)
-		down();
-	b_epage = pos(b_ebuf);
+ b_page = b_point = upup(b_epage);
+ while (0 < b_row--)
+  down();
+ b_epage = pos(b_ebuf);
 }
 
 @ @<Procedures@>=
 void pgup(void)
 {
-	int i = LINES - 1;
-	while (0 < --i) {
-		b_page = upup(b_page);
-		up();
-	}
+ int i = LINES - 1;
+ while (0 < --i) {
+  b_page = upup(b_page);
+  up();
+ }
 }
 
 @ @<Procedures@>=
 void insert(wchar_t c)
 {
-	assert(b_gap <= b_egap);
-	if (b_gap == b_egap && !growgap(CHUNK)) return; /* if gap size is zero,
+ assert(b_gap <= b_egap);
+ if (b_gap == b_egap && !growgap(CHUNK)) return; /* if gap size is zero,
           grow gap */
-	movegap(b_point);
-	*b_gap++ = c;
-	b_point++;
-	b_flags |= B_MODIFIED;
+ movegap(b_point);
+ *b_gap++ = c;
+ b_point++;
+ b_flags |= B_MODIFIED;
 }
 
 @ @<Procedures@>=
 void backsp(void)
 {
-	movegap(b_point);
-	if (b_buf < b_gap)
-		b_gap--;
-	b_point = pos(b_egap);
-	b_flags |= B_MODIFIED;
+ movegap(b_point);
+ if (b_buf < b_gap)
+  b_gap--;
+ b_point = pos(b_egap);
+ b_flags |= B_MODIFIED;
 }
 
 @ @<Procedures@>=
 void delete(void)
 {
-	movegap(b_point);
-	if (b_egap < b_ebuf)
-		b_point = pos(++b_egap);
-	b_flags |= B_MODIFIED;
+ movegap(b_point);
+ if (b_egap < b_ebuf)
+  b_point = pos(++b_egap);
+ b_flags |= B_MODIFIED;
 }
 
 @* Searching text.
@@ -1013,19 +1013,19 @@ if (direction==0&&!no_occurrences) search_failed=0; /* direction changed */
 for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
 /* FIXME: if instead of |end_p| will be used |a| will it get into the index? */
 @^FIXME@>
-	point_t pp;
-	wchar_t *s;
-	for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
-	  towlower(*s) == towlower(*ptr(pp))) &&
-	  *s !=L'\0' && pp < end_p; s++, pp++) ;
-	if (*s == L'\0') {
+ point_t pp;
+ wchar_t *s;
+ for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
+   towlower(*s) == towlower(*ptr(pp))) &&
+   *s !=L'\0' && pp < end_p; s++, pp++) ;
+ if (*s == L'\0') {
           b_point = pp;
           b_search_point = p;
           search_msg(L"Search Forward: %ls", searchtext);
           display();
           search_failed=0;
           goto search_forward;
-	}
+ }
 }
 if (search_failed) {
   search_msg(L"No Occurrences: %ls", searchtext);
@@ -1046,20 +1046,20 @@ b_search_point=b_point;
 @<Search backward@>=
 if (direction==1&&!no_occurrences) search_failed=0; /* direction changed */
 for (point_t p=b_point; p > 0;) {
-	p--;
-	point_t pp;
+ p--;
+ point_t pp;
         wchar_t *s;
-	for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
-	  towlower(*s) == towlower(*ptr(pp))) &&
-	  *s != L'\0'; s++, pp++) ;
-	if (*s == L'\0') {
+ for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
+   towlower(*s) == towlower(*ptr(pp))) &&
+   *s != L'\0'; s++, pp++) ;
+ if (*s == L'\0') {
           b_point = p;
           b_search_point = pp;
           search_msg(L"Search Backward: %ls", searchtext);
           display();
           search_failed=0;
           goto search_backward;
-	}
+ }
 }
 if (search_failed) {
   search_msg(L"No Occurrences: %ls", searchtext);
@@ -1129,58 +1129,58 @@ void search(direction)
   while (1) {
     refresh(); /* update the real screen */
     if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
-	switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/}
+ switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/}
                         library while decoding escape sequences via terminfo database */
-	  case KEY_RESIZE:
-		search_msg(L"Search %ls: %ls",
-		  direction==1?L"Forward":L"Backward",searchtext);
-		display();
-		continue;
-	  case KEY_BACKSPACE:
-		if (cpos == 0) continue;
-		searchtext[--cpos] = L'\0';
-		search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
-		dispmsg();
-		break;
-	  case KEY_IC:
-		@<Use Insert key...@>@;
-		break;
-	  case KEY_ENTER:
-		if (search_failed) b_point = search_point;
-		search_active = 0;
-		return;
-	}
+   case KEY_RESIZE:
+  search_msg(L"Search %ls: %ls",
+    direction==1?L"Forward":L"Backward",searchtext);
+  display();
+  continue;
+   case KEY_BACKSPACE:
+  if (cpos == 0) continue;
+  searchtext[--cpos] = L'\0';
+  search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
+  dispmsg();
+  break;
+   case KEY_IC:
+  @<Use Insert key...@>@;
+  break;
+   case KEY_ENTER:
+  if (search_failed) b_point = search_point;
+  search_active = 0;
+  return;
+ }
     }
     else {
-	curs_set(1);
-	switch (c) {
-	    case 0x0d:
-			if (search_failed) b_point = search_point;
-			search_active = 0;
-			return;
-	    case 0x07:
-			b_point = o_point;
-			search_active = 0;
-			return;
-	    case 0x12:
-			direction=0;
-			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
-			@<Search backward@>@;
-			break;
-	    case 0x13:
-			direction=1;
-			cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
-			@<Search forward@>@;
-			break;
-	    case 0x0a:
-	    @t\4@>
-	    case 0x09:
-		@<Add char to search text@>;
-		break;
-	    default:
-		if (iswcntrl(c)) break; /* ignore non-assigned control keys */
-		@<Add char to search text@>@;
-	}
+ curs_set(1);
+ switch (c) {
+     case 0x0d:
+   if (search_failed) b_point = search_point;
+   search_active = 0;
+   return;
+     case 0x07:
+   b_point = o_point;
+   search_active = 0;
+   return;
+     case 0x12:
+   direction=0;
+   cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
+   @<Search backward@>@;
+   break;
+     case 0x13:
+   direction=1;
+   cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
+   @<Search forward@>@;
+   break;
+     case 0x0a:
+     @t\4@>
+     case 0x09:
+  @<Add char to search text@>;
+  break;
+     default:
+  if (iswcntrl(c)) break; /* ignore non-assigned control keys */
+  @<Add char to search text@>@;
+ }
     }
   }
 }
@@ -1205,76 +1205,76 @@ dispmsg();
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
-	setlocale(LC_CTYPE, "C.UTF-8");
+ setlocale(LC_CTYPE, "C.UTF-8");
 
-	if (argc == 1) @<Open temporary file@>@;
+ if (argc == 1) @<Open temporary file@>@;
 
-	if (initscr() == NULL) exit(EXIT_FAILURE); /* screen must be initialized as early as
+ if (initscr() == NULL) exit(EXIT_FAILURE); /* screen must be initialized as early as
           possible - in order to be able to use |fatal| */
 
-	int lineno;
-	if (argc >= 3) /* second argument is the line number to be shown when file is opened;
+ int lineno;
+ if (argc >= 3) /* second argument is the line number to be shown when file is opened;
           ignore the rest arguments, if any */
-		if (sscanf(argv[2], "%d", &lineno) != 1)
-			fatal(L"error - line number not an integer\n");
+  if (sscanf(argv[2], "%d", &lineno) != 1)
+   fatal(L"error - line number not an integer\n");
 
-	FILE *fp;
-	@<Save file name@>@;
-	@<Open file@>@;
-	@<Get absolute...@>@;
-	@<Restore cursor from |DB_FILE|@>@;
-	@<Read file@>@;
-	@<Close file@>@;
-	if (argc == 3) @<Move cursor to |lineno|@>@;
-	else @<Ensure that restored position is inside buffer@>;
-	@<Set |b_epage|...@>@;
+ FILE *fp;
+ @<Save file name@>@;
+ @<Open file@>@;
+ @<Get absolute...@>@;
+ @<Restore cursor from |DB_FILE|@>@;
+ @<Read file@>@;
+ @<Close file@>@;
+ if (argc == 3) @<Move cursor to |lineno|@>@;
+ else @<Ensure that restored position is inside buffer@>;
+ @<Set |b_epage|...@>@;
 
         raw();
         noecho(); /* TODO: see getch(3NCURSES) for a discussion of
           how echo/noecho interact with cbreak and nocbreak
           (|raw|/|noraw| are almost the same as cbreak/nocbreak) */
-	nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
-	@<Automatically interpret ANSI control sequences@>@;
+ nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
+ @<Automatically interpret ANSI control sequences@>@;
 
-	while (!done) {
-		display();
-		@<Handle key@>@;
-	}
+ while (!done) {
+  display();
+  @<Handle key@>@;
+ }
 
-	move(LINES - 1, 0);
-	refresh(); /* FIXME: why do we need this? Remove and check what will be. */
-	noraw();
-	endwin(); /* end curses mode */
+ move(LINES - 1, 0);
+ refresh(); /* FIXME: why do we need this? Remove and check what will be. */
+ noraw();
+ endwin(); /* end curses mode */
 
-	return 0;
+ return 0;
 }
 
 @ If you call \.{em} without arguments, everything will be stored to
 a unique temporary file, whose name will be printed when you exit \.{em}.
 @s pid_t int
 @<Open temporary file@>= {
-		char tmpl[] = "/tex_tmp/tmp-XXXXXX";
+  char tmpl[] = "/tex_tmp/tmp-XXXXXX";
                 int fd = mkstemp(tmpl);
                 if (fd == -1) {
                         wprintf(L"mkstemp: %m\n");
                         exit(EXIT_FAILURE);
                 }
-		char tmpfname[30];
-		if (snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fd) >= sizeof tmpfname)
+  char tmpfname[30];
+  if (snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fd) >= sizeof tmpfname)
                   wprintf(L"Buffer `tmpfname' too small.\n"), exit(EXIT_FAILURE);
-		if (readlink(tmpfname, b_absname, sizeof b_absname - 1) == -1)
-		  wprintf(L"Could not get absolute path.\n"), exit(EXIT_FAILURE);
-		if (b_absname[sizeof b_absname - 1])
+  if (readlink(tmpfname, b_absname, sizeof b_absname - 1) == -1)
+    wprintf(L"Could not get absolute path.\n"), exit(EXIT_FAILURE);
+  if (b_absname[sizeof b_absname - 1])
                   wprintf(L"Buffer `b_absname' too small.\n"), exit(EXIT_FAILURE);
                 close(fd);
 
                 pid_t pid;
                 if ((pid = fork()) == -1) wprintf(L"fork: %m\n"), exit(EXIT_FAILURE);
                 if (pid == 0) {
-			execl("/usr/local/bin/em", "em", b_absname, (char *) NULL);
-			wprintf(L"execl: %m\n");
-			exit(EXIT_FAILURE);
-	        }
+   execl("/usr/local/bin/em", "em", b_absname, (char *) NULL);
+   wprintf(L"execl: %m\n");
+   exit(EXIT_FAILURE);
+         }
                 wait(NULL);
                 printf("%s\n", b_absname);
                 exit(EXIT_SUCCESS);
@@ -1434,7 +1434,7 @@ if (get_wch(&c) == KEY_CODE_YES) {
   switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/} library
                   while decoding escape sequences via terminfo database */
     case KEY_RESIZE:
-	continue;
+ continue;
     case KEY_LEFT:
         left();
         break;
@@ -1471,7 +1471,7 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case 01076: @q keypad middle key (actually keypad enter key due to patched @>
                 @q /usr/share/X11/xkb/keycodes/evdev) FIXME: which constant corresponds to it? @>
                /* exit with a single key */
-	quit();
+ quit();
         break;
     default:
         msg(L"Not bound"); @q msg(L"oct: %o", c); @>
@@ -1479,59 +1479,59 @@ if (get_wch(&c) == KEY_CODE_YES) {
 }
 else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   switch (c) {
-	case 0x18:
+ case 0x18:
 #if 0
-		/*|@<Remove lock and save cursor@>|*/
-		done = 1; /* quit without saving */
+  /*|@<Remove lock and save cursor@>|*/
+  done = 1; /* quit without saving */
 #endif
-		break;
-	case 0x12: @/
-		search(0);
-		break;
-	case 0x13: /* \vb{Ctrl}+\vb{S} */
-		search(1);
-		break;
-	case 0x10: @/
-		up();
-		break;
-	case 0x0e: @/
-		down();
-		break;
-	case 0x02: @/
-		left();
-		break;
-	case 0x06: @/
-		right();
-		break;
-	case 0x05: @/
-		b_point = lnend(b_point);
-		break;
-	case 0x01: @/
-		b_point = lnbegin(b_point);
-		break;
-	case 0x04: @/
-		delete();
-		break;
-	case 0x08: /* \vb{Ctrl}+\vb{[} */
-		top();
-		break;
+  break;
+ case 0x12: @/
+  search(0);
+  break;
+ case 0x13: /* \vb{Ctrl}+\vb{S} */
+  search(1);
+  break;
+ case 0x10: @/
+  up();
+  break;
+ case 0x0e: @/
+  down();
+  break;
+ case 0x02: @/
+  left();
+  break;
+ case 0x06: @/
+  right();
+  break;
+ case 0x05: @/
+  b_point = lnend(b_point);
+  break;
+ case 0x01: @/
+  b_point = lnbegin(b_point);
+  break;
+ case 0x04: @/
+  delete();
+  break;
+ case 0x08: /* \vb{Ctrl}+\vb{[} */
+  top();
+  break;
         case 0x1d: /* \vb{Ctrl}+\vb{]} */
                 bottom();
                 break;
-	case 0x17: /* \vb{Ctrl}+\vb{W} */
-		pgup();
-		break;
-	case 0x16: /* \vb{Ctrl}+\vb{V} */
-		pgdown();
-		break;
-	case 0x1a: /* \vb{Ctrl}+\vb{Z} */
-		quit();
-		break;
-	case 0x0d: @/
-		insert(L'\n');
-		break;
-	default:
-		insert(c);
+ case 0x17: /* \vb{Ctrl}+\vb{W} */
+  pgup();
+  break;
+ case 0x16: /* \vb{Ctrl}+\vb{V} */
+  pgdown();
+  break;
+ case 0x1a: /* \vb{Ctrl}+\vb{Z} */
+  quit();
+  break;
+ case 0x0d: @/
+  insert(L'\n');
+  break;
+ default:
+  insert(c);
   }
 }
 
