@@ -1250,7 +1250,7 @@ int main(int argc, char **argv)
 }
 
 @ If you call \.{em} without arguments, everything will be stored to
-a unique temporary file, whose name will be printed when you exit `em'.
+a unique temporary file, whose name will be printed when you exit \.{em}.
 @s pid_t int
 @<Open temporary file@>= {
 		char tmpl[] = "/tex_tmp/tmp-XXXXXX";
