@@ -1,4 +1,3 @@
-\let\lheader\rheader
 \datethis
 
 @s delete normal @q unreserve a C++ keyword @>
