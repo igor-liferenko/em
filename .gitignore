@@ -1,10 +1,9 @@
 em
 *.o
 *.c
-*.dvi
 *.idx
 *.log
-*.ps
+*.pdf
 *.scn
 *.tex
 *.toc
