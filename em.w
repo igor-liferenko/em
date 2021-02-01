@@ -709,11 +709,19 @@ point_t lncolumn(point_t offset, int column)
 @ @<Procedures@>=
 void modeline(void)
 {
-       standout();
-       move(LINES - 1, 0);
-       addstr(b_fname);
-       standend();
-       clrtoeol();
+  standout();
+  move(LINES - 1, 0);
+  for (int k = 0, len; k < strlen(b_fname); k += len) {
+    wchar_t wc;
+    len = mbtowc(&wc, b_fname+k, MB_CUR_MAX);
+    cchar_t my_cchar;
+    memset(&my_cchar, 0, sizeof my_cchar);
+    my_cchar.chars[0] = wc;
+    my_cchar.chars[1] = L'\0';
+    add_wch(&my_cchar);
+  }
+  standend();
+  clrtoeol();
 }
 
 @ There is indication of pre-existing search, which is done by hiding the cursor.
@@ -1540,7 +1548,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!realloc|, |@!getenv| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <assert.h> /* |@!assert| */
-#include <ncursesw/curses.h> /* |@!add_wch|, |@!addstr|, |@!addwstr|, |@!chars|, |@!clrtoeol|,
+#include <ncursesw/curses.h> /* |@!add_wch|, |@!addwstr|, |@!chars|, |@!clrtoeol|,
   |@!curs_set|, |@!COLS|, |@!endwin|,
   |@!FALSE|, |@!get_wch|, |@!initscr|, |@!keypad|, |@!KEY_BACKSPACE|,
   |@!KEY_RESIZE|,
