@@ -1540,14 +1540,11 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 }
 
 @ @<Header files@>=
-/* TODO: sort alphabetically */
-@^TODO@>
 /* TODO: get rid of WEOF */
 @^TODO@>
-#include <stdlib.h> /* |@!malloc|, |@!mkstemp|, |@!exit|, |@!EXIT_FAILURE|,
-  |@!realloc|, |@!getenv| */
-#include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <assert.h> /* |@!assert| */
+#include <limits.h> /* |@!PATH_MAX| */
+#include <locale.h> /* |@!LC_CTYPE|, |@!setlocale| */
 #include <ncursesw/curses.h> /* |@!add_wch|, |@!addwstr|, |@!chars|, |@!clrtoeol|,
   |@!curs_set|, |@!COLS|, |@!endwin|,
   |@!FALSE|, |@!get_wch|, |@!initscr|, |@!keypad|, |@!KEY_BACKSPACE|,
@@ -1560,16 +1557,17 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!stdscr|, |@!TRUE|, |@!wunctrl|,
   |@!KEY_CODE_YES| */
 #include <pwd.h> /* |@!pw_uid|, |@!pw_gid|, |@!getpwnam| */
+#include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <stdio.h> /* |@!fclose|, |@!fgets|, |@!fileno|, |@!snprintf|, |@!fopen|,
   |@!fprintf|, |@!sscanf|, |@!wprintf| */
-#include <locale.h> /* |@!LC_CTYPE|, |@!setlocale| */
+#include <stdlib.h> /* |@!malloc|, |@!mkstemp|, |@!exit|, |@!EXIT_FAILURE|,
+  |@!realloc|, |@!getenv| */
+#include <string.h> /* |@!strncmp|, |@!memset|, |@!strchr|, |@!strlen|, |@!strstr| */
+#include <sys/wait.h> /* |@!wait| */
+#include <unistd.h> /* |@!close|, |@!execl|, |@!fork|, |@!unlink|, |@!readlink|, |@!fchown|,
+  |@!getuid| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!vwprintf|,
   |@!wcslen|, |@!WEOF| */
 #include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
-#include <string.h> /* |@!strncmp|, |@!memset|, |@!strchr|, |@!strlen|, |@!strstr| */
-#include <sys/wait.h> /* |@!wait| */
-#include <limits.h> /* |@!PATH_MAX| */
-#include <unistd.h> /* |@!close|, |@!execl|, |@!fork|, |@!unlink|, |@!readlink|, |@!fchown|,
-  |@!getuid| */
 
 @* Index.
