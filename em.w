@@ -1545,29 +1545,25 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #include <assert.h> /* |@!assert| */
 #include <limits.h> /* |@!PATH_MAX| */
 #include <locale.h> /* |@!LC_CTYPE|, |@!setlocale| */
-#include <ncursesw/curses.h> /* |@!add_wch|, |@!addwstr|, |@!chars|, |@!clrtoeol|,
-  |@!curs_set|, |@!COLS|, |@!endwin|,
-  |@!FALSE|, |@!get_wch|, |@!initscr|, |@!keypad|, |@!KEY_BACKSPACE|,
-  |@!KEY_RESIZE|,
-  |@!KEY_BACKSPACE|, |@!KEY_RESIZE|, |@!KEY_LEFT|, |@!KEY_RIGHT|, |@!KEY_UP|,
-  |@!KEY_DOWN|, |@!KEY_HOME|,
-  |@!KEY_END|, |@!KEY_NPAGE|, |@!KEY_PPAGE|, |@!KEY_DC|, |@!KEY_BACKSPACE|, |@!LINES|,
-  |@!move|, |@!noecho|,
-  |@!nonl|, |@!noraw|, |@!raw|, |@!refresh|, |@!standend|, |@!standout|,
-  |@!stdscr|, |@!TRUE|, |@!wunctrl|,
-  |@!KEY_CODE_YES| */
-#include <pwd.h> /* |@!pw_uid|, |@!pw_gid|, |@!getpwnam| */
+#include <ncursesw/curses.h> /* |@!COLS|, |@!FALSE|, |@!KEY_BACKSPACE|, |@!KEY_BACKSPACE|,
+  |@!KEY_BACKSPACE|, |@!KEY_CODE_YES|, |@!KEY_DC|, |@!KEY_DOWN|, |@!KEY_END|, |@!KEY_HOME|,
+  |@!KEY_LEFT|, |@!KEY_NPAGE|, |@!KEY_PPAGE|, |@!KEY_RESIZE|, |@!KEY_RESIZE|, |@!KEY_RIGHT|,
+  |@!KEY_UP|, |@!LINES|, |@!TRUE|, |@!add_wch|, |@!addwstr|, |@!chars|, |@!clrtoeol|,
+  |@!curs_set|, |@!endwin|, |@!get_wch|, |@!initscr|, |@!keypad|, |@!move|, |@!noecho|,
+  |@!nonl|, |@!noraw|, |@!raw|, |@!refresh|, |@!standend|, |@!standout|, |@!stdscr|,
+  |@!wunctrl| */
+#include <pwd.h> /* |@!getpwnam|, |@!pw_gid|, |@!pw_uid| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
-#include <stdio.h> /* |@!fclose|, |@!fgets|, |@!fileno|, |@!snprintf|, |@!fopen|,
-  |@!fprintf|, |@!sscanf|, |@!wprintf| */
-#include <stdlib.h> /* |@!malloc|, |@!mkstemp|, |@!exit|, |@!EXIT_FAILURE|,
-  |@!realloc|, |@!getenv| */
-#include <string.h> /* |@!strncmp|, |@!memset|, |@!strchr|, |@!strlen|, |@!strstr| */
+#include <stdio.h> /* |@!fclose|, |@!fgets|, |@!fileno|, |@!fopen|, |@!fprintf|,
+  |@!snprintf|, |@!sscanf|, |@!wprintf| */
+#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!exit|, |@!getenv|, |@!malloc|, |@!mkstemp|,
+  |@!realloc| */
+#include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp|, |@!strstr| */
 #include <sys/wait.h> /* |@!wait| */
-#include <unistd.h> /* |@!close|, |@!execl|, |@!fork|, |@!unlink|, |@!readlink|, |@!fchown|,
-  |@!getuid| */
-#include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!vwprintf|,
-  |@!wcslen|, |@!WEOF| */
+#include <unistd.h> /* |@!close|, |@!execl|, |@!fchown|, |@!fork|, |@!getuid|,
+  |@!readlink|, |@!unlink| */
+#include <wchar.h> /* |@!WEOF|, |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!vwprintf|,
+  |@!wcslen| */
 #include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
 
 @* Index.
