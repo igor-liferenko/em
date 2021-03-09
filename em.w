@@ -513,10 +513,11 @@ And do that if file was unchanged, just quit without doing anything to the file.
 
 @<Write file@>=
 point_t n;
-for (n = 0; n < length; n++)
+for (n = 0; n < length; n++) {
   fputwc(*(b_egap + n), fp);
   if (ferror(fp))
     break;
+}
 if (n != length)
   msg(L"Failed to write file \"%s\".", b_fname);
 
