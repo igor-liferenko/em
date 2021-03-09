@@ -514,7 +514,8 @@ And do that if file was unchanged, just quit without doing anything to the file.
 @<Write file@>=
 point_t n;
 for (n = 0; n < length; n++)
-  if (fputwc(*(b_egap + n), fp) == WEOF)
+  fputwc(*(b_egap + n), fp);
+  if (ferror(fp))
     break;
 if (n != length)
   msg(L"Failed to write file \"%s\".", b_fname);
@@ -558,8 +559,11 @@ wchar_t c;
 int i = 0;
 while (1) {
   buf_end = buf;
-  while (buf_end - buf < CHUNK && (c = fgetwc(fp)) != WEOF)
+  while (buf_end - buf < CHUNK) {
+    c = fgetwc(fp);
+    if (feof(fp) || ferror(fp)) break;
     *buf_end++ = c;
+  }
   if (buf_end == buf) break; /* end of file */
   @<Copy contents of |buf| to editing buffer@>@;
 }
@@ -1540,8 +1544,6 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 }
 
 @ @<Header files@>=
-/* TODO: get rid of WEOF */
-@^TODO@>
 #include <assert.h> /* |@!assert| */
 #include <limits.h> /* |@!PATH_MAX| */
 #include <locale.h> /* |@!LC_CTYPE|, |@!setlocale| */
@@ -1562,7 +1564,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #include <sys/wait.h> /* |@!wait| */
 #include <unistd.h> /* |@!close|, |@!execl|, |@!fchown|, |@!fork|, |@!getuid|,
   |@!readlink|, |@!unlink| */
-#include <wchar.h> /* |@!WEOF|, |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!vwprintf|,
+#include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!vwprintf|,
   |@!wcslen| */
 #include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
 
