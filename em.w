@@ -512,14 +512,13 @@ And do that if file was unchanged, just quit without doing anything to the file.
 @^TODO@>
 
 @<Write file@>=
-point_t n;
-for (n = 0; n < length; n++) {
+for (point_t n = 0; n < length; n++) {
   fputwc(*(b_egap + n), fp);
-  if (ferror(fp))
+  if (ferror(fp)) {
+    msg(L"Failed to write file \"%s\".", b_fname);
     break;
+  }
 }
-if (n != length)
-  msg(L"Failed to write file \"%s\".", b_fname);
 
 @*1 Reading file into buffer.
 
