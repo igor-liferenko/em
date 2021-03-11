@@ -561,7 +561,8 @@ while (1) {
   buf_end = buf;
   while (buf_end - buf < CHUNK) {
     c = fgetwc(fp);
-    if (feof(fp) || ferror(fp)) break;
+    if (ferror(fp)) fatal(L"File is not UTF-8\n");
+    if (feof(fp)) break;
     *buf_end++ = c;
   }
   if (buf_end == buf) break; /* end of file */
