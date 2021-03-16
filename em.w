@@ -1,9 +1,11 @@
 \datethis
 
+@s cchar_t int
 @s delete normal @q unreserve a C++ keyword @>
 @s new normal @q unreserve a C++ keyword @>
+@s passwd int
+@s pid_t int
 @s uint8_t int
-@s cchar_t int
 
 \font\emfont=manfnt
 \def\EM/{{\emfont EM}}
@@ -441,26 +443,12 @@ if (readlink(tmpfname, b_absname, sizeof b_absname) == -1)
   fatal(L"Could not get absolute path.\n");
 if (b_absname[sizeof b_absname - 1]) fatal(L"Buffer `b_absname' too small.\n");
 
-@ TODO: if file does not exist, do not create it right away - create it only in
-|@<Write file@>|. For this remove fopen..."w" and when saving file ensure that
-a check is done if file exists and create it and if it cannot be created ensure that
-buffer is not closed and a warning in message line is printed, allowing to input another file
-name.
-@^TODO@>
-
-`\.{r+}' is used instead of `\.{r}' to be able to detect if we are trying to open a
-directory. The matter is that |fopen| fails on a directory only if mode requires write access.
-@^system dependencies@>
-
-TODO: BUT we have a problem with `\.{r+}' if we try to open a read-only file !!! Think how
-to reconcile these. HINT: check if a file is a directory before opening a file - see
-https://stackoverflow.com/a/4553076
-@^TODO@>
-
-@<Open file@>=
-if ((fp = fopen(b_fname, "r+")) == NULL)
-  if ((fp = fopen(b_fname, "w")) == NULL) /* create file if it does not exist */
-    fatal(L"Failed to open file \"%s\".\n", b_fname);
+@ @<Open file@>=
+if ((fp = fopen(b_fname, "r+")) == NULL) {
+  if (errno != ENOENT) fatal(L"%m\n");
+  if ((fp = fopen(b_fname, "w+")) == NULL) /* create file if it does not exist */
+    fatal(L"%m\n");
+}
 
 @ @<Close file@>=
 fclose(fp);
@@ -545,7 +533,7 @@ to editing buffer.
 wchar_t buf[CHUNK]; /* we read the input into this array */
 wchar_t *buf_end; /* where the next char goes */
 
-@ If we open non-existent file, |ferror| will be true, but |feof| will be false, so
+@ If we open non-existent file, |ferror| will be true (\.{EBADF}), but |feof| will be false, so
 both must be checked before breaking the loop.
 
 @<Read file@>=
@@ -556,6 +544,7 @@ while (1) {
   while (buf_end - buf < CHUNK) {
     c = fgetwc(fp);
     if (ferror(fp) && errno == EILSEQ) fatal(L"File is not UTF-8\n");
+    if (ferror(fp)) fatal(L"errno: %d, %m\n", errno);
     if (ferror(fp) || feof(fp)) break;
     *buf_end++ = c;
   }
@@ -1258,7 +1247,7 @@ int main(int argc, char **argv)
 
 @ If you call \.{em} without arguments, everything will be stored to
 a unique temporary file, whose name will be printed when you exit \.{em}.
-@s pid_t int
+
 @<Open temporary file@>= {
   char tmpl[] = "/tex_tmp/tmp-XXXXXX";
                 int fd = mkstemp(tmpl);
@@ -1369,7 +1358,7 @@ argument - make proper error message in such case */
 
 @ If the program is run under \.{sudo},
 then after changing |DB_FILE| change its ownership back to the user who invoked \.{sudo}.
-@s passwd int
+
 @<Assure...@>=
 struct passwd *sudo;
 if (getenv("SUDO_USER")!=NULL)
