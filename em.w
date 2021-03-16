@@ -1525,7 +1525,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 
 @ @<Header files@>=
 #include <assert.h> /* |@!assert| */
-#include <errno.h> /* |@!EILSEQ|, |@!errno| */
+#include <errno.h> /* |@!ENOENT|, |@!errno| */
 #include <limits.h> /* |@!PATH_MAX| */
 #include <locale.h> /* |@!LC_CTYPE|, |@!setlocale| */
 #include <ncursesw/curses.h> /* |@!COLS|, |@!FALSE|, |@!KEY_BACKSPACE|, |@!KEY_BACKSPACE|,
