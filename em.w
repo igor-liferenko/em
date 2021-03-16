@@ -5,6 +5,7 @@
 @s new normal @q unreserve a C++ keyword @>
 @s passwd int
 @s pid_t int
+@s stat int
 @s uint8_t int
 
 \font\emfont=manfnt
@@ -279,7 +280,7 @@ int msgflag;
 messages are treated specially.
 
 @<Procedures@>=
-#define search_msg(...) @,@,@, msg(__VA_ARGS__); @+ \
+#define search_msg(...) @,@,@, msg(@t}\begingroup\def\vb#1{\.{#1}\endgroup@>@=__VA_ARGS__@>); @+ \
   case_sensitive_search(case_sensitive_search_flag);
 
 void msg(wchar_t *msg, ...)
@@ -444,6 +445,8 @@ if (readlink(tmpfname, b_absname, sizeof b_absname) == -1)
 if (b_absname[sizeof b_absname - 1]) fatal(L"Buffer `b_absname' too small.\n");
 
 @ @<Open file@>=
+struct stat sb;
+if (lstat(b_fname, &sb) == 0 && S_ISLNK(sb.st_mode)) fatal(L"File is a symlink\n");
 if ((fp = fopen(b_fname, "r+")) == NULL) {
   if (errno != ENOENT) fatal(L"%m\n");
   if ((fp = fopen(b_fname, "w+")) == NULL) /* create file if it does not exist */
@@ -695,7 +698,7 @@ void modeline(void)
 {
   standout();
   move(LINES - 1, 0);
-  for (int k = 0, len; k < strlen(b_fname); k += len) {
+  for (int k = 0, @!len; k < strlen(b_fname); k += len) {
     wchar_t wc;
     len = mbtowc(&wc, b_fname+k, MB_CUR_MAX);
     cchar_t my_cchar;
@@ -1529,7 +1532,8 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #include <limits.h> /* |@!PATH_MAX| */
 #include <locale.h> /* |@!LC_CTYPE|, |@!setlocale| */
 #include <ncursesw/curses.h> /* |@!COLS|, |@!FALSE|, |@!KEY_BACKSPACE|, |@!KEY_BACKSPACE|,
-  |@!KEY_BACKSPACE|, |@!KEY_CODE_YES|, |@!KEY_DC|, |@!KEY_DOWN|, |@!KEY_END|, |@!KEY_HOME|,
+  |@!KEY_BACKSPACE|, |@!KEY_CODE_YES|, |@!KEY_DC|, |@!KEY_DOWN|, |@!KEY_END|, |@!KEY_ENTER|,
+  |@!KEY_HOME|, |@!KEY_IC|,
   |@!KEY_LEFT|, |@!KEY_NPAGE|, |@!KEY_PPAGE|, |@!KEY_RESIZE|, |@!KEY_RESIZE|, |@!KEY_RIGHT|,
   |@!KEY_UP|, |@!LINES|, |@!TRUE|, |@!add_wch|, |@!addwstr|, |@!chars|, |@!clrtoeol|,
   |@!curs_set|, |@!endwin|, |@!get_wch|, |@!initscr|, |@!keypad|, |@!move|, |@!noecho|,
@@ -1537,11 +1541,15 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!wunctrl| */
 #include <pwd.h> /* |@!getpwnam|, |@!pw_gid|, |@!pw_uid| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
-#include <stdio.h> /* |@!fclose|, |@!fgets|, |@!fileno|, |@!fopen|, |@!fprintf|,
+#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fileno|, |@!fopen|,
+  |@!fprintf|,
   |@!snprintf|, |@!sscanf|, |@!wprintf| */
-#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!exit|, |@!getenv|, |@!malloc|, |@!mkstemp|,
+#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!EXIT_SUCCESS|, |@!MB_CUR_MAX|, |@!exit|, |@!getenv|,
+  |@!malloc|,
+  |@!mbtowc|, |@!mkstemp|,
   |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp|, |@!strstr| */
+#include <sys/stat.h> /* |@!S_ISLNK|, |@!lstat| */
 #include <sys/wait.h> /* |@!wait| */
 #include <unistd.h> /* |@!close|, |@!execl|, |@!fchown|, |@!fork|, |@!getuid|,
   |@!readlink|, |@!unlink| */
