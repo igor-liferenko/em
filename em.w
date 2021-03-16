@@ -533,19 +533,15 @@ to editing buffer.
 wchar_t buf[CHUNK]; /* we read the input into this array */
 wchar_t *buf_end; /* where the next char goes */
 
-@ If we open non-existent file, |ferror| will be true (\.{EBADF}), but |feof| will be false, so
-both must be checked before breaking the loop.
-
-@<Read file@>=
+@ @<Read file@>=
 wchar_t c;
 int i = 0;
 while (1) {
   buf_end = buf;
   while (buf_end - buf < CHUNK) {
     c = fgetwc(fp);
-    if (ferror(fp) && errno == EILSEQ) fatal(L"File is not UTF-8\n");
-    if (ferror(fp)) fatal(L"errno: %d, %m\n", errno);
-    if (ferror(fp) || feof(fp)) break;
+    if (ferror(fp)) fatal(L"File is not UTF-8\n");
+    if (feof(fp)) break;
     *buf_end++ = c;
   }
   if (buf_end == buf) break; /* end of file */
