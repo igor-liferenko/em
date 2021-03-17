@@ -5,7 +5,7 @@
 @s new normal @q unreserve a C++ keyword @>
 @s passwd int
 @s pid_t int
-@s stat int
+@s stаt int
 @s uint8_t int
 
 \font\emfont=manfnt
