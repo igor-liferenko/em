@@ -445,7 +445,7 @@ if (readlink(tmpfname, b_absname, sizeof b_absname) == -1)
 if (b_absname[sizeof b_absname - 1]) fatal(L"Buffer `b_absname' too small.\n");
 
 @ @<Open file@>=
-struct stat sb;
+struct stаt sb;
 if (lstat(b_fname, &sb) == 0 && S_ISLNK(sb.st_mode)) fatal(L"File is a symlink\n");
 if ((fp = fopen(b_fname, "r+")) == NULL) {
   if (errno != ENOENT) fatal(L"%m\n");
