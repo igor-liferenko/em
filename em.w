@@ -693,7 +693,11 @@ point_t lncolumn(point_t offset, int column)
  return offset;
 }
 
-@ @<Procedures@>=
+@ FIXME: find out if using \\{addstr} in combination with \\{addwstr} can
+be dangerous and use `\\{addstr}(\\{b\_fname});' between \\{move} and \\{standend}
+instead of the `for' loop
+
+@<Procedures@>=
 void modeline(void)
 {
   standout();
