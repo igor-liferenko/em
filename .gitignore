@@ -3,6 +3,8 @@ em
 *.c
 *.idx
 *.log
+*.arg
+*.dvi
 *.pdf
 *.scn
 *.tex
