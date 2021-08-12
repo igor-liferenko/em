@@ -693,9 +693,10 @@ point_t lncolumn(point_t offset, int column)
  return offset;
 }
 
-@ FIXME: find out if using \\{addstr} in combination with \\{addwstr} can
-be dangerous and use `\\{addstr}(\\{b\_fname});' between \\{move} and \\{standend}
+@ FIXME: find out if using `addstr' in combination with `addwstr' can
+be dangerous and use \hfil\break `addstr(b\_fname);' between \\{move} and \\{standend}
 instead of the `for' loop
+(mixing addstr and addwstr may be dangerous --- like printf and wprintf)
 
 @<Procedures@>=
 void modeline(void)
