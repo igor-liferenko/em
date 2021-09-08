@@ -1,4 +1,5 @@
 \datethis
+\nocon
 
 @s cchar_t int
 @s delete normal @q unreserve a C++ keyword @>
