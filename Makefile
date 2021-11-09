@@ -9,4 +9,4 @@ clean:
 	@git clean -X -d -f
 
 imgs:
-	@mp em
+	@mpost em
