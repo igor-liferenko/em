@@ -440,6 +440,7 @@ char b_absname[PATH_MAX+1];
 char tmpfname[30];
 if (snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fileno(fp)) >= sizeof tmpfname)
   fatal(L"Buffer `tmpfname' too small.\n");
+memset(b_absname, 0, sizeof b_absname);
 if (readlink(tmpfname, b_absname, sizeof b_absname) == -1)
   fatal(L"Could not get absolute path.\n");
 if (b_absname[sizeof b_absname - 1]) fatal(L"Buffer `b_absname' too small.\n");
@@ -1262,6 +1263,7 @@ a unique temporary file, whose name will be printed when you exit \.{em}.
   char tmpfname[30];
   if (snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fd) >= sizeof tmpfname)
                   wprintf(L"Buffer `tmpfname' too small.\n"), exit(EXIT_FAILURE);
+  memset(b_absname, 0, sizeof b_absname);
   if (readlink(tmpfname, b_absname, sizeof b_absname - 1) == -1)
     wprintf(L"Could not get absolute path.\n"), exit(EXIT_FAILURE);
   if (b_absname[sizeof b_absname - 1])
