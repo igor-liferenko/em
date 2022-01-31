@@ -7,7 +7,8 @@ I have taken the C source from
 and converted it to CWEB, then added UTF-8
 support (using wide-character API).
 To build it, just type `make'. You will need
-ctangle/cweave binaries ("texlive-binaries" package on Debian).
+ctangle/cweave binaries (ftp://ftp.cs.stanford.edu/pub/cweb/cweb.tar.gz)
+and libncursesw5.
 
 I am indepted to Hugh Barney on whose initial ideas and code
 EM is based.
