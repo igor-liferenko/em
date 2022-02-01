@@ -6,34 +6,15 @@ I have taken the C source from
 
 and converted it to CWEB, then added UTF-8
 support (using wide-character API).
-To build it, just type `make'. You will need:
+
+You will need:
 
   * ctangle (ftp://ftp.cs.stanford.edu/pub/cweb/cweb.tar.gz)
   * libncursesw5-dev
   * libtinfo-dev
 
-I am indepted to Hugh Barney on whose initial ideas and code
-EM is based.
+To build it, run:
 
-I also want to express my gratitude to Silvio Levy and
-Donald Knuth for CWEB.
-
------------------------------------------------------------
-
-For those, who are not fond of CWEB, the following may be used
-to reformat tangled output:
-
-perl -i -pe 's!/\*.*\*/$!\n$&!' em.c
-perl -i -ne 'if(/^#line \d+/){undef$prev}else{if(defined$prev){print$prev}$prev=$_}if(eof){print unless m!^/\*.*\*/$!}' em.c # WARNING: this works wrong
-cat -s em.c | indent -nce -nut -i2 -kr > em.tmp && mv em.tmp em.c
-perl -i -0777 -pe 's/^\s*//' em.c
-perl -i -0777 -pe 's/\s+\\(?=\n\n)//g' em.c; perl -i -0777 -pe 's/\s+\\(?=\n\n)//g' em.c
-
-(WARNING: valuable documentation from .w file will be skipped from .c file, because it is intended
-only for the eyes of the C compiler)
-
---
-
-April 2017.
-
-Igor Liferenko
+  sed -i 's/struct stаt/struct stat/' em.w
+  ctangle em
+  make em
