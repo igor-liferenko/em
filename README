@@ -7,14 +7,16 @@ I have taken the C source from
 and converted it to CWEB, then added UTF-8
 support (using wide-character API).
 
+The main feature of EM is that when file is opened again,
+the screen is in the same state as when it was closed.
+
 You will need:
 
-  * ctangle (ftp://ftp.cs.stanford.edu/pub/cweb/cweb.tar.gz)
-  * libncursesw5-dev
-  * libtinfo-dev
+  libncursesw5-dev
+  libtinfo-dev
 
 To build it, run:
 
-  sed -i 's/struct stаt/struct stat/' em.w
+  sed -i 's/struct st\xD0\xB0t/struct stat/' em.w
   ctangle em
   make em
