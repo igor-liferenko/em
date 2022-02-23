@@ -17,6 +17,5 @@ You will need:
 
 To build it, run:
 
-  sed -i 's/struct st\xD0\xB0t/struct stat/' em.w
-  ctangle em
+  ctangle em && sed -i 's/stXD0XB0t/stat/' em.c
   make em
