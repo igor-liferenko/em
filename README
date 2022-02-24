@@ -17,5 +17,5 @@ You will need:
 
 To build it, run:
 
-  ctangle em && sed -i 's/stXD0XB0t/stat/' em.c
+  ctangle em && sed -i s/stXD0XB0t/stat/ em.c
   make em
