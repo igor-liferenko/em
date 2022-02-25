@@ -1479,7 +1479,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   switch (c) {
  case 0x18:
 #if 0
-  /*|@<Remove lock and save cursor@>|*/
+  @<Remove lock and save cursor@>
   done = 1; /* quit without saving */
 #endif
   break;
