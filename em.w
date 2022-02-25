@@ -1208,8 +1208,6 @@ int main(int argc, char **argv)
 {
  setlocale(LC_CTYPE, "C.UTF-8");
 
- if (argc == 1) @<Open temporary file@>@;
-
  if (initscr() == NULL) exit(EXIT_FAILURE); /* screen must be initialized as early as
           possible - in order to be able to use |fatal| */
 
@@ -1248,38 +1246,6 @@ int main(int argc, char **argv)
  endwin(); /* end curses mode */
 
  return 0;
-}
-
-@ If you call \.{em} without arguments, everything will be stored to
-a unique temporary file, whose name will be printed when you exit \.{em}.
-
-@<Open temporary file@>= {
-  char tmpl[] = "/tex_tmp/tmp-XXXXXX";
-                int fd = mkstemp(tmpl);
-                if (fd == -1) {
-                        wprintf(L"mkstemp: %m\n");
-                        exit(EXIT_FAILURE);
-                }
-  char tmpfname[30];
-  if (snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fd) >= sizeof tmpfname)
-                  wprintf(L"Buffer `tmpfname' too small.\n"), exit(EXIT_FAILURE);
-  memset(b_absname, 0, sizeof b_absname);
-  if (readlink(tmpfname, b_absname, sizeof b_absname - 1) == -1)
-    wprintf(L"Could not get absolute path.\n"), exit(EXIT_FAILURE);
-  if (b_absname[sizeof b_absname - 1])
-                  wprintf(L"Buffer `b_absname' too small.\n"), exit(EXIT_FAILURE);
-                close(fd);
-
-                pid_t pid;
-                if ((pid = fork()) == -1) wprintf(L"fork: %m\n"), exit(EXIT_FAILURE);
-                if (pid == 0) {
-   execl("/usr/local/bin/em", "em", b_absname, (char *) NULL);
-   wprintf(L"execl: %m\n");
-   exit(EXIT_FAILURE);
-         }
-                wait(NULL);
-                wprintf(L"%s\n", b_absname);
-                exit(EXIT_SUCCESS);
 }
 
 @ Make {\sl ncurses\/} automatically
