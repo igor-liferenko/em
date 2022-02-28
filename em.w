@@ -1207,8 +1207,8 @@ dispmsg();
 int main(int argc, char **argv)
 {
   assert(argc == 2 || argc == 3);
-  int lineno = -1;
-  if (argc == 3) assert(sscanf(argv[2], "%u", &lineno) == 1);
+  int lineno = 0;
+  if (argc == 3) assert(sscanf(argv[2], "%d", &lineno) == 1);
   assert(initscr() != NULL);
   setlocale(LC_CTYPE, "C.UTF-8");
 
@@ -1219,7 +1219,7 @@ int main(int argc, char **argv)
  @<Restore cursor from |DB_FILE|@>@;
  @<Read file@>@;
  @<Close file@>@;
- if (lineno != -1) @<Move cursor to |lineno|@>@;
+ if (lineno > 0) @<Move cursor to |lineno|@>@;
  else @<Ensure that restored position is inside buffer@>;
  @<Set |b_epage|...@>@;
 
