@@ -1206,16 +1206,11 @@ dispmsg();
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
- setlocale(LC_CTYPE, "C.UTF-8");
-
- if (initscr() == NULL) exit(EXIT_FAILURE); /* screen must be initialized as early as
-          possible - in order to be able to use |fatal| */
-
- int lineno;
- if (argc >= 3) /* second argument is the line number to be shown when file is opened;
-          ignore the rest arguments, if any */
-  if (sscanf(argv[2], "%d", &lineno) != 1)
-   fatal(L"error - line number not an integer\n");
+  assert(argc == 2 || argc == 3);
+  int lineno = -1;
+  if (argc == 3) assert(sscanf(argv[2], "%u", &lineno) == 1);
+  assert(initscr() != NULL);
+  setlocale(LC_CTYPE, "C.UTF-8");
 
  FILE *fp;
  @<Save file name@>@;
@@ -1224,7 +1219,7 @@ int main(int argc, char **argv)
  @<Restore cursor from |DB_FILE|@>@;
  @<Read file@>@;
  @<Close file@>@;
- if (argc == 3) @<Move cursor to |lineno|@>@;
+ if (lineno != -1) @<Move cursor to |lineno|@>@;
  else @<Ensure that restored position is inside buffer@>;
  @<Set |b_epage|...@>@;
 
