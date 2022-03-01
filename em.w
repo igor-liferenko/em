@@ -1206,11 +1206,12 @@ dispmsg();
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
-  assert(argc == 2 || argc == 3);
   int lineno = 0;
-  if (argc == 3) assert(sscanf(argv[2], "%d", &lineno) == 1);
-  assert(initscr() != NULL);
+  if (argc == 3) lineno = atoi(argv[2]);
+
   setlocale(LC_CTYPE, "C.UTF-8");
+
+  assert(initscr() != NULL);
 
  FILE *fp;
  @<Save file name@>@;
