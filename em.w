@@ -437,13 +437,10 @@ is the destination of the symlink \.{/proc/self/fd/<file descriptor>}.
 char b_absname[PATH_MAX+1];
 
 @ @<Get absolute file name@>=
-char tmpfname[30];
-if (snprintf(tmpfname, sizeof tmpfname, "/proc/self/fd/%d", fileno(fp)) >= sizeof tmpfname)
-  fatal(L"Buffer `tmpfname' too small.\n");
+char tmp[30];
+assert(snprintf(tmp, sizeof tmp, "/proc/self/fd/%d", fileno(fp)) < sizeof tmp);
 memset(b_absname, 0, sizeof b_absname);
-if (readlink(tmpfname, b_absname, sizeof b_absname) == -1)
-  fatal(L"Could not get absolute path.\n");
-if (b_absname[sizeof b_absname - 1]) fatal(L"Buffer `b_absname' too small.\n");
+assert(readlink(tmp, b_absname, sizeof b_absname) != -1 && b_absname[sizeof b_absname - 1] == 0);
 
 @ @<Open file@>=
 struct stаt sb;
