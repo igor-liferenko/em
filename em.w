@@ -434,13 +434,13 @@ is the destination of the symlink \.{/proc/self/fd/<file descriptor>}.
 @^system dependencies@>
 
 @<Global...@>=
-char b_absname[PATH_MAX+1];
+char absname[PATH_MAX+1];
 
 @ @<Get absolute file name@>=
-char tmp[30];
-assert(snprintf(tmp, sizeof tmp, "/proc/self/fd/%d", fileno(fp)) < sizeof tmp);
-memset(b_absname, 0, sizeof b_absname);
-assert(readlink(tmp, b_absname, sizeof b_absname) != -1 && b_absname[sizeof b_absname - 1] == 0);
+char symname[30];
+assert(snprintf(symname, sizeof symname, "/proc/self/fd/%d", fileno(fp)) < sizeof symname);
+memset(absname, 0, sizeof absname);
+assert(readlink(symname, absname, sizeof absname) != -1 && absname[sizeof absname - 1] == 0);
 
 @ @<Open file@>=
 struct stаt sb;
@@ -1300,11 +1300,11 @@ if ((db_out=fopen(DB_FILE,"w"))==NULL) {
 }
 int file_is_locked = 0;
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
-  if (strlen(b_absname) == (strchr(db_line,' ')-db_line) && /* TODO: check that filename
+  if (strlen(absname) == (strchr(db_line,' ')-db_line) && /* TODO: check that filename
   does not contain spaces before opening it */
 @^TODO@>
-      strncmp(db_line, b_absname, strlen(b_absname)) == 0) {
-      if (sscanf(db_line+strlen(b_absname), "%ld %ld", &b_point, &b_page) != 2)
+      strncmp(db_line, absname, strlen(absname)) == 0) {
+      if (sscanf(db_line+strlen(absname), "%ld %ld", &b_point, &b_page) != 2)
         file_is_locked = 1;
     continue;
   }
@@ -1312,7 +1312,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
 }
 /* TODO: fix bug that if x is opened after xy, xy disappears from em.db */
 fclose(db_in);
-fprintf(db_out,"%s lock\n",b_absname);
+fprintf(db_out,"%s lock\n",absname);
 @<Assure correct ownership of |DB_FILE|@>@;
 fclose(db_out);
 if (file_is_locked)
@@ -1363,13 +1363,13 @@ if ((db_out=fopen(DB_FILE,"w"))==NULL) {
   fatal(L"Could not open DB file for writing: %m\n");
 }
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
-  if (strncmp(db_line, b_absname, strlen(b_absname)) == 0)
+  if (strncmp(db_line, absname, strlen(absname)) == 0)
     continue;
   fprintf(db_out,"%s",db_line);
 }
 fclose(db_in);
-if (strstr(b_absname,"COMMIT_EDITMSG")==NULL)
-  fprintf(db_out,"%s %ld %ld\n",b_absname,b_point,b_page);
+if (strstr(absname,"COMMIT_EDITMSG")==NULL)
+  fprintf(db_out,"%s %ld %ld\n",absname,b_point,b_page);
 @<Assure...@>@;
 fclose(db_out);
 
