@@ -16,3 +16,7 @@ To build it, run:
 
   ctangle em && sed -i s/stXD0XB0t/stat/ em.c
   make em
+
+The feature of this editor is that going to beginning
+and end of line uses entire line, and going to previous
+line and next line uses line as it is shown on screen.
