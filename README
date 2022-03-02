@@ -7,9 +7,6 @@ I have taken the C source from
 and converted it to CWEB, then added UTF-8
 support (using wide-character API).
 
-The main feature of EM is that when file is opened again,
-the screen is in the same state as when it was closed.
-
 You will need:
 
   libncursesw5-dev
