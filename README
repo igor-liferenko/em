@@ -1,0 +1,18 @@
+EM is a UTF-8 capable text editor, written in CWEB.
+
+I have taken the C source from
+
+    http://github.com/hughbarney/zep
+
+and converted it to CWEB, then added UTF-8
+support (using wide-character API).
+
+You will need:
+
+  libncursesw5-dev
+  libtinfo-dev
+
+To build it, run:
+
+  ctangle em && sed -i s/stXD0XB0t/stat/ em.c
+  make em
