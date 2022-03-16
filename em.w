@@ -3,7 +3,6 @@
 @s cchar_t int
 @s delete normal @q unreserve a C++ keyword @>
 @s new normal @q unreserve a C++ keyword @>
-@s passwd int
 @s pid_t int
 @s uint8_t int
 
@@ -419,13 +418,11 @@ void quit(void)
 
 @* File input/output.
 
-@ Save file name into global variable |fname| in order that it will be
-visible from procedures.
-
-@<Global...@>=
+@ @<Global...@>=
 char *fname;
+char *db_file = "/tmp/em.db", *db_file_tmp = "/tmp/em.db.tmp";
 
-@ Get absolute name of opened file to use it in |DB_FILE|.
+@ Get absolute name of opened file to use it in |db_file|.
 
 @<Global...@>=
 char absname[PATH_MAX+1];
@@ -561,10 +558,10 @@ if (i && buf[i-1] != L'\n') {
 }
 
 @*1 File locking. Locking file is necessary to indicate that this file is already
-opened. Before we open a file, lock is created in |DB_FILE| in
+opened. Before we open a file, lock is created in |db_file| in
 |@<Restore cursor...@>| (which
 in turn is executed right before the wanted file is opened). Upon exiting
-the editor, lock is removed from |DB_FILE| in |@<Remove lock and save cursor@>|.
+the editor, lock is removed from |db_file| in |@<Remove lock and save cursor@>|.
 
 @ Reverse scan for beginning of real line containing offset.
 
@@ -1198,6 +1195,8 @@ int main(int argc, char **argv)
   if (argc == 2) fname = argv[1];
   if (argc == 3) lineno = atoi(argv[1]), fname = argv[2];
 
+  if (getuid() == 0) db_file = "/tmp/em-sudo.db", db_file_tmp = "/tmp/em-sudo.db.tmp";
+
   setlocale(LC_CTYPE, "C.UTF-8");
 
   assert(initscr() != NULL);
@@ -1205,8 +1204,8 @@ int main(int argc, char **argv)
  FILE *fp;
  @<Open file@>@;
  @<Get absolute...@>@;
- @<Restore cursor from |DB_FILE|@>@;
  @<Read file@>@;
+ @<Restore cursor from |db_file|@>@;
  @<Close file@>@;
  if (lineno > 0) @<Move cursor to |lineno|@>@;
  else @<Ensure that restored position is inside buffer@>;
@@ -1265,61 +1264,31 @@ with the same name and write the modified lines into the new file. We'll have tw
 variables.
 @^system dependencies@>
 
-@d DB_FILE "/tmp/em.db"
 @d DB_LINE_SIZE PATH_MAX + 100
 
 @ @<Global...@>=
 FILE *db_in, *db_out;
 char db_line[DB_LINE_SIZE+1];
 
-@ We do this before |@<Read file@>|, not after, because it is not necessary to free memory
-before the call to |fatal|.
-
-@<Restore cursor...@>=
-if (getenv("SUDO_USER")!=NULL && getuid()!=0)
-  fatal(L"DB_FILE must have ownership of default user, so it may be run under sudo only \
-as root\n");
-if ((db_in=fopen(DB_FILE,"a+"))==NULL) { /* |"a+"| creates empty file if it does not exist */
-  fclose(fp);
-  fatal(L"Could not open DB file in a+ mode: %m\n");
-}
-unlink(DB_FILE);
-if ((db_out=fopen(DB_FILE,"w"))==NULL) {
-  fclose(fp);
-  fclose(db_in);
-  fatal(L"Could not open DB file for writing: %m\n");
-}
-int file_is_locked = 0;
+@ @<Restore cursor...@>=
+assert((db_out = fopen(db_file_tmp, "w")) != NULL);
+if ((db_in = fopen(db_file, "r")) == NULL) goto done;
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   if (strlen(absname) == (strchr(db_line,' ')-db_line) && /* TODO: check that filename
   does not contain spaces before opening it */
 @^TODO@>
       strncmp(db_line, absname, strlen(absname)) == 0) {
-      if (sscanf(db_line+strlen(absname), "%ld %ld", &b_point, &b_page) != 2)
-        file_is_locked = 1;
+      assert(sscanf(db_line+strlen(absname), "%ld %ld", &b_point, &b_page) == 2);
     continue;
   }
   fprintf(db_out,"%s",db_line);
 }
 /* TODO: fix bug that if x is opened after xy, xy disappears from em.db */
 fclose(db_in);
+done:
 fprintf(db_out,"%s lock\n",absname);
-@<Assure correct ownership of |DB_FILE|@>@;
 fclose(db_out);
-if (file_is_locked)
-  fatal(L"File is locked.\n");
-/* FIXME: now this is printed when a directory is erroneously specified as the first
-argument - make proper error message in such case */
-@^FIXME@>
-
-@ If the program is run under \.{sudo},
-then after changing |DB_FILE| change its ownership back to the user who invoked \.{sudo}.
-
-@<Assure...@>=
-struct passwd *sudo;
-if (getenv("SUDO_USER")!=NULL)
-  if ((sudo=getpwnam(getenv("SUDO_USER")))!=NULL)
-    fchown(fileno(db_out),sudo->pw_uid,sudo->pw_gid);
+rename(db_file_tmp, db_file);
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
@@ -1330,7 +1299,7 @@ is allocated.
 
 TODO: instead of this check do this: if file is closed without saving and it was
 changed after it was opened (|if (b_flags & B_MODIFIED)|),
-saved cursor position must be the same as it was read from |DB_FILE|.
+saved cursor position must be the same as it was read from |db_file|.
 @^TODO@>
 
 @<Ensure that restored...@>=
@@ -1346,10 +1315,10 @@ b_epage=pos(b_ebuf);
 @ See |@<Restore cursor...@>| for the technique used here.
 
 @<Remove lock and save cursor@>=
-if ((db_in=fopen(DB_FILE,"r"))==NULL)
+if ((db_in=fopen(db_file,"r"))==NULL)
   fatal(L"Could not open DB file for reading: %m\n");
-unlink(DB_FILE);
-if ((db_out=fopen(DB_FILE,"w"))==NULL) {
+unlink(db_file);
+if ((db_out=fopen(db_file,"w"))==NULL) {
   fclose(db_in);
   fatal(L"Could not open DB file for writing: %m\n");
 }
@@ -1360,7 +1329,6 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
 }
 fclose(db_in);
 fprintf(db_out,"%s %ld %ld\n",absname,b_point,b_page);
-@<Assure...@>@;
 fclose(db_out);
 
 @ @<Move cursor to |lineno|@>= {
@@ -1495,16 +1463,14 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!curs_set|, |@!endwin|, |@!get_wch|, |@!initscr|, |@!keypad|, |@!move|, |@!noecho|,
   |@!nonl|, |@!noraw|, |@!raw|, |@!refresh|, |@!standend|, |@!standout|, |@!stdscr|,
   |@!wunctrl| */
-#include <pwd.h> /* |@!getpwnam|, |@!pw_gid|, |@!pw_uid| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
-#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fileno|, |@!fopen|,
-  |@!fprintf|,
-  |@!snprintf|, |@!sscanf|, |@!wprintf| */
+#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fopen|,
+  |@!fprintf|, |@!rename|, |@!snprintf|, |@!sscanf|, |@!wprintf| */
 #include <stdlib.h> /* |@!EXIT_FAILURE|, |@!EXIT_SUCCESS|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|,
-  |@!getenv|, |@!malloc|, |@!mbtowc|, |@!mkstemp|, |@!realloc| */
+  |@!malloc|, |@!mbtowc|, |@!mkstemp|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp|, |@!strstr| */
 #include <sys/wait.h> /* |@!wait| */
-#include <unistd.h> /* |@!close|, |@!execl|, |@!fchown|, |@!fork|, |@!getcwd|, |@!getuid|,
+#include <unistd.h> /* |@!close|, |@!execl|, |@!fork|, |@!getcwd|, |@!getuid|,
   |@!unlink| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!vwprintf|,
   |@!wcslen| */
