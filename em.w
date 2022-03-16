@@ -252,22 +252,6 @@ uint8_t b_flags = 0;             /* buffer flags */
 @ @<Global variables@>=
 int done;
 
-@ @<Procedures@>=
-void fatal(wchar_t *msg, ...)
-{
- va_list args;
-
- move(LINES-1, 0);
- refresh(); /* update the real screen */
- noraw();
- endwin(); /* end curses mode */
-
- va_start(args, msg);
- vwprintf(msg, args);
- va_end(args);
- exit(EXIT_FAILURE);
-}
-
 @ @d MSGBUF 512
 
 @<Global variables@>=
@@ -433,9 +417,9 @@ else assert(snprintf(absname, sizeof absname, "%s/%s", getcwd(NULL, 0), fname) <
 
 @ @<Open file@>=
 if ((fp = fopen(fname, "r+")) == NULL) {
-  if (errno != ENOENT) fatal(L"%m\n");
+  if (errno != ENOENT) printf("%m\n"), exit(EXIT_FAILURE);
   if ((fp = fopen(fname, "w+")) == NULL) /* create file if it does not exist */
-    fatal(L"%m\n");
+    printf("%m\n"), exit(EXIT_FAILURE);
 }
 
 @ @<Close file@>=
@@ -528,7 +512,7 @@ while (1) {
   buf_end = buf;
   while (buf_end - buf < CHUNK) {
     c = fgetwc(fp);
-    if (ferror(fp)) fatal(L"File is not UTF-8\n");
+    if (ferror(fp)) printf("File is not UTF-8\n"), exit(EXIT_FAILURE);
     if (feof(fp)) break;
     *buf_end++ = c;
   }
@@ -543,7 +527,7 @@ if (b_egap - b_gap < buf_end-buf && !growgap((point_t) (buf_end-buf))) { /* if g
     is not sufficient, grow gap */
   fclose(fp);
   @<Remove lock and save cursor@>@;
-  fatal(L"Failed to allocate required memory.\n");
+  printf("Failed to allocate required memory.\n"), exit(EXIT_FAILURE);
 }
 for (i = 0; i < buf_end-buf; i++)
   *b_gap++ = buf[i];
@@ -1199,14 +1183,14 @@ int main(int argc, char **argv)
 
   setlocale(LC_CTYPE, "C.UTF-8");
 
-  assert(initscr() != NULL);
-
  FILE *fp;
  @<Open file@>@;
  @<Get absolute...@>@;
- @<Read file@>@;
  @<Restore cursor from |db_file|@>@;
+ @<Read file@>@;
  @<Close file@>@;
+
+  assert(initscr() != NULL);
  if (lineno > 0) @<Move cursor to |lineno|@>@;
  else @<Ensure that restored position is inside buffer@>;
  @<Set |b_epage|...@>@;
@@ -1216,7 +1200,7 @@ int main(int argc, char **argv)
           how echo/noecho interact with cbreak and nocbreak
           (|raw|/|noraw| are almost the same as cbreak/nocbreak) */
  nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
- @<Automatically interpret ANSI control sequences@>@;
+ keypad(stdscr, TRUE);
 
  while (!done) {
   display();
@@ -1230,29 +1214,6 @@ int main(int argc, char **argv)
 
  return 0;
 }
-
-@ Make {\sl ncurses\/} automatically
-translate the escape sequences into internal codes.
-
-Escape sequences
-are generated
-by terminal
-in response to pressing on certain buttons.
-Here is an example of the mapping between escape
-sequence and keyboard button by which it is generated:
-\medskip
-{\tt\obeyspaces|0x1B 0x4F 0x48 ==| Home}
-\medskip
-
-{\sl ncurses\/} recognizes the key as \.{KEY\_HOME} because \EM/
-will call the |keypad|
-function to initialize the terminal using the {\sl smkx\/}\footnote*{see \.{terminfo(5)}}
-(the mnemonic means ``start
-keyboard-transmit mode''). That may/may not actually turn on application mode. Linux
-console's terminal description does not, xterm's does.
-
-@<Automatically interpret ANSI control sequences@>=
-keypad(stdscr, TRUE);
 
 @ DB file cannot have null char, so use |fgets|.
 We will not use \\{fgetws} here, because the conversion
@@ -1272,20 +1233,21 @@ char db_line[DB_LINE_SIZE+1];
 
 @ @<Restore cursor...@>=
 assert((db_out = fopen(db_file_tmp, "w")) != NULL);
-if ((db_in = fopen(db_file, "r")) == NULL) goto done;
-while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
-  if (strlen(absname) == (strchr(db_line,' ')-db_line) && /* TODO: check that filename
-  does not contain spaces before opening it */
+if ((db_in = fopen(db_file, "r")) != NULL) {
+  while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
+    if (strlen(absname) == (strchr(db_line,' ')-db_line) && /* TODO: check that filename
+    does not contain spaces before opening it */
 @^TODO@>
       strncmp(db_line, absname, strlen(absname)) == 0) {
-      assert(sscanf(db_line+strlen(absname), "%ld %ld", &b_point, &b_page) == 2);
-    continue;
+        if (sscanf(db_line+strlen(absname), "%ld %ld", &b_point, &b_page) != 2)
+          printf("File is locked\n"), exit(EXIT_FAILURE);
+        continue;
+    }
+    fprintf(db_out,"%s",db_line);
   }
-  fprintf(db_out,"%s",db_line);
+  /* TODO: fix bug that if x is opened after xy, xy disappears from em.db */
+  fclose(db_in);
 }
-/* TODO: fix bug that if x is opened after xy, xy disappears from em.db */
-fclose(db_in);
-done:
 fprintf(db_out,"%s lock\n",absname);
 fclose(db_out);
 rename(db_file_tmp, db_file);
@@ -1312,15 +1274,15 @@ allocated.
 @<Set |b_epage| for proper positioning of cursor on screen@>=
 b_epage=pos(b_ebuf);
 
-@ See |@<Restore cursor...@>| for the technique used here.
+@ TODO: re-do via |rename|
 
 @<Remove lock and save cursor@>=
 if ((db_in=fopen(db_file,"r"))==NULL)
-  fatal(L"Could not open DB file for reading: %m\n");
+  printf("Could not open DB file for reading: %m\n"), exit(EXIT_FAILURE);
 unlink(db_file);
 if ((db_out=fopen(db_file,"w"))==NULL) {
   fclose(db_in);
-  fatal(L"Could not open DB file for writing: %m\n");
+  printf("Could not open DB file for writing: %m\n"), exit(EXIT_FAILURE);
 }
 while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   if (strncmp(db_line, absname, strlen(absname)) == 0)
@@ -1346,18 +1308,15 @@ for (int i=(LINES-1)/2;i>0;i--)
 
 @ Here, besides reading user input, we handle resize event.
 
-If |get_wch| processed a function key, it returns |KEY_CODE_YES|.
-
 @<Handle key@>=
 wchar_t c;
 if (get_wch(&c) == KEY_CODE_YES) {
-  switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/} library
-                  while decoding escape sequences via terminfo database */
+  switch (c) {
     case KEY_RESIZE:
- continue;
+      continue;
     case KEY_LEFT:
-        left();
-        break;
+      left();
+      break;
     case KEY_RIGHT:
         right();
         break;
@@ -1394,59 +1353,59 @@ if (get_wch(&c) == KEY_CODE_YES) {
 }
 else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   switch (c) {
- case 0x18:
+    case 0x18: /* \vb{Ctrl}+\vb{X} */
 #if 0
-  @<Remove lock and save cursor@>
-  done = 1; /* quit without saving */
+      @<Remove lock and save cursor@>
+      done = 1; /* quit without saving */
 #endif
-  break;
- case 0x12: @/
-  search(0);
-  break;
- case 0x13: /* \vb{Ctrl}+\vb{S} */
-  search(1);
-  break;
- case 0x10: @/
-  up();
-  break;
- case 0x0e: @/
-  down();
-  break;
- case 0x02: @/
-  left();
-  break;
- case 0x06: @/
-  right();
-  break;
- case 0x05: @/
-  b_point = lnend(b_point);
-  break;
- case 0x01: @/
-  b_point = lnbegin(b_point);
-  break;
- case 0x04: @/
-  delete();
-  break;
- case 0x08: /* \vb{Ctrl}+\vb{[} */
-  top();
-  break;
-        case 0x1d: /* \vb{Ctrl}+\vb{]} */
-                bottom();
-                break;
- case 0x17: /* \vb{Ctrl}+\vb{W} */
-  pgup();
-  break;
- case 0x16: /* \vb{Ctrl}+\vb{V} */
-  pgdown();
-  break;
- case 0x1a: /* \vb{Ctrl}+\vb{Z} */
-  quit();
-  break;
- case 0x0d: @/
-  insert(L'\n');
-  break;
- default:
-  insert(c);
+      break;
+    case 0x12: /* \vb{Ctrl}+\vb{R} */
+      search(0);
+      break;
+    case 0x13: /* \vb{Ctrl}+\vb{S} */
+      search(1);
+      break;
+    case 0x10: /* \vb{Ctrl}+\vb{P} */
+      up();
+      break;
+    case 0x0e: /* \vb{Ctrl}+\vb{N} */
+      down();
+      break;
+    case 0x03: /* \vb{Ctrl}+\vb{C} */
+      left();
+      break;
+    case 0x06: /* \vb{Ctrl}+\vb{F} */
+      right();
+      break;
+    case 0x05: /* \vb{Ctrl}+\vb{E} */
+      b_point = lnend(b_point);
+      break;
+    case 0x01: /* \vb{Ctrl}+\vb{A} */
+      b_point = lnbegin(b_point);
+      break;
+    case 0x04: /* \vb{Ctrl}+\vb{D} */
+      delete();
+      break;
+    case 0x1f: /* \vb{Ctrl}+\vb{/} */
+      top();
+      break;
+    case 0x1d: /* \vb{Ctrl}+\vb{]} */
+      bottom();
+      break;
+    case 0x17: /* \vb{Ctrl}+\vb{W} */
+      pgup();
+      break;
+    case 0x16: /* \vb{Ctrl}+\vb{V} */
+      pgdown();
+      break;
+    case 0x1a: /* \vb{Ctrl}+\vb{Z} */
+      quit();
+      break;
+    case 0x0d: /* \vb{Ctrl}+\vb{M} */
+      insert(L'\n');
+      break;
+    default:
+      insert(c);
   }
 }
 
@@ -1465,15 +1424,14 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!wunctrl| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fopen|,
-  |@!fprintf|, |@!rename|, |@!snprintf|, |@!sscanf|, |@!wprintf| */
+  |@!fprintf|, |@!rename|, |@!snprintf|, |@!sscanf| */
 #include <stdlib.h> /* |@!EXIT_FAILURE|, |@!EXIT_SUCCESS|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|,
   |@!malloc|, |@!mbtowc|, |@!mkstemp|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp|, |@!strstr| */
 #include <sys/wait.h> /* |@!wait| */
 #include <unistd.h> /* |@!close|, |@!execl|, |@!fork|, |@!getcwd|, |@!getuid|,
   |@!unlink| */
-#include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!vwprintf|,
-  |@!wcslen| */
+#include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
 #include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
 
 @* Index.
