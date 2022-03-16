@@ -1341,9 +1341,6 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_DC:
         delete();
         break;
-    case KEY_BACKSPACE:
-        backsp();
-        break;
     case KEY_ENTER:
         insert(L'\n');
         break;
@@ -1365,13 +1362,16 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
     case 0x13: /* \vb{Ctrl}+\vb{S} */
       search(1);
       break;
+    case 0x08: /* \vb{Ctrl}+\vb{H} */
+      backsp();
+      break;
     case 0x10: /* \vb{Ctrl}+\vb{P} */
       up();
       break;
     case 0x0e: /* \vb{Ctrl}+\vb{N} */
       down();
       break;
-    case 0x03: /* \vb{Ctrl}+\vb{C} */
+    case 0x02: /* \vb{Ctrl}+\vb{B} */
       left();
       break;
     case 0x06: /* \vb{Ctrl}+\vb{F} */
