@@ -5,7 +5,6 @@
 @s new normal @q unreserve a C++ keyword @>
 @s passwd int
 @s pid_t int
-@s stаt int
 @s uint8_t int
 
 \font\emfont=manfnt
@@ -426,22 +425,16 @@ visible from procedures.
 @<Global...@>=
 char *fname;
 
-@ Get absolute name of opened file to use it in |DB_FILE|. Absolute name
-is the destination of the symlink \.{/proc/self/fd/<file descriptor>}.
-@^system dependencies@>
+@ Get absolute name of opened file to use it in |DB_FILE|.
 
 @<Global...@>=
 char absname[PATH_MAX+1];
 
 @ @<Get absolute file name@>=
-char symname[30];
-assert(snprintf(symname, sizeof symname, "/proc/self/fd/%d", fileno(fp)) < sizeof symname);
-memset(absname, 0, sizeof absname);
-assert(readlink(symname, absname, sizeof absname) != -1 && absname[sizeof absname - 1] == 0);
+if (*fname == '/') strcpy(absname, fname);
+else assert(snprintf(absname, sizeof absname, "%s/%s", getcwd(NULL, 0), fname) < sizeof absname);
 
 @ @<Open file@>=
-struct stаt sb;
-if (lstat(fname, &sb) == 0 && S_ISLNK(sb.st_mode)) fatal(L"File is a symlink\n");
 if ((fp = fopen(fname, "r+")) == NULL) {
   if (errno != ENOENT) fatal(L"%m\n");
   if ((fp = fopen(fname, "w+")) == NULL) /* create file if it does not exist */
@@ -1510,10 +1503,9 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #include <stdlib.h> /* |@!EXIT_FAILURE|, |@!EXIT_SUCCESS|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|,
   |@!getenv|, |@!malloc|, |@!mbtowc|, |@!mkstemp|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp|, |@!strstr| */
-#include <sys/stat.h> /* |@!S_ISLNK|, |@!lstat| */
 #include <sys/wait.h> /* |@!wait| */
-#include <unistd.h> /* |@!close|, |@!execl|, |@!fchown|, |@!fork|, |@!getuid|,
-  |@!readlink|, |@!unlink| */
+#include <unistd.h> /* |@!close|, |@!execl|, |@!fchown|, |@!fork|, |@!getcwd|, |@!getuid|,
+  |@!unlink| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!vwprintf|,
   |@!wcslen| */
 #include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
