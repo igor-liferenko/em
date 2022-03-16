@@ -420,14 +420,11 @@ void quit(void)
 
 @* File input/output.
 
-@ Save file name into global variable |b_fname| in order that it will be
+@ Save file name into global variable |fname| in order that it will be
 visible from procedures.
 
 @<Global...@>=
-char *b_fname;
-
-@ @<Save file name@>=
-b_fname=argv[1];
+char *fname;
 
 @ Get absolute name of opened file to use it in |DB_FILE|. Absolute name
 is the destination of the symlink \.{/proc/self/fd/<file descriptor>}.
@@ -444,10 +441,10 @@ assert(readlink(symname, absname, sizeof absname) != -1 && absname[sizeof absnam
 
 @ @<Open file@>=
 struct stаt sb;
-if (lstat(b_fname, &sb) == 0 && S_ISLNK(sb.st_mode)) fatal(L"File is a symlink\n");
-if ((fp = fopen(b_fname, "r+")) == NULL) {
+if (lstat(fname, &sb) == 0 && S_ISLNK(sb.st_mode)) fatal(L"File is a symlink\n");
+if ((fp = fopen(fname, "r+")) == NULL) {
   if (errno != ENOENT) fatal(L"%m\n");
-  if ((fp = fopen(b_fname, "w+")) == NULL) /* create file if it does not exist */
+  if ((fp = fopen(fname, "w+")) == NULL) /* create file if it does not exist */
     fatal(L"%m\n");
 }
 
@@ -468,8 +465,8 @@ the gap.
 @<Save buffer@>=
 FILE *fp;
 point_t length;
-if ((fp = fopen(b_fname, "w")) != NULL) {
-  if (fp == NULL) msg(L"Failed to open file \"%s\".", b_fname);
+if ((fp = fopen(fname, "w")) != NULL) {
+  if (fp == NULL) msg(L"Failed to open file \"%s\".", fname);
   @<Add trailing newline to non-empty buffer if it is not present@>@;
   movegap(0);
   length = (point_t) (b_ebuf - b_egap);
@@ -504,7 +501,7 @@ And do that if file was unchanged, just quit without doing anything to the file.
 for (point_t n = 0; n < length; n++) {
   fputwc(*(b_egap + n), fp);
   if (ferror(fp)) {
-    msg(L"Failed to write file \"%s\".", b_fname);
+    msg(L"Failed to write file \"%s\".", fname);
     break;
   }
 }
@@ -701,9 +698,9 @@ void modeline(void)
 {
   standout();
   move(LINES - 1, 0);
-  for (int k = 0, @!len; k < strlen(b_fname); k += len) {
+  for (int k = 0, @!len; k < strlen(fname); k += len) {
     wchar_t wc;
-    len = mbtowc(&wc, b_fname+k, MB_CUR_MAX);
+    len = mbtowc(&wc, fname+k, MB_CUR_MAX);
     cchar_t my_cchar;
     memset(&my_cchar, 0, sizeof my_cchar);
     my_cchar.chars[0] = wc;
@@ -1204,14 +1201,15 @@ dispmsg();
 int main(int argc, char **argv)
 {
   int lineno = 0;
-  if (argc == 3) lineno = atoi(argv[2]);
+  assert(argc == 2 || argc == 3);
+  if (argc == 2) fname = argv[1];
+  if (argc == 3) lineno = atoi(argv[1]), fname = argv[2];
 
   setlocale(LC_CTYPE, "C.UTF-8");
 
   assert(initscr() != NULL);
 
  FILE *fp;
- @<Save file name@>@;
  @<Open file@>@;
  @<Get absolute...@>@;
  @<Restore cursor from |DB_FILE|@>@;
@@ -1368,8 +1366,7 @@ while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
   fprintf(db_out,"%s",db_line);
 }
 fclose(db_in);
-if (strstr(absname,"COMMIT_EDITMSG")==NULL)
-  fprintf(db_out,"%s %ld %ld\n",absname,b_point,b_page);
+fprintf(db_out,"%s %ld %ld\n",absname,b_point,b_page);
 @<Assure...@>@;
 fclose(db_out);
 
@@ -1510,10 +1507,8 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fileno|, |@!fopen|,
   |@!fprintf|,
   |@!snprintf|, |@!sscanf|, |@!wprintf| */
-#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!EXIT_SUCCESS|, |@!MB_CUR_MAX|, |@!exit|, |@!getenv|,
-  |@!malloc|,
-  |@!mbtowc|, |@!mkstemp|,
-  |@!realloc| */
+#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!EXIT_SUCCESS|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|,
+  |@!getenv|, |@!malloc|, |@!mbtowc|, |@!mkstemp|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp|, |@!strstr| */
 #include <sys/stat.h> /* |@!S_ISLNK|, |@!lstat| */
 #include <sys/wait.h> /* |@!wait| */
