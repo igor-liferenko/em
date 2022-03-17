@@ -3,7 +3,6 @@
 @s cchar_t int
 @s delete normal @q unreserve a C++ keyword @>
 @s new normal @q unreserve a C++ keyword @>
-@s pid_t int
 @s uint8_t int
 
 \font\emfont=manfnt
@@ -1098,33 +1097,33 @@ void search(direction)
   while (1) {
     refresh(); /* update the real screen */
     if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
- switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/}
+      switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/}
                         library while decoding escape sequences via terminfo database */
-   case KEY_RESIZE:
-  search_msg(L"Search %ls: %ls",
-    direction==1?L"Forward":L"Backward",searchtext);
-  display();
-  continue;
-   case KEY_BACKSPACE:
-  if (cpos == 0) continue;
-  searchtext[--cpos] = L'\0';
-  search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
-  dispmsg();
-  break;
-   case KEY_IC:
-  @<Use Insert key...@>@;
-  break;
-   case KEY_ENTER:
-  if (search_failed) b_point = search_point;
-  search_active = 0;
-  return;
- }
+      case KEY_RESIZE:
+        search_msg(L"Search %ls: %ls",
+        direction==1?L"Forward":L"Backward",searchtext);
+        display();
+        continue;
+      case KEY_IC:
+        @<Use Insert key...@>@;
+        break;
+      case KEY_ENTER:
+        if (search_failed) b_point = search_point;
+        search_active = 0;
+        return;
+      }
     }
     else {
- curs_set(1);
- switch (c) {
-     case 0x0d:
-   if (search_failed) b_point = search_point;
+      curs_set(1);
+      switch (c) {
+      case 0x08:
+        if (cpos == 0) continue;
+        searchtext[--cpos] = L'\0';
+        search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
+        dispmsg();
+        break;
+      case 0x0d:
+        if (search_failed) b_point = search_point;
    search_active = 0;
    return;
      case 0x07:
@@ -1414,8 +1413,8 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #include <errno.h> /* |@!ENOENT|, |@!errno| */
 #include <limits.h> /* |@!PATH_MAX| */
 #include <locale.h> /* |@!LC_CTYPE|, |@!setlocale| */
-#include <ncursesw/curses.h> /* |@!COLS|, |@!FALSE|, |@!KEY_BACKSPACE|, |@!KEY_BACKSPACE|,
-  |@!KEY_BACKSPACE|, |@!KEY_CODE_YES|, |@!KEY_DC|, |@!KEY_DOWN|, |@!KEY_END|, |@!KEY_ENTER|,
+#include <ncursesw/curses.h> /* |@!COLS|, |@!FALSE|,
+  |@!KEY_CODE_YES|, |@!KEY_DC|, |@!KEY_DOWN|, |@!KEY_END|, |@!KEY_ENTER|,
   |@!KEY_HOME|, |@!KEY_IC|,
   |@!KEY_LEFT|, |@!KEY_NPAGE|, |@!KEY_PPAGE|, |@!KEY_RESIZE|, |@!KEY_RESIZE|, |@!KEY_RIGHT|,
   |@!KEY_UP|, |@!LINES|, |@!TRUE|, |@!add_wch|, |@!addwstr|, |@!chars|, |@!clrtoeol|,
@@ -1425,11 +1424,10 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fopen|,
   |@!fprintf|, |@!rename|, |@!snprintf|, |@!sscanf| */
-#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!EXIT_SUCCESS|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|,
-  |@!malloc|, |@!mbtowc|, |@!mkstemp|, |@!realloc| */
-#include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp|, |@!strstr| */
-#include <sys/wait.h> /* |@!wait| */
-#include <unistd.h> /* |@!close|, |@!execl|, |@!fork|, |@!getcwd|, |@!getuid|,
+#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|,
+  |@!malloc|, |@!mbtowc|, |@!realloc| */
+#include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp| */
+#include <unistd.h> /* |@!getcwd|, |@!getuid|,
   |@!unlink| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
 #include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
