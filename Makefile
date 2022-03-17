@@ -1,11 +1,6 @@
 all:
-	@echo NoOp
-
-em: em.c
-	clang -g -o $@ $< -lncursesw -D_XOPEN_SOURCE=600
-
-clean:
-	@git clean -X -d -f
+	ctangle em
+	gcc -o em em.c -lncursesw -D_XOPEN_SOURCE=600
 
 imgs:
-	@mpost em
+	mpost em
