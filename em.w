@@ -403,7 +403,7 @@ void quit(void)
 
 @ @<Global...@>=
 char *fname;
-char *db_file = "/tmp/em.db", *db_file_tmp = "/tmp/em.db.tmp";
+char *db_file = DB_DIR "em.db", *db_file_tmp = DB_DIR "em.db.tmp";
 
 @ Get absolute name of opened file to use it in |db_file|.
 
@@ -1178,7 +1178,7 @@ int main(int argc, char **argv)
   if (argc == 2) fname = argv[1];
   if (argc == 3) lineno = atoi(argv[1]), fname = argv[2];
 
-  if (getuid() == 0) db_file = "/tmp/em-sudo.db", db_file_tmp = "/tmp/em-sudo.db.tmp";
+  if (getuid() == 0) db_file = DB_DIR "em-sudo.db", db_file_tmp = DB_DIR "em-sudo.db.tmp";
 
   setlocale(LC_CTYPE, "C.UTF-8");
 
@@ -1355,16 +1355,16 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
       done = 1; /* quit without saving */
 #endif
       break;
-    case 0x12: /* \vb{Ctrl}+\vb{R} */
+    case 0x12:
       search(0);
       break;
-    case 0x13: /* \vb{Ctrl}+\vb{S} */
+    case 0x13:
       search(1);
       break;
-    case 0x08: /* \vb{Ctrl}+\vb{H} */
+    case 0x08:
       backsp();
       break;
-    case 0x10: /* \vb{Ctrl}+\vb{P} */
+    case 0x10:
       up();
       break;
     case 0x0e: /* \vb{Ctrl}+\vb{N} */
