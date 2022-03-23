@@ -1385,7 +1385,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
     case 0x04: /* \vb{Ctrl}+\vb{D} */
       delete();
       break;
-    case 0x1f: /* \vb{Ctrl}+\vb{/} */
+    case 0x1b: /* \vb{Ctrl}+\vb{[} */
       top();
       break;
     case 0x1d: /* \vb{Ctrl}+\vb{]} */
