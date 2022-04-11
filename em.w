@@ -411,7 +411,7 @@ char *db_file = DB_DIR "em.db", *db_file_tmp = DB_DIR "em.db.tmp";
 char absname[PATH_MAX+1];
 
 @ @<Get absolute file name@>=
-if (*fname == '/') strcpy(absname, fname);
+if (*fname == '/') strcpy(absname, fname); /* for tex/editor.ch and mf/editor.ch */
 else assert(snprintf(absname, sizeof absname, "%s", realpath(fname, NULL)) < sizeof absname);
 
 @ @<Open file@>=
