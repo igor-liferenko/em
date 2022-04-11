@@ -412,7 +412,7 @@ char absname[PATH_MAX+1];
 
 @ @<Get absolute file name@>=
 if (*fname == '/') strcpy(absname, fname);
-else assert(snprintf(absname, sizeof absname, "%s/%s", getcwd(NULL, 0), fname) < sizeof absname);
+else assert(snprintf(absname, sizeof absname, "%s", realpath(fname, NULL)) < sizeof absname);
 
 @ @<Open file@>=
 if ((fp = fopen(fname, "r+")) == NULL) {
@@ -1424,11 +1424,10 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fopen|,
   |@!fprintf|, |@!rename|, |@!snprintf|, |@!sscanf| */
-#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|,
-  |@!malloc|, |@!mbtowc|, |@!realloc| */
+#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!malloc|,
+  |@!mbtowc|, |@!realloc|, |@!realpath| */
 #include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp| */
-#include <unistd.h> /* |@!getcwd|, |@!getuid|,
-  |@!unlink| */
+#include <unistd.h> /* |@!getuid|, |@!unlink| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
 #include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
 
