@@ -411,8 +411,7 @@ char *db_file = DB_DIR "em.db", *db_file_tmp = DB_DIR "em.db.tmp";
 char *absname;
 
 @ @<Get absolute file name@>=
-absname = (*fname == '/') ? fname : realpath(fname, NULL); /* do not expand
-  `\.{/proc/n/fd/n}' in \.{editor.ch} not to overwrite current position */
+absname = strcmp(fname, "/proc/") == 0 ? fname : realpath(fname, NULL);
 
 @ @<Open file@>=
 if ((fp = fopen(fname, "r+")) == NULL) {
