@@ -417,9 +417,10 @@ else {
   while (strstr(fname+n, "../")) n += 3;
   char *cwd = getcwd(NULL, 0);
   char *p = cwd + strlen(cwd) - 1;
-  int m = n - 1;
+  int m = n / 3;
   while (m--) while (*p != '/') p--;
-  assert(snprintf(absname, sizeof absname, "%.*s/%s", p-cwd, cwd, fname+n) < sizeof absname);
+  assert(snprintf(absname, sizeof absname, "%.*s/%s", (n/3?p-cwd:p-cwd+1), cwd, fname+n)
+    < sizeof absname);
 fprintf(stderr,"%s\n",absname);
 }
 
