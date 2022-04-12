@@ -410,7 +410,10 @@ char *db_file = DB_DIR "em.db", *db_file_tmp = DB_DIR "em.db.tmp";
 @<Global...@>=
 char absname[PATH_MAX+1];
 
-@ @<Get absolute file name@>=
+@ Useg |getcwd| to get absolute path. If filename is specified via one or more `\.{../}',
+then cut-off that many levels from the end of current directory.
+
+@<Get absolute file name@>=
 if (*fname == '/') strcpy(absname, fname);
 else {
   int n = 0;
@@ -421,7 +424,6 @@ else {
   while (m--) while (*p != '/') p--;
   assert(snprintf(absname, sizeof absname, "%.*s/%s", (n/3?p-cwd:p-cwd+1), cwd, fname+n)
     < sizeof absname);
-fprintf(stderr,"%s\n",absname);
 }
 
 @ @<Open file@>=
