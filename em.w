@@ -419,9 +419,7 @@ if (*fname == '/') strcpy(absname, fname);
 else {
   assert(getcwd(absname, sizeof absname));
   char *p = fname;
-  while (strstr(p, "../")) p += 3;
-  int n = (p - fname) / 3;
-  while (n--) *strrchr(absname, '/') = 0;
+  while (strstr(p, "../")) p += 3, *strrchr(absname, '/') = 0;
   assert(sizeof absname > strlen(absname) + strlen(p) + 1);
   strcat(strcat(absname, "/"), p);
 }
