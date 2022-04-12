@@ -419,11 +419,12 @@ else {
   int n = 0;
   while (strstr(fname+n, "../")) n += 3;
   char *cwd = getcwd(NULL, 0);
-  char *p = cwd + strlen(cwd) - 1;
+  char *p = cwd + strlen(cwd);
   int m = n / 3;
-  while (m--) while (*p != '/') p--;
+  while (m--) do p--; while (*p != '/');
   assert(snprintf(absname, sizeof absname, "%.*s/%s", (n/3?p-cwd:p-cwd+1), cwd, fname+n)
     < sizeof absname);
+fprintf(stderr,"%s\n",absname);
 }
 
 @ @<Open file@>=
