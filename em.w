@@ -408,11 +408,11 @@ char *db_file = DB_DIR "em.db", *db_file_tmp = DB_DIR "em.db.tmp";
 @ Get absolute name of opened file to use it in |db_file|.
 
 @<Global...@>=
-char absname[PATH_MAX+1];
+char *absname;
 
 @ @<Get absolute file name@>=
-if (*fname == '/') strcpy(absname, fname); /* for tex/editor.ch and mf/editor.ch */
-else assert(snprintf(absname, sizeof absname, "%s", realpath(fname, NULL)) < sizeof absname);
+absname = (*fname == '/') ? fname : realpath(fname, NULL); /* do not expand
+  `\.{/proc/n/fd/n}' in \.{editor.ch} not to overwrite current position */
 
 @ @<Open file@>=
 if ((fp = fopen(fname, "r+")) == NULL) {
