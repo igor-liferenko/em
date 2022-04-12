@@ -410,20 +410,21 @@ char *db_file = DB_DIR "em.db", *db_file_tmp = DB_DIR "em.db.tmp";
 @<Global...@>=
 char absname[PATH_MAX+1];
 
-@ Useg |getcwd| to get absolute path. If filename is specified via one or more `\.{../}',
-then cut-off that many levels from the end of current directory.
+@ Concatenate |getcwd| with |fname| to get absolute path, if filename is not already absolute.
+If filename is specified via one or more leading `\.{../}', then cut them off and cut-off that
+many levels from the end of |getcwd| before concatenation.
 
 @<Get absolute file name@>=
 if (*fname == '/') strcpy(absname, fname);
 else {
-  int n = 0;
-  while (strstr(fname+n, "../")) n += 3;
   char *cwd = getcwd(NULL, 0);
-  char *p = cwd + strlen(cwd);
-  int m = n / 3;
-  while (m--) do p--; while (*p != '/');
-  assert(snprintf(absname, sizeof absname, "%.*s/%s", (n/3?p-cwd:p-cwd+1), cwd, fname+n)
-    < sizeof absname);
+  char *end = cwd + strlen(cwd);
+  int n = 0, m = 0;
+  while (strstr(fname+n, "../")) n += 3, m += 1;
+  while (m--) while (*end-- != '/') ;
+  if (n) end += 1;
+  assert(snprintf(absname, sizeof absname, "%.*s/%s", end-cwd, cwd, fname+n) < sizeof absname);
+  free(cwd);
 }
 
 @ @<Open file@>=
@@ -1436,7 +1437,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fopen|,
   |@!fprintf|, |@!rename|, |@!snprintf|, |@!sscanf| */
-#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!malloc|,
+#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!free|, |@!malloc|,
   |@!mbtowc|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp| */
 #include <unistd.h> /* |@!getcwd|, |@!getuid|, |@!unlink| */
