@@ -411,20 +411,19 @@ char *db_file = DB_DIR "em.db", *db_file_tmp = DB_DIR "em.db.tmp";
 char absname[PATH_MAX+1];
 
 @ Concatenate |getcwd| with |fname| to get absolute path, if filename is not already absolute.
-If filename is specified via one or more leading `\.{../}', then cut them off and cut-off that
+If filename is specified with one or more leading `\.{../}', then cut them off and cut-off that
 many levels from the end of |getcwd| before concatenation.
 
 @<Get absolute file name@>=
 if (*fname == '/') strcpy(absname, fname);
 else {
-  char *cwd = getcwd(NULL, 0);
-  char *end = cwd + strlen(cwd);
-  int n = 0, m = 0;
-  while (strstr(fname+n, "../")) n += 3, m += 1;
-  while (m--) while (*end-- != '/') ;
-  if (n) end += 1;
-  assert(snprintf(absname, sizeof absname, "%.*s/%s", end-cwd, cwd, fname+n) < sizeof absname);
-  free(cwd);
+  assert(getcwd(absname, sizeof absname));
+  char *p = fname;
+  while (strstr(p, "../")) p += 3;
+  int n = (p - fname) / 3;
+  while (n--) *strrchr(absname, '/') = 0;
+  assert(sizeof absname > strlen(absname) + strlen(p) + 1);
+  strcat(strcat(absname, "/"), p);
 }
 
 @ @<Open file@>=
@@ -1437,9 +1436,9 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fopen|,
   |@!fprintf|, |@!rename|, |@!snprintf|, |@!sscanf| */
-#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!free|, |@!malloc|,
+#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!malloc|,
   |@!mbtowc|, |@!realloc| */
-#include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp| */
+#include <string.h> /* |@!memset|, |@!strcat|, |@!strchr|, |@!strlen|, |@!strncmp| */
 #include <unistd.h> /* |@!getcwd|, |@!getuid|, |@!unlink| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
 #include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
