@@ -408,10 +408,20 @@ char *db_file = DB_DIR "em.db", *db_file_tmp = DB_DIR "em.db.tmp";
 @ Get absolute name of opened file to use it in |db_file|.
 
 @<Global...@>=
-char *absname;
+char absname[PATH_MAX+1];
 
 @ @<Get absolute file name@>=
-absname = strcmp(fname, "/proc/") == 0 ? fname : realpath(fname, NULL);
+if (*fname == '/') strcpy(absname, fname);
+else {
+  int n = 0;
+  while (strstr(fname+n, "../")) n += 3;
+  char *cwd = getcwd(NULL, 0);
+  char *p = cwd + strlen(cwd) - 1;
+  int m = n - 1;
+  while (m--) while (*p != '/') p--;
+  assert(snprintf(absname, sizeof absname, "%.*s/%s", p-cwd, cwd, fname+n) < sizeof absname);
+fprintf(stderr,"%s\n",absname);
+}
 
 @ @<Open file@>=
 if ((fp = fopen(fname, "r+")) == NULL) {
