@@ -424,7 +424,6 @@ else {
   while (m--) do p--; while (*p != '/');
   assert(snprintf(absname, sizeof absname, "%.*s/%s", (n/3?p-cwd:p-cwd+1), cwd, fname+n)
     < sizeof absname);
-fprintf(stderr,"%s\n",absname);
 }
 
 @ @<Open file@>=
