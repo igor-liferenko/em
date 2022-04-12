@@ -1435,9 +1435,9 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fopen|,
   |@!fprintf|, |@!rename|, |@!snprintf|, |@!sscanf| */
 #include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!malloc|,
-  |@!mbtowc|, |@!realloc|, |@!realpath| */
+  |@!mbtowc|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strchr|, |@!strlen|, |@!strncmp| */
-#include <unistd.h> /* |@!getuid|, |@!unlink| */
+#include <unistd.h> /* |@!getcwd|, |@!getuid|, |@!unlink| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
 #include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
 
