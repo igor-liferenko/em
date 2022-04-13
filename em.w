@@ -417,11 +417,10 @@ many levels from the end of |getcwd| before concatenation.
 @<Get absolute file name@>=
 if (*fname == '/') strcpy(absname, fname);
 else {
-  assert(getcwd(absname, sizeof absname));
-  char *p = fname;
-  while (strstr(p, "../")) p += 3, *strrchr(absname, '/') = 0;
-  assert(sizeof absname > strlen(absname) + strlen(p) + 1);
-  strcat(strcat(absname, "/"), p);
+  assert(getcwd(absname, sizeof absname - strlen(fname) - 1));
+  int n = 0;
+  while (strstr(fname + n, "../")) n += 3, *strrchr(absname, '/') = 0;
+  strcat(strcat(absname, "/"), fname + n);
 }
 
 @ @<Open file@>=
