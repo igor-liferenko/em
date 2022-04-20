@@ -1432,7 +1432,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!wunctrl| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fopen|,
-  |@!fprintf|, |@!rename|, |@!snprintf|, |@!sscanf| */
+  |@!fprintf|, |@!rename|, |@!sscanf| */
 #include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!malloc|,
   |@!mbtowc|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strcat|, |@!strchr|, |@!strlen|, |@!strncmp| */

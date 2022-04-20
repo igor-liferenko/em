@@ -1,4 +1,4 @@
-%outputtemplate:="%j.eps"; prologues:=3;
+prologues:=3;
 
 verbatimtex \font\tenss=cmss10 \tenss etex
 
