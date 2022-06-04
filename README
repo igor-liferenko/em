@@ -12,7 +12,15 @@ You will need:
   libncursesw5-dev
   libtinfo-dev
 
-To build it, run:
+Add this `em' script to PATH:
 
-  ctangle em
-  make em
+    #!/bin/sh
+    if [ $# = 0 ]; then
+      tmp=`mktemp -p /tmp tmp-XXXXXX`
+      ~/em/em $tmp
+      echo $tmp
+    elif [ $# = 1 ] && [ "${1#*:}" != "$1" ]; then
+        ~/em/em ${1#*:} "${1%:*}"
+    else
+      ~/em/em "$@"
+    fi
