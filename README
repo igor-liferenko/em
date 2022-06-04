@@ -20,7 +20,7 @@ Add this `em' script to PATH:
       ~/em/em $tmp
       echo $tmp
     elif [ $# = 1 ] && [ "${1#*:}" != "$1" ]; then
-        ~/em/em ${1#*:} "${1%:*}"
+      ~/em/em ${1#*:} "${1%:*}"
     else
       ~/em/em "$@"
     fi
