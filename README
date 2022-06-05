@@ -16,7 +16,7 @@ Add this `em' script to PATH:
 
     #!/bin/sh
     if [ $# = 0 ]; then
-      tmp=`mktemp -p /tmp tmp-XXXXXX`
+      tmp=`mktemp -p /tmp em-XXXXXX`
       ~/em/em $tmp
       echo $tmp
     elif [ $# = 1 ] && [ "${1#*:}" != "$1" ]; then
