@@ -1205,16 +1205,11 @@ allocated.
 @<Set |b_epage| for proper positioning of cursor on screen@>=
 b_epage=pos(b_ebuf);
 
-@ NOTE: filename is appended in wrapper (see \.{README}).
+@ NOTE: filename is added in wrapper (see \.{README}).
 
 @<Save cursor@>=
-FILE *db_out;
-char *db_file;
-if (getuid() == 0) db_file = "/tmp/em-sudo.db"; else db_file = "/tmp/em.db";
-if ((db_out=fopen(db_file,"a"))==NULL)
-  printf("Could not open DB file for writing: %m\n"), exit(EXIT_FAILURE);
-fprintf(db_out,"%ld %ld\n",b_point,b_page);
-fclose(db_out);
+FILE *db_file = fopen(getenv("DB"), "a");
+if (db_file) fprintf(db_file, "%ld %ld\n", b_point, b_page), fclose(db_file);
 
 @ This must be done after |initscr| in order that |COLS| will be initialized.
 
@@ -1355,10 +1350,9 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!wunctrl| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fopen|, |@!fprintf|, |@!sscanf| */
-#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!malloc|,
-  |@!mbtowc|, |@!realloc| */
+#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!getenv|,
+  |@!malloc|, |@!mbtowc|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strlen| */
-#include <unistd.h> /* |@!getuid| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
 #include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
 
