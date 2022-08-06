@@ -16,7 +16,7 @@ Add this `em' script to PATH:
 
     #!/bin/sh
     # Use as `em file line' or `em file:line' (for copy-paste from `grep -n')
-    DB=/tmp/em.db # TODO: add sudo detection and use /tmp/em-sudo.db
+    export DB=/tmp/em.db # TODO: add sudo detection and use /tmp/em-sudo.db
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
       ~/em/em 0 $tmp
@@ -25,34 +25,30 @@ Add this `em' script to PATH:
     else
       if [ $# = 1 ]; then
         if [ "${1#*:}" != "$1" ]; then
-          FILE=${1%:*}
+          FILE="${1%:*}"
           LINE=${1#*:}
         else
-          FILE=$1
+          FILE="$1"
           LINE=0
         fi
       else
         if [ "${1#+}" != "$1" ]; then # for editor.ch in tex and mf
-          FILE=$2
-          LINE=$1
+          FILE="$2"
+          LINE=${1#+}
         else
-          FILE=$1
+          FILE="$1"
           LINE=$2
         fi
       fi
       REAL=`realpath $FILE`
-      if [ $REAL = /home/user/0000-git/bin/em ]; then
-        echo Use nano
-        exit 1
-      fi
+      [ $REAL = `which em` ] && exec ~/em/em 0 $FILE
       if grep -sq "^$REAL lock$" $DB; then
         echo File is already opened
         exit 1
       fi
       echo $REAL lock >>$DB
       ABS=`realpath -s $FILE`
-      POS=`sed -i -e "\|^$ABS [0-9]\+ [0-9]\+\$|{s|$ABS ||;w /dev/stdout" -e 'd}' $DB`
-      ~/em/em $LINE "$FILE" $POS
+      ~/em/em $LINE "$FILE" `sed -i -e "\|^$ABS [0-9]\+ [0-9]\+\$|{s|$ABS ||;w /dev/stdout" -e 'd}' $DB`
       [ $? = 0 ] && sed -i "\$s|^|$ABS |" $DB
       sed -i "\|^$REAL lock$|d" $DB
     fi
