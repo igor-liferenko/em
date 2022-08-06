@@ -1172,9 +1172,8 @@ int main(int argc, char **argv)
   @<Read file@>@;
   @<Close file@>@;
 
-  @<Set |b_epage|...@>@;
   @<Ensure that restored position is inside buffer@>;
-  if (lineno > 0) @<Move cursor to |lineno|@>@;
+  @<Set |b_epage| for proper positioning of cursor on screen@>@;
 
   assert(initscr() != NULL);
   raw();
@@ -1183,6 +1182,8 @@ int main(int argc, char **argv)
           (|raw|/|noraw| are almost the same as cbreak/nocbreak) */
   nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
   keypad(stdscr, TRUE);
+
+  if (lineno > 0) @<Move cursor to |lineno|@>@;
 
   while (!done) {
     display();
@@ -1197,7 +1198,10 @@ int main(int argc, char **argv)
   return 0;
 }
 
-@ Consider this case: we open empty file, add string ``hello world'', then
+@ FIXME: is this needed? (see `quit without saving')
+@^FIXME@>
+
+Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
 same empty file, |b_point| will be set past the end of buffer.
 
@@ -1211,8 +1215,7 @@ saved cursor position must be the same as it was read from |db_file|.
 
 @<Ensure that restored...@>=
 #if 0
-if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf); /* TODO: is this needed?
-                                                     (see `quit without saving') */
+if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
 #endif
 
 @ Set |b_epage| to maximum value.
@@ -1233,7 +1236,9 @@ if ((db_out=fopen(db_file,"a"))==NULL)
 fprintf(db_out,"%ld %ld\n",b_point,b_page);
 fclose(db_out);
 
-@ @<Move cursor to |lineno|@>= {
+@ This must be done after |initscr| in order that |COLS| will be initialized.
+
+@<Move cursor to |lineno|@>= {
   for (b_point=0,lineno--; lineno>0; lineno--) {
     b_point = lnend(b_point);
     right();
