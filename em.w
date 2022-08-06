@@ -391,11 +391,23 @@ void movegap(offset)
  assert(b_egap <= b_ebuf);
 }
 
+@ NOTE: \.{SaVeCuRsOr} is changed to filename in wrapper (see \.{README}).
+
+@<Procedures@>=
+void save_cursor(point_t point, point_t page)
+{
+  char *db_file_name;
+  if (getuid() == 0) db_file_name = "/tmp/em-sudo.db"; else db_file_name = "/tmp/em.db";
+  FILE *db_file = fopen(db_file_name, "a");
+  fprintf(db_file, "SaVeCuRsOr %ld %ld\n", point, page);
+  fclose(db_file);
+}
+
 @ @<Procedures@>=
 void quit(void)
 {
   @<Save buffer@>@;
-  @<Save cursor@>@;
+  save_cursor(b_point, b_page);
   done = 1;
 }
 
@@ -515,7 +527,6 @@ b_flags &= ~B_MODIFIED;
 if (b_egap - b_gap < buf_end-buf && !growgap((point_t) (buf_end-buf))) { /* if gap size
     is not sufficient, grow gap */
   fclose(fp);
-  @<Save cursor@>@;
   printf("Failed to allocate required memory.\n"), exit(EXIT_FAILURE);
 }
 for (i = 0; i < buf_end-buf; i++)
@@ -1172,7 +1183,6 @@ int main(int argc, char **argv)
   @<Read file@>@;
   @<Close file@>@;
 
-  @<Ensure that restored position is inside buffer@>;
   @<Set |b_epage| for proper positioning of cursor on screen@>@;
 
   assert(initscr() != NULL);
@@ -1198,43 +1208,12 @@ int main(int argc, char **argv)
   return 0;
 }
 
-@ FIXME: is this needed? (see `quit without saving')
-@^FIXME@>
-
-Consider this case: we open empty file, add string ``hello world'', then
-exit without saving. The saved cursor position will be 11. Next time we open this
-same empty file, |b_point| will be set past the end of buffer.
-
-But this check can only be done after the file is read, in order that the buffer
-is allocated.
-
-TODO: instead of this check do this: if file is closed without saving and it was
-changed after it was opened (|if (b_flags & B_MODIFIED)|),
-saved cursor position must be the same as it was read from |db_file|.
-@^TODO@>
-
-@<Ensure that restored...@>=
-#if 0
-if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
-#endif
-
 @ Set |b_epage| to maximum value.
 This must be set after the file has been read, in order that the buffer is
 allocated.
 
 @<Set |b_epage| for proper positioning of cursor on screen@>=
 b_epage=pos(b_ebuf);
-
-@ NOTE: filename is appended in wrapper (see \.{README}).
-
-@<Save cursor@>=
-FILE *db_out;
-char *db_file;
-if (getuid() == 0) db_file = "/tmp/em-sudo.db"; else db_file = "/tmp/em.db";
-if ((db_out=fopen(db_file,"a"))==NULL)
-  printf("Could not open DB file for writing: %m\n"), exit(EXIT_FAILURE);
-fprintf(db_out,"%ld %ld\n",b_point,b_page);
-fclose(db_out);
 
 @ This must be done after |initscr| in order that |COLS| will be initialized.
 
@@ -1297,9 +1276,9 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   switch (c) {
     case 0x18: /* \vb{Ctrl}+\vb{X} */
 #if 0
-      @<Save cursor@>
-      done = 1; /* quit without saving;
-                   TODO: see |@<Ensure that restored position is inside buffer@>| */
+      done = 1; /* quit without saving */
+      if (b_flags & B_MODIFIED) save_cursor(atoi(argv[3]), atoi(argv[4]));
+      else save_cursor(b_point, b_page);
 #endif
       break;
     case 0x12:
