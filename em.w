@@ -391,23 +391,11 @@ void movegap(offset)
  assert(b_egap <= b_ebuf);
 }
 
-@ NOTE: \.{SaVeCuRsOr} is changed to filename in wrapper (see \.{README}).
-
-@<Procedures@>=
-void save_cursor(point_t point, point_t page)
-{
-  char *db_file_name;
-  if (getuid() == 0) db_file_name = "/tmp/em-sudo.db"; else db_file_name = "/tmp/em.db";
-  FILE *db_file = fopen(db_file_name, "a");
-  fprintf(db_file, "SaVeCuRsOr %ld %ld\n", point, page);
-  fclose(db_file);
-}
-
 @ @<Procedures@>=
 void quit(void)
 {
   @<Save buffer@>@;
-  save_cursor(b_point, b_page);
+  @<Save cursor@>@;
   done = 1;
 }
 
@@ -1173,8 +1161,10 @@ int main(int argc, char **argv)
   assert(argc == 3 || argc == 5);
   int lineno = atoi(argv[1]);
   fname = argv[2];
-  if (argc == 5) b_point = atoi(argv[3]), b_page = atoi(argv[4]); /* restore cursor
-                                                                     (see wrapper in \.{README}) */
+  if (argc == 5) { /* restore cursor (see wrapper in \.{README}) */
+    assert(sscanf(argv[3], "%zu", &b_point) == 1);
+    assert(sscanf(argv[4], "%zu", &b_page) == 1);
+  }
 
   setlocale(LC_CTYPE, "C.UTF-8");
 
@@ -1214,6 +1204,17 @@ allocated.
 
 @<Set |b_epage| for proper positioning of cursor on screen@>=
 b_epage=pos(b_ebuf);
+
+@ NOTE: filename is appended in wrapper (see \.{README}).
+
+@<Save cursor@>=
+FILE *db_out;
+char *db_file;
+if (getuid() == 0) db_file = "/tmp/em-sudo.db"; else db_file = "/tmp/em.db";
+if ((db_out=fopen(db_file,"a"))==NULL)
+  printf("Could not open DB file for writing: %m\n"), exit(EXIT_FAILURE);
+fprintf(db_out,"%ld %ld\n",b_point,b_page);
+fclose(db_out);
 
 @ This must be done after |initscr| in order that |COLS| will be initialized.
 
@@ -1277,8 +1278,14 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
     case 0x18: /* \vb{Ctrl}+\vb{X} */
 #if 0
       done = 1; /* quit without saving */
-      if (b_flags & B_MODIFIED) save_cursor(atoi(argv[3]), atoi(argv[4]));
-      else save_cursor(b_point, b_page);
+      if (b_flags & B_MODIFIED) {
+        if (argc == 5) {
+          sscanf(argv[3], "%zu", &b_point);
+          sscanf(argv[4], "%zu", &b_page);
+        }
+        else b_point = 0, b_page = 0;
+      }
+      @<Save cursor@>@;
 #endif
       break;
     case 0x12:
@@ -1347,8 +1354,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!nonl|, |@!noraw|, |@!raw|, |@!refresh|, |@!standend|, |@!standout|, |@!stdscr|,
   |@!wunctrl| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
-#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fopen|,
-  |@!fprintf| */
+#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fopen|, |@!fprintf|, |@!sscanf| */
 #include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!malloc|,
   |@!mbtowc|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strlen| */
