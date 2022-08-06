@@ -20,7 +20,7 @@ Add this `em' script to PATH:
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
       ~/em/em 0 $tmp
-      sed -i /SaVeCuRsOr/d $DB
+      [ $? = 0 ] && sed -i \$d $DB
       echo $tmp
     else
       if [ $# = 1 ]; then
@@ -53,6 +53,6 @@ Add this `em' script to PATH:
       ABS=`realpath -s $FILE`
       POS=`sed -i -e "\|^$ABS [0-9]\+ [0-9]\+\$|{s|$ABS ||;w /dev/stdout" -e 'd}' $DB`
       ~/em/em $LINE "$FILE" $POS
-      sed -i "s|SaVeCuRsOr|$ABS|" $DB
+      [ $? = 0 ] && sed -i "\$s|^|$ABS |" $DB
       sed -i "\|^$REAL lock$|d" $DB
     fi
