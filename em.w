@@ -395,7 +395,7 @@ void movegap(offset)
 void quit(void)
 {
   @<Save buffer@>@;
-  @<Remove lock and save cursor@>@;
+  @<Save cursor@>@;
   done = 1;
 }
 
@@ -403,25 +403,6 @@ void quit(void)
 
 @ @<Global...@>=
 char *fname;
-char *db_file = DB_DIR "em.db", *db_file_tmp = DB_DIR "em.db.tmp";
-
-@ Get absolute name of opened file to use it in |db_file|.
-
-@<Global...@>=
-char absname[PATH_MAX+1];
-
-@ Concatenate |getcwd| with |fname| to get absolute path, if filename is not already absolute.
-If filename is specified with one or more leading `\.{../}', then cut them off and cut-off that
-many levels from the end of |getcwd| before concatenation.
-
-@<Get absolute file name@>=
-if (*fname == '/') strcpy(absname, fname);
-else {
-  assert(getcwd(absname, sizeof absname - strlen(fname) - 1));
-  int n = 0;
-  while (strstr(fname + n, "../")) n += 3, *strrchr(absname, '/') = 0;
-  strcat(strcat(absname, "/"), fname + n);
-}
 
 @ @<Open file@>=
 if ((fp = fopen(fname, "r+")) == NULL) {
@@ -534,7 +515,7 @@ b_flags &= ~B_MODIFIED;
 if (b_egap - b_gap < buf_end-buf && !growgap((point_t) (buf_end-buf))) { /* if gap size
     is not sufficient, grow gap */
   fclose(fp);
-  @<Remove lock and save cursor@>@;
+  @<Save cursor@>@;
   printf("Failed to allocate required memory.\n"), exit(EXIT_FAILURE);
 }
 for (i = 0; i < buf_end-buf; i++)
@@ -549,11 +530,7 @@ if (i && buf[i-1] != L'\n') {
   @<Copy contents of |buf|...@>@;
 }
 
-@*1 File locking. Locking file is necessary to indicate that this file is already
-opened. Before we open a file, lock is created in |db_file| in
-|@<Restore cursor...@>| (which
-in turn is executed right before the wanted file is opened). Upon exiting
-the editor, lock is removed from |db_file| in |@<Remove lock and save cursor@>|.
+@*1 Procedures.
 
 @ Reverse scan for beginning of real line containing offset.
 
@@ -1182,19 +1159,16 @@ dispmsg();
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
-  int lineno = 0;
-  assert(argc == 2 || argc == 3);
-  if (argc == 2) fname = argv[1];
-  if (argc == 3) lineno = atoi(argv[1]), fname = argv[2];
-
-  if (getuid() == 0) db_file = DB_DIR "em-sudo.db", db_file_tmp = DB_DIR "em-sudo.db.tmp";
+  assert(argc == 3 || argc == 5);
+  int lineno = atoi(argv[1]);
+  fname = argv[2];
+  if (argc == 5) b_point = atoi(argv[3]), b_page = atoi(argv[4]); /* restore cursor
+                                                                     (see wrapper in \.{README}) */
 
   setlocale(LC_CTYPE, "C.UTF-8");
 
  FILE *fp;
  @<Open file@>@;
- @<Get absolute...@>@;
- @<Restore cursor from |db_file|@>@;
  @<Read file@>@;
  @<Close file@>@;
 
@@ -1223,43 +1197,6 @@ int main(int argc, char **argv)
  return 0;
 }
 
-@ DB file cannot have null char, so use |fgets|.
-We will not use \\{fgetws} here, because the conversion
-of file name from UTF-8 to unicode is not
-necessary here and because it uses |char*|, not |char|, and |char*| is OK.
-
-We use Linux, so just delete the file by |unlink| after we open it - then open a new file
-with the same name and write the modified lines into the new file. We'll have two |FILE*|
-variables.
-@^system dependencies@>
-
-@d DB_LINE_SIZE PATH_MAX + 100
-
-@ @<Global...@>=
-FILE *db_in, *db_out;
-char db_line[DB_LINE_SIZE+1];
-
-@ @<Restore cursor...@>=
-assert((db_out = fopen(db_file_tmp, "w")) != NULL);
-if ((db_in = fopen(db_file, "r")) != NULL) {
-  while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
-    if (strlen(absname) == (strchr(db_line,' ')-db_line) && /* TODO: check that filename
-    does not contain spaces before opening it */
-@^TODO@>
-      strncmp(db_line, absname, strlen(absname)) == 0) {
-        if (sscanf(db_line+strlen(absname), "%ld %ld", &b_point, &b_page) != 2)
-          printf("File is locked\n"), exit(EXIT_FAILURE);
-        continue;
-    }
-    fprintf(db_out,"%s",db_line);
-  }
-  /* TODO: fix bug that if x is opened after xy, xy disappears from em.db */
-  fclose(db_in);
-}
-fprintf(db_out,"%s lock\n",absname);
-fclose(db_out);
-rename(db_file_tmp, db_file);
-
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
 same empty file, |@<Restore cursor...@>| will set |b_point| past the end of buffer.
@@ -1273,7 +1210,10 @@ saved cursor position must be the same as it was read from |db_file|.
 @^TODO@>
 
 @<Ensure that restored...@>=
-if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
+#if 0
+if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf); /* TODO: is this needed?
+                                                     (see `quit without saving') */
+#endif
 
 @ Set |b_epage| to maximum value.
 This must be set after the file has been read, in order that the buffer is
@@ -1282,23 +1222,15 @@ allocated.
 @<Set |b_epage| for proper positioning of cursor on screen@>=
 b_epage=pos(b_ebuf);
 
-@ TODO: re-do via |rename|
+@ NOTE: filename is appended in wrapper (see \.{README}).
 
-@<Remove lock and save cursor@>=
-if ((db_in=fopen(db_file,"r"))==NULL)
-  printf("Could not open DB file for reading: %m\n"), exit(EXIT_FAILURE);
-unlink(db_file);
-if ((db_out=fopen(db_file,"w"))==NULL) {
-  fclose(db_in);
+@<Save cursor@>=
+FILE *db_out;
+char *db_file;
+if (getuid() == 0) db_file = "/tmp/em-sudo.db"; else db_file = "/tmp/em.db";
+if ((db_out=fopen(db_file,"a"))==NULL)
   printf("Could not open DB file for writing: %m\n"), exit(EXIT_FAILURE);
-}
-while (fgets(db_line, DB_LINE_SIZE+1, db_in) != NULL) {
-  if (strncmp(db_line, absname, strlen(absname)) == 0)
-    continue;
-  fprintf(db_out,"%s",db_line);
-}
-fclose(db_in);
-fprintf(db_out,"%s %ld %ld\n",absname,b_point,b_page);
+fprintf(db_out,"%ld %ld\n",b_point,b_page);
 fclose(db_out);
 
 @ @<Move cursor to |lineno|@>= {
@@ -1360,8 +1292,9 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   switch (c) {
     case 0x18: /* \vb{Ctrl}+\vb{X} */
 #if 0
-      @<Remove lock and save cursor@>
-      done = 1; /* quit without saving */
+      @<Save cursor@>
+      done = 1; /* quit without saving;
+                   TODO: see |@<Ensure that restored position is inside buffer@>| */
 #endif
       break;
     case 0x12:
