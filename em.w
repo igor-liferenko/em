@@ -1167,39 +1167,39 @@ int main(int argc, char **argv)
 
   setlocale(LC_CTYPE, "C.UTF-8");
 
- FILE *fp;
- @<Open file@>@;
- @<Read file@>@;
- @<Close file@>@;
+  FILE *fp;
+  @<Open file@>@;
+  @<Read file@>@;
+  @<Close file@>@;
+
+  @<Set |b_epage|...@>@;
+  @<Ensure that restored position is inside buffer@>;
+  if (lineno > 0) @<Move cursor to |lineno|@>@;
 
   assert(initscr() != NULL);
- if (lineno > 0) @<Move cursor to |lineno|@>@;
- else @<Ensure that restored position is inside buffer@>;
- @<Set |b_epage|...@>@;
-
-        raw();
-        noecho(); /* TODO: see getch(3NCURSES) for a discussion of
+  raw();
+  noecho(); /* TODO: see getch(3NCURSES) for a discussion of
           how echo/noecho interact with cbreak and nocbreak
           (|raw|/|noraw| are almost the same as cbreak/nocbreak) */
- nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
- keypad(stdscr, TRUE);
+  nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
+  keypad(stdscr, TRUE);
 
- while (!done) {
-  display();
-  @<Handle key@>@;
- }
+  while (!done) {
+    display();
+    @<Handle key@>@;
+  }
 
- move(LINES - 1, 0);
- refresh(); /* FIXME: why do we need this? Remove and check what will be. */
- noraw();
- endwin(); /* end curses mode */
+  move(LINES - 1, 0);
+  refresh(); /* FIXME: why do we need this? Remove and check what will be. */
+  noraw();
+  endwin(); /* end curses mode */
 
- return 0;
+  return 0;
 }
 
 @ Consider this case: we open empty file, add string ``hello world'', then
 exit without saving. The saved cursor position will be 11. Next time we open this
-same empty file, |@<Restore cursor...@>| will set |b_point| past the end of buffer.
+same empty file, |b_point| will be set past the end of buffer.
 
 But this check can only be done after the file is read, in order that the buffer
 is allocated.
@@ -1353,7 +1353,6 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 @ @<Header files@>=
 #include <assert.h> /* |@!assert| */
 #include <errno.h> /* |@!ENOENT|, |@!errno| */
-#include <limits.h> /* |@!PATH_MAX| */
 #include <locale.h> /* |@!LC_CTYPE|, |@!setlocale| */
 #include <ncursesw/curses.h> /* |@!COLS|, |@!FALSE|,
   |@!KEY_CODE_YES|, |@!KEY_DC|, |@!KEY_DOWN|, |@!KEY_END|, |@!KEY_ENTER|,
@@ -1364,12 +1363,12 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!nonl|, |@!noraw|, |@!raw|, |@!refresh|, |@!standend|, |@!standout|, |@!stdscr|,
   |@!wunctrl| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
-#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fgets|, |@!fopen|,
-  |@!fprintf|, |@!rename|, |@!sscanf| */
+#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fopen|,
+  |@!fprintf| */
 #include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!malloc|,
   |@!mbtowc|, |@!realloc| */
-#include <string.h> /* |@!memset|, |@!strcat|, |@!strchr|, |@!strlen|, |@!strncmp| */
-#include <unistd.h> /* |@!getcwd|, |@!getuid|, |@!unlink| */
+#include <string.h> /* |@!memset|, |@!strlen| */
+#include <unistd.h> /* |@!getuid| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
 #include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
 
