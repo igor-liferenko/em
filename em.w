@@ -250,6 +250,7 @@ int b_col;                /* cursor col */
 uint8_t b_flags = 0;             /* buffer flags */
 
 @ @<Global variables@>=
+FILE *db;
 int done;
 
 @ @d MSGBUF 512
@@ -395,19 +396,18 @@ void movegap(offset)
 void quit(void)
 {
   @<Save buffer@>@;
-  @<Save cursor@>@;
+  if (db = fopen(getenv("db"), "a"))
+    fprintf(db, "%s %ld %ld\n", getenv("abs"), b_point, b_page), fclose(db);
   done = 1;
 }
 
 @* File input/output.
 
-@ @<Global...@>=
-char *fname;
-
 @ @<Open file@>=
-if ((fp = fopen(fname, "r+")) == NULL) {
+if ((fp = fopen(getenv("file"), "r+")) == NULL) {
   if (errno != ENOENT) printf("%m\n"), exit(EXIT_FAILURE);
-  if ((fp = fopen(fname, "w+")) == NULL) /* create file if it does not exist */
+  if ((fp = fopen(getenv("file"), "w+")) == NULL) /* create file if it does
+                                                      not exist */
     printf("%m\n"), exit(EXIT_FAILURE);
 }
 
@@ -428,8 +428,8 @@ the gap.
 @<Save buffer@>=
 FILE *fp;
 point_t length;
-if ((fp = fopen(fname, "w")) != NULL) {
-  if (fp == NULL) msg(L"Failed to open file \"%s\".", fname);
+if ((fp = fopen(getenv("file"), "w")) != NULL) {
+  if (fp == NULL) msg(L"Failed to open file \"%s\".", getenv("file"));
   @<Add trailing newline to non-empty buffer if it is not present@>@;
   movegap(0);
   length = (point_t) (b_ebuf - b_egap);
@@ -464,7 +464,7 @@ And do that if file was unchanged, just quit without doing anything to the file.
 for (point_t n = 0; n < length; n++) {
   fputwc(*(b_egap + n), fp);
   if (ferror(fp)) {
-    msg(L"Failed to write file \"%s\".", fname);
+    msg(L"Failed to write file \"%s\".", getenv("file"));
     break;
   }
 }
@@ -515,6 +515,8 @@ b_flags &= ~B_MODIFIED;
 if (b_egap - b_gap < buf_end-buf && !growgap((point_t) (buf_end-buf))) { /* if gap size
     is not sufficient, grow gap */
   fclose(fp);
+  if (db = fopen(getenv("db"), "a"))
+    fprintf(db, "%s %ld %ld\n", getenv("abs"), b_point, b_page), fclose(db);
   printf("Failed to allocate required memory.\n"), exit(EXIT_FAILURE);
 }
 for (i = 0; i < buf_end-buf; i++)
@@ -647,8 +649,8 @@ point_t lncolumn(point_t offset, int column)
 }
 
 @ FIXME: find out if using `addstr' in combination with `addwstr' can
-be dangerous and use \hfil\break `addstr(b\_fname);' between \\{move} and \\{standend}
-instead of the `for' loop
+be dangerous and use \hfil\break `addstr(getenv("file"));' between \\{move}
+and \\{standend} instead of the `for' loop
 (mixing addstr and addwstr may be dangerous --- like printf and wprintf)
 
 @<Procedures@>=
@@ -656,9 +658,9 @@ void modeline(void)
 {
   standout();
   move(LINES - 1, 0);
-  for (int k = 0, @!len; k < strlen(fname); k += len) {
+  for (int k = 0, @!len; k < strlen(getenv("file")); k += len) {
     wchar_t wc;
-    len = mbtowc(&wc, fname+k, MB_CUR_MAX);
+    len = mbtowc(&wc, getenv("file")+k, MB_CUR_MAX);
     cchar_t my_cchar;
     memset(&my_cchar, 0, sizeof my_cchar);
     my_cchar.chars[0] = wc;
@@ -1158,12 +1160,11 @@ dispmsg();
 @ @<Main program@>=
 int main(int argc, char **argv)
 {
-  assert(argc == 3 || argc == 5);
-  int lineno = atoi(argv[1]);
-  fname = argv[2];
-  if (argc == 5) { /* restore cursor (see wrapper in \.{README}) */
-    assert(sscanf(argv[3], "%zu", &b_point) == 1);
-    assert(sscanf(argv[4], "%zu", &b_page) == 1);
+  assert(argc == 1 || argc == 3);
+  int lineno; assert(sscanf(getenv("line"), "%u", &lineno) == 1);
+  if (argc != 1) { /* restore cursor (see wrapper in \.{README}) */
+    assert(sscanf(argv[1], "%zu", &b_point) == 1);
+    assert(sscanf(argv[2], "%zu", &b_page) == 1);
   }
 
   setlocale(LC_CTYPE, "C.UTF-8");
@@ -1204,12 +1205,6 @@ allocated.
 
 @<Set |b_epage| for proper positioning of cursor on screen@>=
 b_epage=pos(b_ebuf);
-
-@ NOTE: filename is added in wrapper (see \.{README}).
-
-@<Save cursor@>=
-FILE *db_file = fopen(getenv("DB"), "a");
-if (db_file) fprintf(db_file, "%ld %ld\n", b_point, b_page), fclose(db_file);
 
 @ This must be done after |initscr| in order that |COLS| will be initialized.
 
@@ -1274,13 +1269,13 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
 #if 0
       done = 1; /* quit without saving */
       if (b_flags & B_MODIFIED) {
-        if (argc == 5) {
-          sscanf(argv[3], "%zu", &b_point);
-          sscanf(argv[4], "%zu", &b_page);
-        }
-        else b_point = 0, b_page = 0;
+        if (argc != 1)
+          if (db = fopen(getenv("db"), "a"))
+            fprintf(db, "%s %s %s\n", getenv("abs"), argv[1], argv[2]), fclose(db);
       }
-      @<Save cursor@>@;
+      else
+        if (db = fopen(getenv("db"), "a"))
+          fprintf(db, "%s %ld %ld\n", getenv("abs"), b_point, b_page), fclose(db);
 #endif
       break;
     case 0x12:
@@ -1350,7 +1345,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!wunctrl| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fopen|, |@!fprintf|, |@!sscanf| */
-#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!exit|, |@!getenv|,
+#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!exit|, |@!getenv|,
   |@!malloc|, |@!mbtowc|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strlen| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
