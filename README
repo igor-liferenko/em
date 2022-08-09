@@ -40,7 +40,7 @@ Add this `em' script to PATH:
         fi
       fi
       export abs=`realpath "$file"`
-      [ $abs = `which em` ] && db=/dev/null exec ~/em/em
+      [ "$abs" = `which em` ] && db=/dev/null exec ~/em/em
       if grep -sq "^$abs lock$" $db; then
         echo File is already opened
         exit 1
