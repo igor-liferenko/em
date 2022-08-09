@@ -250,7 +250,7 @@ int b_col;                /* cursor col */
 uint8_t b_flags = 0;             /* buffer flags */
 
 @ @<Global variables@>=
-FILE *db;
+FILE *db; /* save cursor */
 int done;
 
 @ @d MSGBUF 512
@@ -1161,7 +1161,6 @@ dispmsg();
 int main(int argc, char **argv)
 {
   assert(argc == 1 || argc == 3);
-  int lineno; assert(sscanf(getenv("line"), "%u", &lineno) == 1);
   if (argc != 1) { /* restore cursor (see wrapper in \.{README}) */
     assert(sscanf(argv[1], "%zu", &b_point) == 1);
     assert(sscanf(argv[2], "%zu", &b_page) == 1);
@@ -1184,6 +1183,7 @@ int main(int argc, char **argv)
   nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
   keypad(stdscr, TRUE);
 
+  int lineno; @+ assert(sscanf(getenv("line"), "%u", &lineno) == 1);
   if (lineno > 0) @<Move cursor to |lineno|@>@;
 
   while (!done) {
