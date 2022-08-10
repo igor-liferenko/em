@@ -19,7 +19,7 @@ Add this `em' script to PATH:
     export db=/tmp/em.db
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
-      db=/dev/null abs= file=$tmp line=0 ~/em/em
+      db=/dev/null abs=$tmp file=$tmp line=0 ~/em/em
       echo $tmp
     else
       if [ $# = 1 ]; then
@@ -30,16 +30,25 @@ Add this `em' script to PATH:
           export file="$1"
           export line=0
         fi
+        export abs=`realpath "$file"`
       else
         if [ "${1#+}" != "$1" ]; then # for editor.ch in tex and mf
           export file="$2"
           export line=${1#+}
+          export abs=`realpath "$file"`
+          if [ "${abs%/*}" = /home/user/tex/TeXinputs ] && [ "$PWD" != /home/user/tex/TeXinputs ]; then
+            file="${abs#/home/user/tex/}"
+          elif [ "${abs%/*}" = /home/user/mf/MFinputs ] && [ "$PWD" != /home/user/mf/MFinputs ]; then
+            file="${abs#/home/user/mf/}"
+          else
+            file="${abs#$PWD/}"
+          fi
         else
           export file="$1"
           export line=$2
+          export abs=`realpath "$file"`
         fi
       fi
-      export abs=`realpath "$file"`
       [ "$abs" = `which em` ] && db=/dev/null exec ~/em/em
       if grep -sq "^$abs lock$" $db; then
         echo File is already opened
