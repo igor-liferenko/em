@@ -1094,10 +1094,6 @@ void search(direction)
       case KEY_IC:
         @<Use Insert key...@>@;
         break;
-      case KEY_ENTER:
-        if (search_failed) b_point = search_point;
-        search_active = 0;
-        return;
       }
     }
     else {
@@ -1111,9 +1107,9 @@ void search(direction)
         break;
       case 0x0d:
         if (search_failed) b_point = search_point;
-   search_active = 0;
-   return;
-     case 0x07:
+        search_active = 0;
+        return;
+      case 0x07:
    b_point = o_point;
    search_active = 0;
    return;
