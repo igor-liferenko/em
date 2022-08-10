@@ -1173,7 +1173,8 @@ int main(int argc, char **argv)
           how echo/noecho interact with cbreak and nocbreak
           (|raw|/|noraw| are almost the same as cbreak/nocbreak) */
   nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
-  keypad(stdscr, TRUE);
+  keypad(stdscr, TRUE); /* TODO: via strace check that smkx is sent */
+@^TODO@>
 
   int lineno = atoi(getenv("line"));
   if (lineno > 0) @<Move cursor to |lineno|@>@;
