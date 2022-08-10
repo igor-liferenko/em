@@ -1161,10 +1161,6 @@ dispmsg();
 int main(int argc, char **argv)
 {
   assert(argc == 1 || argc == 3);
-  if (argc != 1) { /* restore cursor (see wrapper in \.{README}) */
-    assert(sscanf(argv[1], "%zu", &b_point) == 1);
-    assert(sscanf(argv[2], "%zu", &b_page) == 1);
-  }
 
   setlocale(LC_CTYPE, "C.UTF-8");
 
@@ -1183,8 +1179,10 @@ int main(int argc, char **argv)
   nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
   keypad(stdscr, TRUE);
 
-  int lineno; @+ assert(sscanf(getenv("line"), "%u", &lineno) == 1);
+  int lineno = atoi(getenv("line"));
   if (lineno > 0) @<Move cursor to |lineno|@>@;
+  else if (argc != 1) /* restore cursor (see wrapper in \.{README}) */
+    b_point = atol(argv[1]), b_page = atol(argv[2]);
 
   while (!done) {
     display();
@@ -1344,8 +1342,8 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!nonl|, |@!noraw|, |@!raw|, |@!refresh|, |@!standend|, |@!standout|, |@!stdscr|,
   |@!wunctrl| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
-#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fopen|, |@!fprintf|, |@!sscanf| */
-#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!exit|, |@!getenv|,
+#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fopen|, |@!fprintf| */
+#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!atol|, |@!exit|, |@!getenv|,
   |@!malloc|, |@!mbtowc|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strlen| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
