@@ -315,7 +315,7 @@ point_t pos(wchar_t *cp)
 TODO: check that |(size_t)newlen*sizeof (wchar_t)| does not cause overflow.
 @^TODO@>
 
-$$\epsfbox{em.1}$$
+$$\epsfbox{em.eps}$$
 
 @<Procedures@>=
 int growgap(point_t n)
