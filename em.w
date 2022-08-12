@@ -1173,8 +1173,7 @@ int main(int argc, char **argv)
           how echo/noecho interact with cbreak and nocbreak
           (|raw|/|noraw| are almost the same as cbreak/nocbreak) */
   nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
-  keypad(stdscr, TRUE); /* TODO: via strace check that smkx is sent */
-@^TODO@>
+  @<Call |keypad|@>@;
 
   int lineno = atoi(getenv("line"));
   if (lineno > 0) @<Move cursor to |lineno|@>@;
@@ -1193,6 +1192,25 @@ int main(int argc, char **argv)
 
   return 0;
 }
+
+@ |keypad| does two things: 1) send smkx to terminal, 2) interpret key sequences
+from terminal using terminfo database.
+
+VTxxx (VT100 and up) terminals may send different escape sequences for the cursor (arrow) keys depending on how they are set up. The choices are referred to as the normal and application modes. Initially, the terminal is in normal mode.
+
+VTxxx terminals are usually set up so that full-screen applications will use the cursor application mode strings. This is good for full-screen applications, including legacy applications which may have hard-coded behavior, but bad for interactive shells (e.g., ksh, tcsh, bash) which use arrow keys to scroll through a history of command strings.
+
+To see the difference between normal/application modes, consider this example:
+
+In normal (non-application) mode, the terminal transmits a down-arrow as \E[C, which happens to echo as a down-arrow.
+In application mode the terminal transmits \EOC, which echoes as C. That is because the \EO is the SS3 control, which says to use the character from the G3 character set for the next cell.
+Since termcaps and terminfo descriptions are written for full-screen applications, shells and similar programs often rely on built-in tables of escape sequences which they use instead. Defining keys in terms of the termcap/terminfo entry (e.g., by capturing the string sent by tputs) is apt to confuse the shell.
+
+Depending on the terminal type, the keypad(s) on the keyboard may switch modes along with the cursor keys, or have their own independent modes. The control sequences for these are independent of the ones used for cursor-addressing, but are grouped together, e.g., as the terminfo smkx and rmkx capabilities. Terminfo entries are written assuming that the application has initialized the terminal using the smkx string before it is able to match the codes given for the cursor or keypad keys.
+
+@<Call |keypad|@>=
+keypad(stdscr, TRUE); /* TODO: via strace check that smkx is sent */
+@^TODO@>
 
 @ Set |b_epage| to maximum value.
 This must be set after the file has been read, in order that the buffer is
