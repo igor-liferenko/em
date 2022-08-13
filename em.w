@@ -1208,6 +1208,8 @@ Since termcaps and terminfo descriptions are written for full-screen application
 
 Depending on the terminal type, the keypad(s) on the keyboard may switch modes along with the cursor keys, or have their own independent modes. The control sequences for these are independent of the ones used for cursor-addressing, but are grouped together, e.g., as the terminfo smkx and rmkx capabilities. Terminfo entries are written assuming that the application has initialized the terminal using the smkx string before it is able to match the codes given for the cursor or keypad keys.
 
+(from https://invisible-island.net/xterm/xterm.faq.html#xterm_arrows)
+
 @<Call |keypad|@>=
 keypad(stdscr, TRUE); /* TODO: via strace check that smkx is sent */
 @^TODO@>
