@@ -404,9 +404,9 @@ void quit(void)
 @* File input/output.
 
 @ @<Open file@>=
-if ((fp = fopen(getenv("abs"), "r+")) == NULL) {
+if ((fp = fopen(getenv("file"), "r+")) == NULL) {
   if (errno != ENOENT) printf("%m\n"), exit(EXIT_FAILURE);
-  if ((fp = fopen(getenv("abs"), "w+")) == NULL) /* create file if it does
+  if ((fp = fopen(getenv("file"), "w+")) == NULL) /* create file if it does
                                                       not exist */
     printf("%m\n"), exit(EXIT_FAILURE);
 }
@@ -428,8 +428,8 @@ the gap.
 @<Save buffer@>=
 FILE *fp;
 point_t length;
-if ((fp = fopen(getenv("abs"), "w")) != NULL) {
-  if (fp == NULL) msg(L"Failed to open file \"%s\".", getenv("abs"));
+if ((fp = fopen(getenv("file"), "w")) != NULL) {
+  if (fp == NULL) msg(L"Failed to open file \"%s\".", getenv("file"));
   @<Add trailing newline to non-empty buffer if it is not present@>@;
   movegap(0);
   length = (point_t) (b_ebuf - b_egap);
@@ -464,7 +464,7 @@ And do that if file was unchanged, just quit without doing anything to the file.
 for (point_t n = 0; n < length; n++) {
   fputwc(*(b_egap + n), fp);
   if (ferror(fp)) {
-    msg(L"Failed to write file \"%s\".", getenv("abs"));
+    msg(L"Failed to write file \"%s\".", getenv("file"));
     break;
   }
 }
