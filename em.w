@@ -1165,6 +1165,7 @@ int main(int argc, char **argv)
   @<Read file@>@;
   @<Close file@>@;
 
+  @<Ensure that restored position is inside buffer@>@;
   @<Set |b_epage| for proper positioning of cursor on screen@>@;
 
   assert(initscr() != NULL);
@@ -1213,6 +1214,15 @@ Depending on the terminal type, the keypad(s) on the keyboard may switch modes a
 @<Call |keypad|@>=
 keypad(stdscr, TRUE); /* TODO: via strace check that smkx is sent */
 @^TODO@>
+
+@ We do this check because |b_point| may be set past the end of buffer if file is changed
+externally.
+
+But this check can only be done after the file is read, in order that the buffer
+is allocated.
+
+@<Ensure that restored...@>=
+if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
 
 @ Set |b_epage| to maximum value.
 This must be set after the file has been read, in order that the buffer is
