@@ -1203,13 +1203,13 @@ VTxxx terminals are usually set up so that full-screen applications will use the
 
 To see the difference between normal/application modes, consider this example:
 
-In normal (non-application) mode, the terminal transmits a down-arrow as \E[C, which happens to echo as a down-arrow.
-In application mode the terminal transmits \EOC, which echoes as C. That is because the \EO is the SS3 control, which says to use the character from the G3 character set for the next cell.
+In normal (non-application) mode, the terminal transmits a down-arrow as \.{\\E[C}, which happens to echo as a down-arrow.
+In application mode the terminal transmits \.{\\EOC}, which echoes as C. That is because the \.{\\EO} is the SS3 control, which says to use the character from the G3 character set for the next cell.
 Since termcaps and terminfo descriptions are written for full-screen applications, shells and similar programs often rely on built-in tables of escape sequences which they use instead. Defining keys in terms of the termcap/terminfo entry (e.g., by capturing the string sent by tputs) is apt to confuse the shell.
 
 Depending on the terminal type, the keypad(s) on the keyboard may switch modes along with the cursor keys, or have their own independent modes. The control sequences for these are independent of the ones used for cursor-addressing, but are grouped together, e.g., as the terminfo smkx and rmkx capabilities. Terminfo entries are written assuming that the application has initialized the terminal using the smkx string before it is able to match the codes given for the cursor or keypad keys.
 
-(from https://invisible-island.net/xterm/xterm.faq.html#xterm_arrows)
+(from \.{https://invisible-island.net/xterm/xterm.faq.html\#xterm\_arrows})
 
 @<Call |keypad|@>=
 keypad(stdscr, TRUE); /* TODO: via strace check that smkx is sent */
