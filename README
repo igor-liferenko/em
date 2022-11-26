@@ -7,10 +7,8 @@ I have taken the C source from
 and converted it to CWEB, then added UTF-8
 support (using wide-character API).
 
-You will need:
-
-  libncursesw5-dev
-  libtinfo-dev
+To build EM, install libncursesw5-dev and libtinfo-dev packages,
+or build ncurses from source.
 
 Add this `em' script to PATH:
 

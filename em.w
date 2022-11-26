@@ -11,212 +11,55 @@
 
 @* Buffer-gap algorithm. EM is a text editor. It is implemented
 using wide-character API and ncurses library. EM uses ``buffer-gap''
-algorithm to represent file in memory. Following is the description
-of how it works.
+algorithm to represent a file in memory.
+
+With a buffer gap, editing operations are achieved by moving the gap to
+the place in the buffer where you want to make the change, and then
+either by shrinking the size of the gap for insertions, or increasing the
+size of the gap for deletions.  
 
 When a file is loaded it is loaded with the gap at the bottom.
 {\tt\obeylines
-ccccccc
-ccccccc
-cccc.....\par}
-\noindent where |c| are the bytes in the file and \.{...} is the gap.
-As long as we just move around the file we dont need to worry about the gap.
+cccccccc
+cccccccc
+cccc....\par}
+\noindent where |c| is a byte from the file and \.{.} is a byte in the gap.
+As long as we just move around the memory we dont need to worry about the gap.
 The current point is a long.  If we want the actual memory location we
 use |pos| which converts to a memory pointer
 and ensures that the gap is skipped at the right point.
 
 When we need to insert chars or delete then the gap has to be moved to the
-current position using |movegap|. SAY:
+current position using |movegap|.
 {\tt\obeylines
 cccccccc
-cccC.....c
+ccc....c
 cccccccc\par}
 
-Now we decide to delete the character at the point (C) - we just made the gap
-1 char bigger.  IE the gap pointer is decremented.
+Now we decide to delete the character at the current position, we just made the gap
+1 char bigger, i.e., the gap pointer is decremented.
 In effect nothing is thrown away.  The gap swallows up the deleted character.
 {\tt\obeylines
 cccccccc
-ccc.......c
+cc.....c
 cccccccc\par}
 
 Insertion works the opposite way.
 {\tt\obeylines
 cccccccc
-cccY.....c
+ccc....c
 cccccccc\par}
-\noindent Here we incremented the gap pointer on and put a Y in the new space when the gap
+\noindent Here we incremented the gap pointer on and put a byte in the new space where the gap
 has just moved from.
 
-When we paste we have to be a bit clever and make sure the GAP is big enough to take the
+When we insert we have to be a bit clever and make sure the gap is big enough to take the
 paste. This is where |growgap| comes into play.
 
-----------------
-
-Buffer gap is just one way to store a bunch of characters you wish to
-edit.  (Another way is having a linked list of lines.)  Emacs uses the
-buffer gap mechanism, and here is what a buffer looks like in emacs.
-
-\.{<-----{ }first half{ }-----><-----{ }gap{ }-----><------{ }second half{ }------>}
-
-An emacs buffer is just one huge array of characters, with a gap in the
-middle.  There are no characters in the gap.  So at any given time the
-buffer is described as the characters on the left side of the gap,
-followed by the characters on the right side of the gap.
-
-Why is there a gap?  Well if there isn't a gap and you want to insert one
-character at the beginning of the buffer, you would have to copy all the
-characters over to the right by one, and then stick in the character you
-were inserting.  That's ridiculous, right?  Imagine editing a 100kbyte
-file and inserting characters at the beginning.  The editor would be
-spending the entire time copying characters over to the right one.
-Delete would be done by copying characters to the left, just as slow.
-
-With a buffer gap, editing operations are achieved by moving the gap to
-the place in the buffer where you want to make the change, and then
-either by shrinking the size of the gap for insertions, or increasing the
-size of the gap for deletions.  In case it isn't obvious, this makes
-insertion and deletion incredible simple to implement.  To insert a
-character C at position POS in a buffer, you would do something like this:
-
- /* Move the gap to position POS.  That is, make the first half
-    be POS characters long. */
- BufferMoveGap(b, pos);
- b->data[b->firstHalf++] = c;
- b->gapSize -= 1;
-
-There, done.  The gap is now one character smaller because we made the
-first half bigger while sticking in the character we wished to insert.
-Actually, at the beginning of the routine there should have been a check
+Actually, at the beginning of the insert routine there is a check
 to make sure that there is room in the gap for more characters.  When the
-gapsize is 0, it is necessary to realloc the entire buffer.  Deletion is
-even easier.  To delete N characters at POS, all you do is make the gap
-bigger!  That is, by making the gap bigger, you take away from characters
-that used to be part of the buffer.
-
- BufferMoveGap(b, pos);
- b->gapSize += n;
-
-That is delete, folks.
-
-Moving the gap is pretty trivial.  Just decide if you are moving it
-forward or backward, and use bcopy.  bcopy is smart enough to handle
-overlapping regions.
-
-So, when emacs reads in a file it allocates enough memory for the entire
-file, plus maybe 1024 bytes for the buffer gap.  Initially the buffer gap
-is at the end of the file, so when you insert at the beginning of the
-file right after reading it in, you will notice a longer delay than
-usual, because it first has to move the gap to the beginning of the
-file.  The gap only has to be moved when you are doing edit operations.
-
-To examine the contents of a buffer, you can define a macro:
-
- BufferCharAt(b, pos)
-
-All this does it check to see whether pos is in the first half or the
-second half, and then index that one HUGE array of characters correctly.
-It's surprisingly fast, actually.
-
-Somebody mentioned that GNU search takes two strings to search in.  That
-was Stallman's way of optimizing the hell out of the search.  The two
-strings passed in represent the first half and the second half of the
-buffer.  Now the search code does not have to use the BufferCharAt macro
-to examine the buffer because it is guarunteed to have two contiguous
-strings of valid data.  That's a good idea - I might have to adopt that
-approach.
-
-@* Gap Buffer Explained Again.
-
-     The buffer gap method for storing data in an editor is not very
-complicated.  The idea is to divide the file into two sections at the cursor
-point, the location at which the next change will take place.  These sections
-are placed at opposite ends of the buffer, with the "gap" in between them
-representing the cursor point.  For example, here's a sixteen-character
-buffer containing the words "The net", with the cursor on the letter 'n'.:
-
-   The ---------net
-
-(I'm using the '-' character to represent the spaces making up the gap.)
-
-     Now, if you wanted to insert a character, all you must do is to add it
-into one end or the other of the gap.  Conventional editors that move the
-cursor left as you type would insert at the top edge of the gap.  For example,
-if I wanted to change the word "net" to "Usenet", I would start by typing the
-letter 'U', and the editor would change the buffer to look like this:
-
-   The U--------net
-
-     This represents the string "The Unet", with the cursor still on the 'n'.
-Typing an 's' character would bring us to the following:
-
-   The Us-------net
-
-     And finally, the 'e' character brings us to this:
-
-   The Use------net
-
-     But now we decide that we want to completely change tack and change the
-phrase from "The Usenet" to "The Usenix".  To do this, we will first have to
-move our cursor to the right one spot, so we don't waste time retyping an
-'n'.  To move the cursor point up and down through the file, we must move
-letters "across" the gap.  In this case, we're moving the cursor toward the
-end of the phrase, so we move the 'n' across the gap, to the top end.
-
-   The Usen------et
-
-     Now we're ready to delete the 'e' and the 't'.  To do this, we just
-widen the gap at the bottom edge, wiping out the appropriate character.
-After deleting the 'e', the buffer looks like this:
-
-   The Usen-------t
-
-     And after deleting the 't', the buffer looks like this:
-
-   The Usen--------
-
-     (Note that the gap now extends all the way to the edge of the buffer.
-This means that the file now reads "The Usen", with the cursor at the very
-end.)
-
-     Backspacing works out to be something very similar to delete, with the
-gap is widening at the top instead of the bottom.
-
-     Now we add the letters 'i' and 'x', giving us the following buffer
-snapshots after each key is pressed:
-
-   The Useni-------
-
-   The Usenix------
-
-     Now we've made our changes.  Moving the cursor back to the top of the
-file means moving the characters across the buffer in the other direction,
-starting with the 'x', like this:
-
-   The Useni------x
-
-     Finally, after doing this once for each of the letters in the buffer,
-we're at the top of the file, and the buffer looks like this:
-
-   ------The Usenix
-
-     Of course, there are many details yet to consider.  Real buffers will be
-much larger than this, probably starting at 64K and stopping at whatever size
-is appropriate for the machine at hand.  In a real implementation, line breaks
-have to be marked in some way.  My editor does this by simply inserting line
-feed (\.{'\\n'}) characters into the buffer, but other approaches might be useful.
-Moving the cursor up and down between lines can get complicated.  What about
-virtual memory, so that we can fit the 21-letter phrase "The Usenix
-Conference" in our 16-letter buffer? Then, of course, there's the question of
-making the screen reflect the contents of the buffer, which is what my
-original "Editor 102" post discussed.
-
-
-     Hope this clears up the question of what a buffer gap is, and why it's
-a convenient data structure to use in an editor.  There are, of course,
-other ways to structure an editor's memory, with no clear victor.  All have
-their strong points and weak points, so I picked the buffer gap for my
-editor because of its simplicity and efficient use of memory.
+gapsize is 0, it is necessary to realloc the entire buffer.
+When we read in a file, we allocate enough memory for the entire
+file, plus a chunk for the buffer gap.
 
 @ This is the outline of our program.
 
@@ -1246,11 +1089,9 @@ b_page=b_point;
 for (int i=(LINES-1)/2;i>0;i--)
   b_page=upup(b_page);
 
-@ Here, besides reading user input, we handle resize event.
-
-@<Handle key@>=
+@ @<Handle key@>=
 wchar_t c;
-if (get_wch(&c) == KEY_CODE_YES) {
+assert(get_wch(&c) != ERR);
   switch (c) {
     case KEY_RESIZE:
       continue;
@@ -1284,12 +1125,6 @@ if (get_wch(&c) == KEY_CODE_YES) {
     case KEY_ENTER:
         insert(L'\n');
         break;
-    default:
-        msg(L"Not bound"); @q msg(L"oct: %o", c); @>
-  }
-}
-else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
-  switch (c) {
     case 0x18: /* \vb{Ctrl}+\vb{X} */
 #if 0
       done = 1; /* quit without saving */
@@ -1309,7 +1144,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
     case 0x13:
       search(1);
       break;
-    case 0x08:
+    case 0x08: /* \vb{Ctrl}+\vb{H}, \vb{ \char'30 \space} */
       backsp();
       break;
     case 0x10:
@@ -1351,10 +1186,10 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
     case 0x0d: /* \vb{Ctrl}+\vb{M} */
       insert(L'\n');
       break;
+    case 0x03: insert(L'\u2502'); break;
     default:
-      insert(c);
+      insert(c); @q msg(L"oct: %o", c); @>    
   }
-}
 
 @ @<Header files@>=
 #include <assert.h> /* |@!assert| */
@@ -1369,7 +1204,7 @@ else { /* FIXME: handle \.{ERR} return value from |get_wch| ? */
   |@!nonl|, |@!noraw|, |@!raw|, |@!refresh|, |@!standend|, |@!standout|, |@!stdscr|,
   |@!wunctrl| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
-#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fopen|, |@!fprintf| */
+#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fopen|, |@!fprintf|, |@!printf| */
 #include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!atol|, |@!exit|, |@!getenv|,
   |@!malloc|, |@!mbtowc|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strlen| */
