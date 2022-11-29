@@ -1091,41 +1091,76 @@ for (int i=(LINES-1)/2;i>0;i--)
 
 @ @<Handle key@>=
 wchar_t c;
-assert(get_wch(&c) != ERR);
-  switch (c) {
-    case KEY_RESIZE:
-      continue;
-    case KEY_LEFT:
-      left();
-      break;
-    case KEY_RIGHT:
-        right();
-        break;
-    case KEY_UP:
-        up();
-        break;
-    case KEY_DOWN:
-        down();
-        break;
-    case KEY_HOME:
-        b_point = lnbegin(b_point);
-        break;
-    case KEY_END:
-        b_point = lnend(b_point);
-        break;
-    case KEY_NPAGE:
-        pgdown();
-        break;
-    case KEY_PPAGE:
-        pgup();
-        break;
-    case KEY_DC:
-        delete();
-        break;
-    case KEY_ENTER:
-        insert(L'\n');
-        break;
-    case 0x18: /* \vb{Ctrl}+\vb{X} */
+int ret;
+assert((ret = get_wch(&c)) != ERR);
+if (ret == KEY_CODE_YES && c == KEY_RESIZE) continue;
+@<\vb{Ctrl}+\vb{M}, \vb{ Enter }@>@;
+@<\vb{Ctrl}+\vb{R}@>@;
+@<\vb{Ctrl}+\vb{S}@>@;
+@<\vb{Ctrl}+\vb{H}, \vb{ BackSpace }@>@;
+@<\vb{Ctrl}+\vb{P}, \vb{ \char'13 \space}@>@;
+@<\vb{Ctrl}+\vb{N}, \vb{ \char'1 \space}@>@;
+@<\vb{Ctrl}+\vb{B}, \vb{ \char'30 \space}@>@;
+@<\vb{Ctrl}+\vb{F}, \vb{ \char'31 \space}@>@;
+@<\vb{Ctrl}+\vb{A}, \vb{ Home }@>@;
+@<\vb{Ctrl}+\vb{E}, \vb{ End }@>@;
+@<\vb{Ctrl}+\vb{D}, \vb{ Delete }@>@;
+@<\vb{Ctrl}+\vb{[}@>@;
+@<\vb{Ctrl}+\vb{]}@>@;
+@<\vb{Ctrl}+\vb{W}, \vb{ PgUp }@>@;
+@<\vb{Ctrl}+\vb{V}, \vb{ PgDown }@>@;
+@<\vb{Ctrl}+\vb{X}@>@;
+@<\vb{Ctrl}+\vb{Z}@>@;
+if (ret == OK && c == 0x03) insert(L'\u2502');
+if (ret == OK && c >= ' ') insert(c);
+
+@ @<\vb{Ctrl}+\vb{M}...@>=
+if ((ret == OK && c == 0x0d) || (ret == KEY_CODE_YES && c == KEY_ENTER)) insert(L'\n');
+
+@ @<\vb{Ctrl}+\vb{R}@>=
+if (ret == OK && c == 0x12) search(0);
+
+@ @<\vb{Ctrl}+\vb{S}@>=
+if (ret == OK && c == 0x13) search(1);
+
+@ @<\vb{Ctrl}+\vb{H}...@>=
+if (ret == OK && c == 0x08) backsp();
+
+@ @<\vb{Ctrl}+\vb{P}...@>=
+if ((ret == OK && c == 0x10) || (ret == KEY_CODE_YES && c == KEY_UP)) up();
+
+@ @<\vb{Ctrl}+\vb{N}...@>=
+if ((ret == OK && c == 0x0e) || (ret == KEY_CODE_YES && c == KEY_DOWN)) down();
+
+@ @<\vb{Ctrl}+\vb{B}...@>=
+if ((ret == OK && c == 0x02) || (ret == KEY_CODE_YES && c == KEY_LEFT)) left();
+
+@ @<\vb{Ctrl}+\vb{F}...@>=
+if ((ret == OK && c == 0x06) || (ret == KEY_CODE_YES && c == KEY_RIGHT)) right();
+
+@ @<\vb{Ctrl}+\vb{A}...@>=
+if ((ret == OK && c == 0x01) || (ret == KEY_CODE_YES && c == KEY_HOME)) b_point = lnbegin(b_point);
+
+@ @<\vb{Ctrl}+\vb{E}...@>=
+if ((ret == OK && c == 0x05) || (ret == KEY_CODE_YES && c == KEY_END)) b_point = lnend(b_point);
+
+@ @<\vb{Ctrl}+\vb{D}...@>=
+if ((ret == OK && c == 0x04) || (ret == KEY_CODE_YES && c == KEY_DC)) delete();
+
+@ @<\vb{Ctrl}+\vb{[}@>=
+if (ret == OK && c == 0x1b) top();
+
+@ @<\vb{Ctrl}+\vb{]}@>=
+if (ret == OK && c == 0x1d) bottom();
+
+@ @<\vb{Ctrl}+\vb{W}...@>=
+if ((ret == OK && c == 0x17) || (ret == KEY_CODE_YES && c == KEY_PPAGE)) pgup();
+
+@ @<\vb{Ctrl}+\vb{V}...@>=
+if ((ret == OK && c == 0x16) || (ret == KEY_CODE_YES && c == KEY_NPAGE)) pgdown();
+
+@ @<\vb{Ctrl}+\vb{X}@>=
+if (ret == OK && c == 0x18) {
 #if 0
       done = 1; /* quit without saving */
       if (b_flags & B_MODIFIED) {
@@ -1137,59 +1172,10 @@ assert(get_wch(&c) != ERR);
         if (db = fopen(getenv("db"), "a"))
           fprintf(db, "%s %ld %ld\n", getenv("abs"), b_point, b_page), fclose(db);
 #endif
-      break;
-    case 0x12:
-      search(0);
-      break;
-    case 0x13:
-      search(1);
-      break;
-    case 0x08: /* \vb{Ctrl}+\vb{H}, \vb{ \char'30 \space} */
-      backsp();
-      break;
-    case 0x10:
-      up();
-      break;
-    case 0x0e: /* \vb{Ctrl}+\vb{N} */
-      down();
-      break;
-    case 0x02: /* \vb{Ctrl}+\vb{B} */
-      left();
-      break;
-    case 0x06: /* \vb{Ctrl}+\vb{F} */
-      right();
-      break;
-    case 0x05: /* \vb{Ctrl}+\vb{E} */
-      b_point = lnend(b_point);
-      break;
-    case 0x01: /* \vb{Ctrl}+\vb{A} */
-      b_point = lnbegin(b_point);
-      break;
-    case 0x04: /* \vb{Ctrl}+\vb{D} */
-      delete();
-      break;
-    case 0x1b: /* \vb{Ctrl}+\vb{[} */
-      top();
-      break;
-    case 0x1d: /* \vb{Ctrl}+\vb{]} */
-      bottom();
-      break;
-    case 0x17: /* \vb{Ctrl}+\vb{W} */
-      pgup();
-      break;
-    case 0x16: /* \vb{Ctrl}+\vb{V} */
-      pgdown();
-      break;
-    case 0x1a: /* \vb{Ctrl}+\vb{Z} */
-      quit();
-      break;
-    case 0x0d: /* \vb{Ctrl}+\vb{M} */
-      insert(L'\n');
-      break;
-    case 0x03: insert(L'\u2502'); break;
-    default:
-      insert(c); @q msg(L"oct: %o", c); @>    
-  }
+}
+
+@ @<\vb{Ctrl}+\vb{Z}@>=
+if (ret == OK && c == 0x1a) quit();
 
 @ @<Header files@>=
 #include <assert.h> /* |@!assert| */
