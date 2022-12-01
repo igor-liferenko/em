@@ -81,13 +81,13 @@ file, plus a chunk for the buffer gap.
 typedef size_t point_t;
 
 @ @<Global...@>=
-point_t b_point = 0;          /* the point */
-point_t b_page = 0;           /* start of page */
-point_t b_epage = 0;          /* end of page */
-wchar_t *b_buf = NULL;            /* start of buffer */
-wchar_t *b_ebuf = NULL;           /* end of buffer */
-wchar_t *b_gap = NULL;            /* start of gap */
-wchar_t *b_egap = NULL;           /* end of gap */
+point_t point = 0;          /* the point */
+point_t bop = 0;           /* start of page */
+point_t eop = 0;          /* end of page */
+wchar_t *bob = NULL;            /* start of buffer */
+wchar_t *eob = NULL;           /* end of buffer */
+wchar_t *bog = NULL;            /* start of gap */
+wchar_t *eog = NULL;           /* end of gap */
 int b_row;                /* cursor row */
 int b_col;                /* cursor col */
 uint8_t b_flags = 0;             /* buffer flags */
@@ -139,7 +139,7 @@ void case_sensitive_search(int case_sensitive_search_flag)
 @<Procedures@>=
 wchar_t *ptr(point_t offset)
 {
- return (b_buf+offset + (b_buf + offset < b_gap ? 0 : b_egap-b_gap));
+ return (bob+offset + (bob + offset < bog ? 0 : eog-bog));
 }
 
 @ Given a pointer into the buffer, convert it to a buffer offset.
@@ -147,11 +147,11 @@ wchar_t *ptr(point_t offset)
 @<Procedures@>=
 point_t pos(wchar_t *cp)
 {
- assert(b_buf <= cp && cp <= b_ebuf);
- assert(cp < b_gap || cp >= b_egap);
- if (cp < b_egap) assert(cp - b_buf >= 0);
- else assert(cp - b_buf - (b_egap - b_gap) >= 0);
- return (point_t) (cp - b_buf - (cp < b_egap ? 0 : b_egap - b_gap));
+ assert(bob <= cp && cp <= eob);
+ assert(cp < bog || cp >= eog);
+ if (cp < eog) assert(cp - bob >= 0);
+ else assert(cp - bob - (eog - bog) >= 0);
+ return (point_t) (cp - bob - (cp < eog ? 0 : eog - bog));
 }
 
 @ Enlarge gap by n chars, position of gap cannot change.
@@ -166,13 +166,13 @@ int growgap(point_t n)
  wchar_t *new;
  point_t buflen, newlen, xgap, xegap;
   
- assert(b_buf <= b_gap);
- assert(b_gap <= b_egap);
- assert(b_egap <= b_ebuf);
+ assert(bob <= bog);
+ assert(bog <= eog);
+ assert(eog <= eob);
 
- xgap = (point_t) (b_gap - b_buf);
- xegap = (point_t) (b_egap - b_buf);
- buflen = (point_t) (b_ebuf - b_buf);
+ xgap = (point_t) (bog - bob);
+ xegap = (point_t) (eog - bob);
+ buflen = (point_t) (eob - bob);
     
  @<Calculate new length |newlen| of gap@>@;
  @<Allocate memory for editing buffer@>@;
@@ -195,7 +195,7 @@ assert(newlen >= 0);
 if (buflen == 0) /* if buffer is empty */
   new = malloc((size_t) newlen * sizeof (wchar_t));
 else
-  new = realloc(b_buf, (size_t) newlen * sizeof (wchar_t));
+  new = realloc(bob, (size_t) newlen * sizeof (wchar_t));
 if (new == NULL) {
   msg(L"malloc: %m\n");
   return FALSE;
@@ -210,29 +210,29 @@ to the right side of the ``new'' buffer.
 
 @<Relocate pointers in new buffer and append the new
     extension to the end of the gap@>=
-b_buf = new;
-b_gap = b_buf + xgap;
-b_egap = b_buf + newlen;
+bob = new;
+bog = bob + xgap;
+eog = bob + newlen;
 while (xegap < buflen--)
- *--b_egap = *--b_ebuf;
-b_ebuf = b_buf + newlen;
-assert(b_buf <= b_gap);
-assert(b_gap < b_egap);          /* gap must exist */
-assert(b_egap <= b_ebuf);
+ *--eog = *--eob;
+eob = bob + newlen;
+assert(bob <= bog);
+assert(bog < eog);          /* gap must exist */
+assert(eog <= eob);
 
 @ @<Procedures@>=
 void movegap(offset)
  point_t offset; /* number of characters before the gap */
 {
  wchar_t *p = ptr(offset);
- assert(p <= b_ebuf);
- while (p < b_gap)
-  *--b_egap = *--b_gap;
- while (b_egap < p)
-  *b_gap++ = *b_egap++;
- assert(b_gap <= b_egap);
- assert(b_buf <= b_gap);
- assert(b_egap <= b_ebuf);
+ assert(p <= eob);
+ while (p < bog)
+  *--eog = *--bog;
+ while (eog < p)
+  *bog++ = *eog++;
+ assert(bog <= eog);
+ assert(bob <= bog);
+ assert(eog <= eob);
 }
 
 @ @<Procedures@>=
@@ -240,7 +240,7 @@ void quit(void)
 {
   @<Save buffer@>@;
   if (db = fopen(getenv("db"), "a"))
-    fprintf(db, "%s %ld %ld\n", getenv("abs"), b_point, b_page), fclose(db);
+    fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
   done = 1;
 }
 
@@ -275,7 +275,7 @@ if ((fp = fopen(getenv("file"), "w")) != NULL) {
   if (fp == NULL) msg(L"Failed to open file \"%s\".", getenv("file"));
   @<Add trailing newline to non-empty buffer if it is not present@>@;
   movegap(0);
-  length = (point_t) (b_ebuf - b_egap);
+  length = (point_t) (eob - eog);
   @<Write file@>@;
   fclose(fp);
 }
@@ -285,10 +285,10 @@ If gap size is zero and no more memory can be allocated, do not append the
 newline.
 
 @<Add trailing newline to non-empty buffer...@>=
-movegap(pos(b_ebuf));
-if (b_buf < b_gap && *(b_gap-1) != L'\n')
-  if (b_gap != b_egap || growgap(1)) /* if gap size is zero, grow gap */
-    *b_gap++ = L'\n';
+movegap(pos(eob));
+if (bob < bog && *(bog-1) != L'\n')
+  if (bog != eog || growgap(1)) /* if gap size is zero, grow gap */
+    *bog++ = L'\n';
 
 @ We write file character-by-character for similar reasons which are explained in
 |@<Read file@>|.
@@ -305,7 +305,7 @@ And do that if file was unchanged, just quit without doing anything to the file.
 
 @<Write file@>=
 for (point_t n = 0; n < length; n++) {
-  fputwc(*(b_egap + n), fp);
+  fputwc(*(eog + n), fp);
   if (ferror(fp)) {
     msg(L"Failed to write file \"%s\".", getenv("file"));
     break;
@@ -355,15 +355,15 @@ while (1) {
 b_flags &= ~B_MODIFIED;
 
 @ @<Copy contents of |buf|...@>=
-if (b_egap - b_gap < buf_end-buf && !growgap((point_t) (buf_end-buf))) { /* if gap size
+if (eog - bog < buf_end-buf && !growgap((point_t) (buf_end-buf))) { /* if gap size
     is not sufficient, grow gap */
   fclose(fp);
   if (db = fopen(getenv("db"), "a"))
-    fprintf(db, "%s %ld %ld\n", getenv("abs"), b_point, b_page), fclose(db);
+    fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
   printf("Failed to allocate required memory.\n"), exit(EXIT_FAILURE);
 }
 for (i = 0; i < buf_end-buf; i++)
-  *b_gap++ = buf[i];
+  *bog++ = buf[i];
 
 @ If necessary, append newline to editing buffer after reading the file.
 If the file has zero length, newline is not appended.
@@ -393,12 +393,12 @@ point_t lnbegin(point_t off)
 @<Procedures@>=
 point_t lnend(point_t off)
 {
-  if (off == pos(b_ebuf)) return off;
+  if (off == pos(eob)) return off;
   wchar_t *p;
   do
     p = ptr(off++);
-  while (b_ebuf > p && *p != L'\n');
-  return (b_ebuf > p ? --off : pos(b_ebuf));
+  while (eob > p && *p != L'\n');
+  return (eob > p ? --off : pos(eob));
 }
 
 @ Forward scan for start of logical line segment containing `finish'.
@@ -441,14 +441,14 @@ point_t segnext(point_t start, point_t finish)
  point_t scan = segstart(start, finish);
  while (1) {
   p = ptr(scan);
-  if (b_ebuf <= p || COLS <= c)
+  if (eob <= p || COLS <= c)
    break;
   scan++;
   if (*p == L'\n')
    break;
   c += *p == L'\t' ? 8 - (c & 7) : 1;
  }
- return (p < b_ebuf ? scan : pos(b_ebuf));
+ return (p < eob ? scan : pos(eob));
 }
 
 @ Find the beginning of previous line.
@@ -484,7 +484,7 @@ point_t lncolumn(point_t offset, int column)
 {
  int c = 0;
  wchar_t *p;
- while ((p = ptr(offset)) < b_ebuf && *p != L'\n' && c < column) {
+ while ((p = ptr(offset)) < eob && *p != L'\n' && c < column) {
   c += *p == L'\t' ? 8 - (c & 7) : 1;
   ++offset;
  }
@@ -635,49 +635,49 @@ void display(void)
 /* FIXME: when cursor is on bottom line (except when it is in the end of this line)
 and C-m is pressed, the cursor goes
 to new line but the page is not scrolled one line up as it should be;
-make so that |down| will be called if character |L'\n'| is inserted and |b_point|
-equals to |b_epage| */
+make so that |down| will be called if character |L'\n'| is inserted and |point|
+equals to |eop| */
 @^FIXME@>
  wchar_t *p;
  int i, j, k;
 
  /* find start of screen, handle scroll up off page or top of file  */
- /* point is always within |b_page| and |b_epage| */
- if (b_point < b_page)
-  b_page = segstart(lnbegin(b_point), b_point);
+ /* point is always within |bop| and |eop| */
+ if (point < bop)
+  bop = segstart(lnbegin(point), point);
 
  /* reframe when scrolled off bottom */
- if (b_epage <= b_point) {
-  b_page = dndn(b_point); /* find end of screen plus one */
-  if (pos(b_ebuf) <= b_page) { /* if we scoll to EOF we show 1
+ if (eop <= point) {
+  bop = dndn(point); /* find end of screen plus one */
+  if (pos(eob) <= bop) { /* if we scoll to EOF we show 1
                   blank line at bottom of screen */
-   b_page = pos(b_ebuf);
+   bop = pos(eob);
    i = LINES - 2;
   }
   else
    i = LINES - 1;
   while (0 < i--) /* scan backwards the required number of lines */
-   b_page = upup(b_page);
+   bop = upup(bop);
  }
 
  move(0, 0); /* start from top of window */
  i = 0;
  j = 0;
- b_epage = b_page;
+ eop = bop;
  
  /* paint screen from top of page until we hit maxline */ 
  while (1) {
   /* reached point - store the cursor position */
-  if (b_point == b_epage) {
+  if (point == eop) {
    b_row = i;
    b_col = j;
   }
-                if (search_active && b_search_point!=b_point && b_point==b_epage)
-    b_point < b_search_point ? standout() : standend();
-  if (search_active && b_search_point!=b_point && b_search_point==b_epage)
-    b_point < b_search_point ? standend() : standout();
-  p = ptr(b_epage);
-  if (LINES - 1 <= i || b_ebuf <= p) /* maxline */
+                if (search_active && b_search_point!=point && point==eop)
+    point < b_search_point ? standout() : standend();
+  if (search_active && b_search_point!=point && b_search_point==eop)
+    point < b_search_point ? standend() : standout();
+  p = ptr(eop);
+  if (LINES - 1 <= i || eob <= p) /* maxline */
    break;
   cchar_t my_cchar;
   memset(&my_cchar, 0, sizeof my_cchar);
@@ -698,7 +698,7 @@ equals to |b_epage| */
     j = 0;
    i++;
   }
-  b_epage++;
+  eop++;
  }
 
  /* replacement for clrtobot() to bottom of window */
@@ -720,20 +720,20 @@ equals to |b_epage| */
 }
 
 @ @<Procedures@>=
-void top(void) @+ {@+ b_point = 0; @+}
-void bottom(void) @+ {@+ b_epage = b_point = pos(b_ebuf); @+}
-void left(void) @+ {@+ if (0 < b_point) b_point--; @+}
-void right(void) @+ {@+ if (b_point < pos(b_ebuf)) b_point++; @+}
-void up(void) @+ {@+ b_point = lncolumn(upup(b_point), b_col); @+}
-void down(void) @+ {@+ b_point = lncolumn(dndn(b_point), b_col); @+}
+void top(void) @+ {@+ point = 0; @+}
+void bottom(void) @+ {@+ eop = point = pos(eob); @+}
+void left(void) @+ {@+ if (0 < point) point--; @+}
+void right(void) @+ {@+ if (point < pos(eob)) point++; @+}
+void up(void) @+ {@+ point = lncolumn(upup(point), b_col); @+}
+void down(void) @+ {@+ point = lncolumn(dndn(point), b_col); @+}
 
 @ @<Procedures@>=
 void pgdown(void)
 {
- b_page = b_point = upup(b_epage);
+ bop = point = upup(eop);
  while (0 < b_row--)
   down();
- b_epage = pos(b_ebuf);
+ eop = pos(eob);
 }
 
 @ @<Procedures@>=
@@ -741,7 +741,7 @@ void pgup(void)
 {
  int i = LINES - 1;
  while (0 < --i) {
-  b_page = upup(b_page);
+  bop = upup(bop);
   up();
  }
 }
@@ -749,46 +749,46 @@ void pgup(void)
 @ @<Procedures@>=
 void insert(wchar_t c)
 {
- assert(b_gap <= b_egap);
- if (b_gap == b_egap && !growgap(CHUNK)) return; /* if gap size is zero,
+ assert(bog <= eog);
+ if (bog == eog && !growgap(CHUNK)) return; /* if gap size is zero,
           grow gap */
- movegap(b_point);
- *b_gap++ = c;
- b_point++;
+ movegap(point);
+ *bog++ = c;
+ point++;
  b_flags |= B_MODIFIED;
 }
 
 @ @<Procedures@>=
 void backsp(void)
 {
- movegap(b_point);
- if (b_buf < b_gap)
-  b_gap--;
- b_point = pos(b_egap);
+ movegap(point);
+ if (bob < bog)
+  bog--;
+ point = pos(eog);
  b_flags |= B_MODIFIED;
 }
 
 @ @<Procedures@>=
 void delete(void)
 {
- movegap(b_point);
- if (b_egap < b_ebuf)
-  b_point = pos(++b_egap);
+ movegap(point);
+ if (eog < eob)
+  point = pos(++eog);
  b_flags |= B_MODIFIED;
 }
 
 @* Searching text.
 
 @ Searching is wrapped. This works by simply resetting cursor position to the beginning of
-buffer when search fails. Next time when search button is pressed, |b_point| will
-hold value 0, thus search will start from the beginning of buffer. (Initially, |b_point|
+buffer when search fails. Next time when search button is pressed, |point| will
+hold value 0, thus search will start from the beginning of buffer. (Initially, |point|
 holds current cursor position, so searching is started from this point.)
 
 Besides, here we keep cursor position of last successful search in |search_point|---to
 leave cursor there when we exit after failed search.
 
 Also, if there are no occurrences of search text, we do not change cursor position from
-which the search was started. To make this work, we save |b_point| only when we fail for the
+which the search was started. To make this work, we save |point| only when we fail for the
 first time. Use |search_failed| to track this.
 
 And if the direction of search changes, |search_failed| must be reset.
@@ -808,7 +808,7 @@ For description of what is |case_sensitive_search_flag| see description of proce
 
 @<Search forward@>=
 if (direction==0&&!no_occurrences) search_failed=0; /* direction changed */
-for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
+for (point_t p=point, @!end_p=pos(eob); p < end_p; p++) {
 /* FIXME: if instead of |end_p| will be used |a| will it get into the index? */
 @^FIXME@>
  point_t pp;
@@ -817,7 +817,7 @@ for (point_t p=b_point, @!end_p=pos(b_ebuf); p < end_p; p++) {
    towlower(*s) == towlower(*ptr(pp))) &&
    *s !=L'\0' && pp < end_p; s++, pp++) ;
  if (*s == L'\0') {
-          b_point = pp;
+          point = pp;
           b_search_point = p;
           search_msg(L"Search Forward: %ls", searchtext);
           display();
@@ -832,18 +832,18 @@ if (search_failed) {
 else {
   search_msg(L"Failing Forward Search: %ls", searchtext);
   search_failed=1;
-  search_point=b_point;
+  search_point=point;
 }
 dispmsg();
-b_point=0;
-b_search_point=b_point;
+point=0;
+b_search_point=point;
 @/@t\4@> search_forward:
 
 @ The logic is analogous to |@<Search forward@>|.
 
 @<Search backward@>=
 if (direction==1&&!no_occurrences) search_failed=0; /* direction changed */
-for (point_t p=b_point; p > 0;) {
+for (point_t p=point; p > 0;) {
  p--;
  point_t pp;
         wchar_t *s;
@@ -851,7 +851,7 @@ for (point_t p=b_point; p > 0;) {
    towlower(*s) == towlower(*ptr(pp))) &&
    *s != L'\0'; s++, pp++) ;
  if (*s == L'\0') {
-          b_point = p;
+          point = p;
           b_search_point = pp;
           search_msg(L"Search Backward: %ls", searchtext);
           display();
@@ -866,17 +866,17 @@ if (search_failed) {
 else {
   search_msg(L"Failing Backward Search: %ls", searchtext);
   search_failed=1;
-  search_point=b_point;
+  search_point=point;
 }
 dispmsg();
-b_point=pos(b_ebuf);
-b_search_point=b_point;
+point=pos(eob);
+b_search_point=point;
 @/@t\4@> search_backward:
 
 @ |search_active| is a flag, which is used in |dispmsg| for
 special handling of msg line---when we are
 typing search text, cursor must stay there until we exit search via C-g or C-m.
-It is also used in |display| to make it possible to use |b_search_point!=b_point| check
+It is also used in |display| to make it possible to use |b_search_point!=point| check
 is an indicator fi a match is found.
 
 |b_search_point| is used to determine the other part of the word to highlight it,
@@ -903,7 +903,7 @@ void search(direction)
 {
   int cpos = 0;
   wchar_t c;
-  point_t o_point = b_point;
+  point_t o_point = point;
   int search_failed = 0;
   point_t search_point; /* FIXME: can it be used uninitialized in |switch| below? */
 @^FIXME@>
@@ -911,7 +911,7 @@ void search(direction)
   int case_sensitive_search_flag = 0;
 
   search_active = 1;
-  b_search_point = b_point;
+  b_search_point = point;
 
   /* FIXME: check if |curs_set(0)| will work correctly in |KEY_RESIZE| event */
 @^FIXME@>
@@ -949,11 +949,11 @@ void search(direction)
         dispmsg();
         break;
       case 0x0d:
-        if (search_failed) b_point = search_point;
+        if (search_failed) point = search_point;
         search_active = 0;
         return;
       case 0x07:
-   b_point = o_point;
+   point = o_point;
    search_active = 0;
    return;
      case 0x12:
@@ -1009,7 +1009,7 @@ int main(int argc, char **argv)
   @<Close file@>@;
 
   @<Ensure that restored position is inside buffer@>@;
-  @<Set |b_epage| for proper positioning of cursor on screen@>@;
+  @<Set |eop| for proper positioning of cursor on screen@>@;
 
   assert(initscr() != NULL);
   raw();
@@ -1022,7 +1022,7 @@ int main(int argc, char **argv)
   int lineno = atoi(getenv("line"));
   if (lineno > 0) @<Move cursor to |lineno|@>@;
   else if (argc != 1) /* restore cursor (see wrapper in \.{README}) */
-    b_point = atol(argv[1]), b_page = atol(argv[2]);
+    point = atol(argv[1]), bop = atol(argv[2]);
 
   while (!done) {
     display();
@@ -1058,36 +1058,36 @@ Depending on the terminal type, the keypad(s) on the keyboard may switch modes a
 keypad(stdscr, TRUE); /* TODO: via strace check that smkx is sent */
 @^TODO@>
 
-@ We do this check because |b_point| may be set past the end of buffer if file is changed
+@ We do this check because |point| may be set past the end of buffer if file is changed
 externally.
 
 But this check can only be done after the file is read, in order that the buffer
 is allocated.
 
 @<Ensure that restored...@>=
-if (b_point > pos(b_ebuf)) b_point = pos(b_ebuf);
+if (point > pos(eob)) point = pos(eob);
 
-@ Set |b_epage| to maximum value.
+@ Set |eop| to maximum value.
 This must be set after the file has been read, in order that the buffer is
 allocated.
 
-@<Set |b_epage| for proper positioning of cursor on screen@>=
-b_epage=pos(b_ebuf);
+@<Set |eop| for proper positioning of cursor on screen@>=
+eop=pos(eob);
 
 @ This must be done after |initscr| in order that |COLS| will be initialized.
 
 @<Move cursor to |lineno|@>= {
-  for (b_point=0,lineno--; lineno>0; lineno--) {
-    b_point = lnend(b_point);
+  for (point=0,lineno--; lineno>0; lineno--) {
+    point = lnend(point);
     right();
   }
   @<Position cursor in the middle line of screen@>@;
 }
 
 @ @<Position cursor...@>=
-b_page=b_point;
+bop=point;
 for (int i=(LINES-1)/2;i>0;i--)
-  b_page=upup(b_page);
+  bop=upup(bop);
 
 @ @<Handle key@>=
 wchar_t c;
@@ -1139,10 +1139,10 @@ if ((ret == OK && c == 0x02) || (ret == KEY_CODE_YES && c == KEY_LEFT)) left();
 if ((ret == OK && c == 0x06) || (ret == KEY_CODE_YES && c == KEY_RIGHT)) right();
 
 @ @<\vb{Ctrl}+\vb{A}...@>=
-if ((ret == OK && c == 0x01) || (ret == KEY_CODE_YES && c == KEY_HOME)) b_point = lnbegin(b_point);
+if ((ret == OK && c == 0x01) || (ret == KEY_CODE_YES && c == KEY_HOME)) point = lnbegin(point);
 
 @ @<\vb{Ctrl}+\vb{E}...@>=
-if ((ret == OK && c == 0x05) || (ret == KEY_CODE_YES && c == KEY_END)) b_point = lnend(b_point);
+if ((ret == OK && c == 0x05) || (ret == KEY_CODE_YES && c == KEY_END)) point = lnend(point);
 
 @ @<\vb{Ctrl}+\vb{D}...@>=
 if ((ret == OK && c == 0x04) || (ret == KEY_CODE_YES && c == KEY_DC)) delete();
@@ -1170,7 +1170,7 @@ if (ret == OK && c == 0x18) {
       }
       else
         if (db = fopen(getenv("db"), "a"))
-          fprintf(db, "%s %ld %ld\n", getenv("abs"), b_point, b_page), fclose(db);
+          fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
 #endif
 }
 
