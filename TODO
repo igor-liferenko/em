@@ -1,3 +1,15 @@
+Add
+volatile int my_var;
+void my_SIGWINCH_handler(int signum)
+{
+  my_var = 1;
+}
+and on KEY_RESIZE check my_var after initializing ncurses
+(check with and without SA_RESTART).
+Then try both cases, but before initializing ncurses.
+This is to understand if defining own SIGWINCH handler can be done with ncurses.
+Afterwards add handler which will simply save all data and close 'em'.
+------------------------------
 do 100-char border via insert(L'\u258F')
 if envvar 'edit' exists, show first param from em.db in red and save it on exit with second param -1
 make case-sensivity persist between searches (if we use string of previous search - without typing new string)
