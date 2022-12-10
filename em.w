@@ -81,15 +81,15 @@ file, plus a chunk for the buffer gap.
 typedef size_t point_t;
 
 @ @<Global...@>=
-point_t point = 0;          /* the point */
-point_t bop = 0;           /* start of page */
+point_t point = 0;
+point_t bop = 0;           /* beginning of page */
 point_t eop = 0;          /* end of page */
-wchar_t *bob = NULL;            /* start of buffer */
+wchar_t *bob = NULL;            /* beginning of buffer */
 wchar_t *eob = NULL;           /* end of buffer */
-wchar_t *bog = NULL;            /* start of gap */
+wchar_t *bog = NULL;            /* beginning of gap */
 wchar_t *eog = NULL;           /* end of gap */
-int b_row;                /* cursor row */
-int b_col;                /* cursor col */
+int row;                /* cursor row */
+int col;                /* cursor col */
 uint8_t b_flags = 0;             /* buffer flags */
 
 @ @<Global variables@>=
@@ -669,8 +669,8 @@ equals to |eop| */
  while (1) {
   /* reached point - store the cursor position */
   if (point == eop) {
-   b_row = i;
-   b_col = j;
+   row = i;
+   col = j;
   }
                 if (search_active && b_search_point!=point && point==eop)
     point < b_search_point ? standout() : standend();
@@ -710,12 +710,12 @@ equals to |eop| */
 
  modeline();
  dispmsg();
-        if (search_active) { /* override |b_row| and |b_col|, in order that cursor will be
+        if (search_active) { /* override |row| and |col|, in order that cursor will be
                                 put to msg line */
-          b_row = LINES - 1;
-          b_col = (int) wcslen(msgline);
+          row = LINES - 1;
+          col = (int) wcslen(msgline);
         }
- move(b_row, b_col); /* set cursor */
+ move(row, col); /* set cursor */
  refresh(); /* update the real screen */
 }
 
@@ -724,14 +724,14 @@ void top(void) @+ {@+ point = 0; @+}
 void bottom(void) @+ {@+ eop = point = pos(eob); @+}
 void left(void) @+ {@+ if (0 < point) point--; @+}
 void right(void) @+ {@+ if (point < pos(eob)) point++; @+}
-void up(void) @+ {@+ point = lncolumn(upup(point), b_col); @+}
-void down(void) @+ {@+ point = lncolumn(dndn(point), b_col); @+}
+void up(void) @+ {@+ point = lncolumn(upup(point), col); @+}
+void down(void) @+ {@+ point = lncolumn(dndn(point), col); @+}
 
 @ @<Procedures@>=
 void pgdown(void)
 {
  bop = point = upup(eop);
- while (0 < b_row--)
+ while (0 < row--)
   down();
  eop = pos(eob);
 }
@@ -1012,11 +1012,9 @@ int main(int argc, char **argv)
   @<Set |eop| for proper positioning of cursor on screen@>@;
 
   assert(initscr() != NULL);
+  nonl();
   raw();
-  noecho(); /* TODO: see getch(3NCURSES) for a discussion of
-          how echo/noecho interact with cbreak and nocbreak
-          (|raw|/|noraw| are almost the same as cbreak/nocbreak) */
-  nonl(); /* prevent |get_wch| from changing |0x0d| to |0x0a| */
+  noecho();
   @<Call |keypad|@>@;
 
   int lineno = atoi(getenv("line"));
@@ -1094,7 +1092,7 @@ wchar_t c;
 int ret;
 assert((ret = get_wch(&c)) != ERR);
 if (ret == KEY_CODE_YES && c == KEY_RESIZE) continue;
-@<\vb{Ctrl}+\vb{M}, \vb{ Enter }@>@;
+@<\vb{Ctrl}+\vb{M}@>@;
 @<\vb{Ctrl}+\vb{R}@>@;
 @<\vb{Ctrl}+\vb{S}@>@;
 @<\vb{Ctrl}+\vb{H}, \vb{ BackSpace }@>@;
@@ -1109,13 +1107,13 @@ if (ret == KEY_CODE_YES && c == KEY_RESIZE) continue;
 @<\vb{Ctrl}+\vb{]}@>@;
 @<\vb{Ctrl}+\vb{W}, \vb{ PgUp }@>@;
 @<\vb{Ctrl}+\vb{V}, \vb{ PgDown }@>@;
+@<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>@;
 @<\vb{Ctrl}+\vb{X}@>@;
 @<\vb{Ctrl}+\vb{Z}@>@;
-if (ret == OK && c == 0x03) insert(L'\u2502');
 if (ret == OK && c >= ' ') insert(c);
 
-@ @<\vb{Ctrl}+\vb{M}...@>=
-if ((ret == OK && c == 0x0d) || (ret == KEY_CODE_YES && c == KEY_ENTER)) insert(L'\n');
+@ @<\vb{Ctrl}+\vb{M}@>=
+if (ret == OK && c == '\r') insert(L'\n');
 
 @ @<\vb{Ctrl}+\vb{R}@>=
 if (ret == OK && c == 0x12) search(0);
@@ -1158,6 +1156,9 @@ if ((ret == OK && c == 0x17) || (ret == KEY_CODE_YES && c == KEY_PPAGE)) pgup();
 
 @ @<\vb{Ctrl}+\vb{V}...@>=
 if ((ret == OK && c == 0x16) || (ret == KEY_CODE_YES && c == KEY_NPAGE)) pgdown();
+
+@ @<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>=
+if (ret == OK && c == '\t') insert(L'\t');
 
 @ @<\vb{Ctrl}+\vb{X}@>=
 if (ret == OK && c == 0x18) {
