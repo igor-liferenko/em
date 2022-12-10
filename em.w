@@ -1092,7 +1092,7 @@ wchar_t c;
 int ret;
 assert((ret = get_wch(&c)) != ERR);
 if (ret == KEY_CODE_YES && c == KEY_RESIZE) continue;
-@<\vb{Ctrl}+\vb{M}@>@;
+@<\vb{Ctrl}+\vb{M}, \vb{ Enter }@>@;
 @<\vb{Ctrl}+\vb{R}@>@;
 @<\vb{Ctrl}+\vb{S}@>@;
 @<\vb{Ctrl}+\vb{H}, \vb{ BackSpace }@>@;
@@ -1112,8 +1112,8 @@ if (ret == KEY_CODE_YES && c == KEY_RESIZE) continue;
 @<\vb{Ctrl}+\vb{Z}@>@;
 if (ret == OK && c >= ' ') insert(c);
 
-@ @<\vb{Ctrl}+\vb{M}@>=
-if (ret == OK && c == '\r') insert(L'\n');
+@ @<\vb{Ctrl}+\vb{M}...@>=
+if ((ret == OK && c == '\r') || (ret == KEY_CODE_YES && c == KEY_ENTER)) insert(L'\n');
 
 @ @<\vb{Ctrl}+\vb{R}@>=
 if (ret == OK && c == 0x12) search(0);
