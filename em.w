@@ -75,7 +75,77 @@ file, plus a chunk for the buffer gap.
 @<Typedef declarations@>@;
 @<Global variables@>@;
 @<Procedures@>@;
-@<Main program@>@;
+int main(int argc, char **argv)
+{
+  @<Initialize@>@;
+  while (1) {
+    @<Wait user input@>@;
+    if (done) break;
+    @<Update screen@>@;
+  }
+  @<Cleanup@>@;
+
+  return 0;
+}
+
+@ @<Initialize@>=
+  assert(argc == 1 || argc == 3);
+
+  setlocale(LC_CTYPE, "C.UTF-8");
+
+  FILE *fp;
+  @<Open file@>@;
+  @<Read file@>@;
+  @<Close file@>@;
+
+  @<Ensure that restored position is inside buffer@>@;
+  @<Set |eop| for proper positioning of cursor on screen@>@;
+
+  assert(initscr() != NULL);
+  nonl();
+  raw();
+  noecho();
+  @<Call |keypad|@>@;
+
+  int lineno = atoi(getenv("line"));
+  if (lineno > 0) @<Move cursor to |lineno|@>@;
+  else if (argc != 1) /* restore cursor (see wrapper in \.{README}) */
+    point = atol(argv[1]), bop = atol(argv[2]);
+
+display();
+
+@ @<Wait user input@>=
+wchar_t c;
+int ret = get_wch(&c);
+if (ret == KEY_CODE_YES && c == KEY_RESIZE) ; /* TODO */
+@<\vb{Ctrl}+\vb{M}, \vb{ Enter }@>@;
+@<\vb{Ctrl}+\vb{R}@>@;
+@<\vb{Ctrl}+\vb{S}@>@;
+@<\vb{Ctrl}+\vb{H}, \vb{ BackSpace }@>@;
+@<\vb{Ctrl}+\vb{P}, \vb{ \char'13 \space}@>@;
+@<\vb{Ctrl}+\vb{N}, \vb{ \char'1 \space}@>@;
+@<\vb{Ctrl}+\vb{B}, \vb{ \char'30 \space}@>@;
+@<\vb{Ctrl}+\vb{F}, \vb{ \char'31 \space}@>@;
+@<\vb{Ctrl}+\vb{A}, \vb{ Home }@>@;
+@<\vb{Ctrl}+\vb{E}, \vb{ End }@>@;
+@<\vb{Ctrl}+\vb{D}, \vb{ Delete }@>@;
+@<\vb{Ctrl}+\vb{[}@>@;
+@<\vb{Ctrl}+\vb{]}@>@;
+@<\vb{Ctrl}+\vb{W}, \vb{ PgUp }@>@;
+@<\vb{Ctrl}+\vb{V}, \vb{ PgDown }@>@;
+@<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>@;
+@<\vb{Ctrl}+\vb{X}@>@;
+@<\vb{Ctrl}+\vb{Z}@>@;
+if (ret == OK && c >= ' ') insert(c);
+
+@ @<Update screen@>=
+display();
+
+@ @<Cleanup@>=
+  move(LINES - 1, 0);
+  refresh(); /* FIXME: why do we need this? Remove and check what will be. */
+  noraw();
+  endwin(); /* end curses mode */
 
 @ @<Typedef declarations@>=
 typedef size_t point_t;
@@ -996,45 +1066,6 @@ case_sensitive_search(case_sensitive_search_flag);
 msgflag = TRUE;
 dispmsg();
 
-@ @<Main program@>=
-int main(int argc, char **argv)
-{
-  assert(argc == 1 || argc == 3);
-
-  setlocale(LC_CTYPE, "C.UTF-8");
-
-  FILE *fp;
-  @<Open file@>@;
-  @<Read file@>@;
-  @<Close file@>@;
-
-  @<Ensure that restored position is inside buffer@>@;
-  @<Set |eop| for proper positioning of cursor on screen@>@;
-
-  assert(initscr() != NULL);
-  nonl();
-  raw();
-  noecho();
-  @<Call |keypad|@>@;
-
-  int lineno = atoi(getenv("line"));
-  if (lineno > 0) @<Move cursor to |lineno|@>@;
-  else if (argc != 1) /* restore cursor (see wrapper in \.{README}) */
-    point = atol(argv[1]), bop = atol(argv[2]);
-
-  while (!done) {
-    display();
-    @<Handle key@>@;
-  }
-
-  move(LINES - 1, 0);
-  refresh(); /* FIXME: why do we need this? Remove and check what will be. */
-  noraw();
-  endwin(); /* end curses mode */
-
-  return 0;
-}
-
 @ |keypad| does two things: 1) send smkx to terminal, 2) interpret key sequences
 from terminal using terminfo database.
 
@@ -1086,31 +1117,6 @@ eop=pos(eob);
 bop=point;
 for (int i=(LINES-1)/2;i>0;i--)
   bop=upup(bop);
-
-@ @<Handle key@>=
-wchar_t c;
-int ret;
-assert((ret = get_wch(&c)) != ERR);
-if (ret == KEY_CODE_YES && c == KEY_RESIZE) continue;
-@<\vb{Ctrl}+\vb{M}, \vb{ Enter }@>@;
-@<\vb{Ctrl}+\vb{R}@>@;
-@<\vb{Ctrl}+\vb{S}@>@;
-@<\vb{Ctrl}+\vb{H}, \vb{ BackSpace }@>@;
-@<\vb{Ctrl}+\vb{P}, \vb{ \char'13 \space}@>@;
-@<\vb{Ctrl}+\vb{N}, \vb{ \char'1 \space}@>@;
-@<\vb{Ctrl}+\vb{B}, \vb{ \char'30 \space}@>@;
-@<\vb{Ctrl}+\vb{F}, \vb{ \char'31 \space}@>@;
-@<\vb{Ctrl}+\vb{A}, \vb{ Home }@>@;
-@<\vb{Ctrl}+\vb{E}, \vb{ End }@>@;
-@<\vb{Ctrl}+\vb{D}, \vb{ Delete }@>@;
-@<\vb{Ctrl}+\vb{[}@>@;
-@<\vb{Ctrl}+\vb{]}@>@;
-@<\vb{Ctrl}+\vb{W}, \vb{ PgUp }@>@;
-@<\vb{Ctrl}+\vb{V}, \vb{ PgDown }@>@;
-@<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>@;
-@<\vb{Ctrl}+\vb{X}@>@;
-@<\vb{Ctrl}+\vb{Z}@>@;
-if (ret == OK && c >= ' ') insert(c);
 
 @ @<\vb{Ctrl}+\vb{M}...@>=
 if ((ret == OK && c == '\r') || (ret == KEY_CODE_YES && c == KEY_ENTER)) insert(L'\n');
