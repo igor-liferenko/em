@@ -84,12 +84,11 @@ int main(int argc, char **argv)
     @<Update screen@>@;
   }
   @<Cleanup@>@;
-
   return 0;
 }
 
 @ @<Initialize@>=
-  assert(argc == 1 || argc == 3);
+  assert(argc == 1 || argc == 3); /* (see wrapper script) */
 
   setlocale(LC_CTYPE, "C.UTF-8");
 
@@ -109,7 +108,7 @@ int main(int argc, char **argv)
 
   int lineno = atoi(getenv("line"));
   if (lineno > 0) @<Move cursor to |lineno|@>@;
-  else if (argc != 1) /* restore cursor (see wrapper in \.{README}) */
+  else if (argc != 1) /* restore cursor */
     point = atol(argv[1]), bop = atol(argv[2]);
 
 display();
@@ -117,7 +116,8 @@ display();
 @ @<Wait user input@>=
 wchar_t c;
 int ret = get_wch(&c);
-if (ret == KEY_CODE_YES && c == KEY_RESIZE) ; /* TODO */
+if (ret == KEY_CODE_YES && c == KEY_RESIZE) ; /* TODO: in this case cursor disappears - do so
+-  that |display| will show |point| in the middle */
 @<\vb{Ctrl}+\vb{M}, \vb{ Enter }@>@;
 @<\vb{Ctrl}+\vb{R}@>@;
 @<\vb{Ctrl}+\vb{S}@>@;
@@ -138,14 +138,15 @@ if (ret == KEY_CODE_YES && c == KEY_RESIZE) ; /* TODO */
 @<\vb{Ctrl}+\vb{Z}@>@;
 if (ret == OK && c >= ' ') insert(c);
 
-@ @<Update screen@>=
+@ Update screen if user changed window size (including changing font
+size) or the data or moved cursor.
+@<Update screen@>=
 display();
 
 @ @<Cleanup@>=
   move(LINES - 1, 0);
-  refresh(); /* FIXME: why do we need this? Remove and check what will be. */
-  noraw();
-  endwin(); /* end curses mode */
+  refresh();
+  endwin();
 
 @ @<Typedef declarations@>=
 typedef size_t point_t;
@@ -996,7 +997,7 @@ void search(direction)
 
   while (1) {
     refresh(); /* update the real screen */
-    if (get_wch(&c) == KEY_CODE_YES) { /* the concept used here is explained in |@<Handle key@>| */
+    if (get_wch(&c) == KEY_CODE_YES) {
       switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/}
                         library while decoding escape sequences via terminfo database */
       case KEY_RESIZE:
