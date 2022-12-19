@@ -9,59 +9,8 @@
 \font\emfont=manfnt
 \def\EM/{{\emfont EM}}
 
-@* Buffer-gap algorithm. EM is a text editor. It is implemented
-using wide-character API and ncurses library. EM uses ``buffer-gap''
-algorithm to represent a file in memory.
-
-With a buffer gap, editing operations are achieved by moving the gap to
-the place in the buffer where you want to make the change, and then
-either by shrinking the size of the gap for insertions, or increasing the
-size of the gap for deletions.  
-
-When a file is loaded it is loaded with the gap at the bottom.
-{\tt\obeylines
-cccccccc
-cccccccc
-cccc....\par}
-\noindent where |c| is a byte from the file and \.{.} is a byte in the gap.
-As long as we just move around the memory we dont need to worry about the gap.
-The current point is a long.  If we want the actual memory location we
-use |pos| which converts to a memory pointer
-and ensures that the gap is skipped at the right point.
-
-When we need to insert chars or delete then the gap has to be moved to the
-current position using |movegap|.
-{\tt\obeylines
-cccccccc
-ccc....c
-cccccccc\par}
-
-Now we decide to delete the character at the current position, we just made the gap
-1 char bigger, i.e., the gap pointer is decremented.
-In effect nothing is thrown away.  The gap swallows up the deleted character.
-{\tt\obeylines
-cccccccc
-cc.....c
-cccccccc\par}
-
-Insertion works the opposite way.
-{\tt\obeylines
-cccccccc
-ccc....c
-cccccccc\par}
-\noindent Here we incremented the gap pointer on and put a byte in the new space where the gap
-has just moved from.
-
-When we insert we have to be a bit clever and make sure the gap is big enough to take the
-paste. This is where |growgap| comes into play.
-
-Actually, at the beginning of the insert routine there is a check
-to make sure that there is room in the gap for more characters.  When the
-gapsize is 0, it is necessary to realloc the entire buffer.
-When we read in a file, we allocate enough memory for the entire
-file, plus a chunk for the buffer gap.
-
-@ This is the outline of our program.
+@* Program.
+This is the outline of the program.
 
 @d B_MODIFIED 0x01 /* modified buffer */
 @d CHUNK 8096L /* TODO: when it was 512 and I pasted from clipboard
@@ -116,8 +65,9 @@ display();
 @ @<Wait user input@>=
 wchar_t c;
 int ret = get_wch(&c);
-if (ret == KEY_CODE_YES && c == KEY_RESIZE) ; /* TODO: in this case cursor disappears - do so
--  that |display| will show |point| in the middle */
+if (ret == KEY_CODE_YES && c == KEY_RESIZE) ; /* TODO: if |point| (and hence the cursor) becomes
+out of visible area, move it minimal distance that it becomes visible again; HINT: debug
+|display| by using stty -F ... rows <decrease and increase by one to see the effect> */
 @<\vb{Ctrl}+\vb{M}, \vb{ Enter }@>@;
 @<\vb{Ctrl}+\vb{R}@>@;
 @<\vb{Ctrl}+\vb{S}@>@;
@@ -145,8 +95,60 @@ display();
 
 @ @<Cleanup@>=
   move(LINES - 1, 0);
-  refresh();
+  //refresh();
   endwin();
+
+@* Buffer-gap algorithm. EM is a text editor. It is implemented
+using wide-character API and ncurses library. EM uses ``buffer-gap''
+algorithm to represent a file in memory.
+
+With a buffer gap, editing operations are achieved by moving the gap to
+the place in the buffer where you want to make the change, and then
+either by shrinking the size of the gap for insertions, or increasing the
+size of the gap for deletions.  
+
+When a file is loaded it is loaded with the gap at the bottom.
+{\tt\obeylines
+cccccccc
+cccccccc
+cccc....\par}
+\noindent where |c| is a byte from the file and \.{.} is a byte in the gap.
+As long as we just move around the memory we dont need to worry about the gap.
+The current point is a long.  If we want the actual memory location we
+use |pos| which converts to a memory pointer
+and ensures that the gap is skipped at the right point.
+
+When we need to insert chars or delete then the gap has to be moved to the
+current position using |movegap|.
+{\tt\obeylines
+cccccccc
+ccc....c
+cccccccc\par}
+
+Now we decide to delete the character at the current position, we just made the gap
+1 char bigger, i.e., the gap pointer is decremented.
+In effect nothing is thrown away.  The gap swallows up the deleted character.
+{\tt\obeylines
+cccccccc
+cc.....c
+cccccccc\par}
+
+Insertion works the opposite way.
+{\tt\obeylines
+cccccccc
+ccc....c
+cccccccc\par}
+\noindent Here we incremented the gap pointer on and put a byte in the new space where the gap
+has just moved from.
+
+When we insert we have to be a bit clever and make sure the gap is big enough to take the
+paste. This is where |growgap| comes into play.
+
+Actually, at the beginning of the insert routine there is a check
+to make sure that there is room in the gap for more characters.  When the
+gapsize is 0, it is necessary to realloc the entire buffer.
+When we read in a file, we allocate enough memory for the entire
+file, plus a chunk for the buffer gap.
 
 @ @<Typedef declarations@>=
 typedef size_t point_t;
@@ -1195,7 +1197,7 @@ if (ret == OK && c == 0x1a) quit();
   |@!KEY_LEFT|, |@!KEY_NPAGE|, |@!KEY_PPAGE|, |@!KEY_RESIZE|, |@!KEY_RESIZE|, |@!KEY_RIGHT|,
   |@!KEY_UP|, |@!LINES|, |@!TRUE|, |@!add_wch|, |@!addwstr|, |@!chars|, |@!clrtoeol|,
   |@!curs_set|, |@!endwin|, |@!get_wch|, |@!initscr|, |@!keypad|, |@!move|, |@!noecho|,
-  |@!nonl|, |@!noraw|, |@!raw|, |@!refresh|, |@!standend|, |@!standout|, |@!stdscr|,
+  |@!nonl|, |@!raw|, |@!refresh|, |@!standend|, |@!standout|, |@!stdscr|,
   |@!wunctrl| */
 #include <stdarg.h> /* |@!va_end|, |@!va_start| */
 #include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fopen|, |@!fprintf|, |@!printf| */
