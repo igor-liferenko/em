@@ -10,6 +10,8 @@
 \def\EM/{{\emfont EM}}
 
 @* Program.
+EM is a text editor. It is implemented
+using wide-character API and ncurses library.
 This is the outline of the program.
 
 @d B_MODIFIED 0x01 /* modified buffer */
@@ -94,12 +96,9 @@ size) or the data or moved cursor.
 display();
 
 @ @<Cleanup@>=
-  move(LINES - 1, 0);
-  //refresh();
-  endwin();
+endwin();
 
-@* Buffer-gap algorithm. EM is a text editor. It is implemented
-using wide-character API and ncurses library. EM uses ``buffer-gap''
+@* Buffer-gap algorithm. EM uses ``buffer-gap''
 algorithm to represent a file in memory.
 
 With a buffer gap, editing operations are achieved by moving the gap to
