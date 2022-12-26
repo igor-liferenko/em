@@ -14,13 +14,6 @@ EM is a text editor. It is implemented
 using wide-character API and ncurses library.
 This is the outline of the program.
 
-@d B_MODIFIED 0x01 /* modified buffer */
-@d CHUNK 8096L /* TODO: when it was 512 and I pasted from clipboard
-  (or typed manually in one go) text of ~600 characters,
-  program segfaulted; reproduce this again and determine the cause.
-  HINT: make |CHUNK| 2 or 3 and use \.{gdb} */
-@^TODO@>
-
 @c
 @<Header files@>@;
 @<Typedef declarations@>@;
@@ -149,6 +142,13 @@ gapsize is 0, it is necessary to realloc the entire buffer.
 When we read in a file, we allocate enough memory for the entire
 file, plus a chunk for the buffer gap.
 
+@d B_MODIFIED 0x01 /* modified buffer */
+@d CHUNK 8096L /* TODO: when it was 512 and I pasted from clipboard
+  (or typed manually in one go) text of ~600 characters,
+  program segfaulted; reproduce this again and determine the cause.
+  HINT: make |CHUNK| 2 or 3 and use \.{gdb} */
+@^TODO@>
+
 @ @<Typedef declarations@>=
 typedef size_t point_t;
 
@@ -162,7 +162,7 @@ wchar_t *bog = NULL;            /* beginning of gap */
 wchar_t *eog = NULL;           /* end of gap */
 int row;                /* cursor row */
 int col;                /* cursor col */
-uint8_t b_flags = 0;             /* buffer flags */
+uint8_t buffer_modified = 0;
 
 @ @<Global variables@>=
 FILE *db; /* save cursor */
@@ -307,15 +307,6 @@ void movegap(offset)
  assert(eog <= eob);
 }
 
-@ @<Procedures@>=
-void quit(void)
-{
-  @<Save buffer@>@;
-  if (db = fopen(getenv("db"), "a"))
-    fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
-  done = 1;
-}
-
 @* File input/output.
 
 @ @<Open file@>=
@@ -424,7 +415,6 @@ while (1) {
   @<Copy contents of |buf| to editing buffer@>@;
 }
 @<Add trailing newline to input from non-empty file if it is not present@>@;
-b_flags &= ~B_MODIFIED;
 
 @ @<Copy contents of |buf|...@>=
 if (eog - bog < buf_end-buf && !growgap((point_t) (buf_end-buf))) { /* if gap size
@@ -827,7 +817,7 @@ void insert(wchar_t c)
  movegap(point);
  *bog++ = c;
  point++;
- b_flags |= B_MODIFIED;
+ buffer_modified = 1;
 }
 
 @ @<Procedures@>=
@@ -837,7 +827,7 @@ void backsp(void)
  if (bob < bog)
   bog--;
  point = pos(eog);
- b_flags |= B_MODIFIED;
+ buffer_modified = 1;
 }
 
 @ @<Procedures@>=
@@ -846,7 +836,7 @@ void delete(void)
  movegap(point);
  if (eog < eob)
   point = pos(++eog);
- b_flags |= B_MODIFIED;
+ buffer_modified = 1;
 }
 
 @* Searching text.
@@ -1168,23 +1158,30 @@ if ((ret == OK && c == 0x16) || (ret == KEY_CODE_YES && c == KEY_NPAGE)) pgdown(
 @ @<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>=
 if (ret == OK && c == '\t') insert(L'\t');
 
-@ @<\vb{Ctrl}+\vb{X}@>=
+@ Quit without saving.
+@<\vb{Ctrl}+\vb{X}@>=
 if (ret == OK && c == 0x18) {
 #if 0
-      done = 1; /* quit without saving */
-      if (b_flags & B_MODIFIED) {
-        if (argc != 1)
-          if (db = fopen(getenv("db"), "a"))
-            fprintf(db, "%s %s %s\n", getenv("abs"), argv[1], argv[2]), fclose(db);
-      }
-      else
-        if (db = fopen(getenv("db"), "a"))
-          fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
+  if (buffer_modified) {
+    if (argc != 1)
+      if (db = fopen(getenv("db"), "a"))
+        fprintf(db, "%s %s %s\n", getenv("abs"), argv[1], argv[2]), fclose(db);
+  }
+  else
+    if (db = fopen(getenv("db"), "a"))
+      fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
+  done = 1;
 #endif
 }
 
-@ @<\vb{Ctrl}+\vb{Z}@>=
-if (ret == OK && c == 0x1a) quit();
+@ Save and quit.
+@<\vb{Ctrl}+\vb{Z}@>=
+if (ret == OK && c == 0x1a) {
+  @<Save buffer@>@;
+  if (db = fopen(getenv("db"), "a"))
+    fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
+  done = 1;
+}
 
 @ @<Header files@>=
 #include <assert.h> /* |@!assert| */
