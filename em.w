@@ -142,7 +142,6 @@ gapsize is 0, it is necessary to realloc the entire buffer.
 When we read in a file, we allocate enough memory for the entire
 file, plus a chunk for the buffer gap.
 
-@d B_MODIFIED 0x01 /* modified buffer */
 @d CHUNK 8096L /* TODO: when it was 512 and I pasted from clipboard
   (or typed manually in one go) text of ~600 characters,
   program segfaulted; reproduce this again and determine the cause.
