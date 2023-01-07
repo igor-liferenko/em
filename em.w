@@ -149,7 +149,7 @@ file, plus a chunk for the buffer gap.
 @^TODO@>
 
 @ @<Typedef declarations@>=
-typedef size_t point_t;
+typedef long point_t;
 
 @ @<Global...@>=
 point_t point = 0;
@@ -161,7 +161,7 @@ wchar_t *bog = NULL;            /* beginning of gap */
 wchar_t *eog = NULL;           /* end of gap */
 int row;                /* cursor row */
 int col;                /* cursor col */
-uint8_t buffer_modified = 0;
+bool buffer_modified = 0;
 
 @ @<Global variables@>=
 FILE *db; /* save cursor */
