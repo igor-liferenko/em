@@ -1,10 +1,10 @@
+% how to change terminfo - https://unix.stackexchange.com/questions/55423/
 \datethis
 \input epsf
 
 @s cchar_t int
 @s delete normal @q unreserve a C++ keyword @>
 @s new normal @q unreserve a C++ keyword @>
-@s uint8_t int
 
 \font\emfont=manfnt
 \def\EM/{{\emfont EM}}
