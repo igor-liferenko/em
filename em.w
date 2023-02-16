@@ -81,8 +81,8 @@ out of visible area, move it minimal distance that it becomes visible again; HIN
 @<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>@;
 @<\vb{Ctrl}+\vb{X}@>@;
 @<\vb{Ctrl}+\vb{Z}@>@;
-if (ret == KEY_CODE_YES && c == KEY_F(1)) insert(L'«');
-if (ret == KEY_CODE_YES && c == KEY_F(2)) insert(L'»');
+if (ret == KEY_CODE_YES && c == KEY_F(1)) insert(L'\u00AB');
+if (ret == KEY_CODE_YES && c == KEY_F(2)) insert(L'\u00BB');
 if (ret == OK && c >= ' ') insert(c);
 
 @ Update screen if user changed window size (including changing font
@@ -874,19 +874,19 @@ if (direction==0&&!no_occurrences) search_failed=0; /* direction changed */
 for (point_t p=point, @!end_p=pos(eob); p < end_p; p++) {
 /* FIXME: if instead of |end_p| will be used |a| will it get into the index? */
 @^FIXME@>
- point_t pp;
- wchar_t *s;
- for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
-   towlower(*s) == towlower(*ptr(pp))) &&
-   *s !=L'\0' && pp < end_p; s++, pp++) ;
- if (*s == L'\0') {
-          point = pp;
-          b_search_point = p;
-          search_msg(L"Search Forward: %ls", searchtext);
-          display();
-          search_failed=0;
-          goto search_forward;
- }
+  point_t pp;
+  wchar_t *s;
+  for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
+       towlower(*s) == towlower(*ptr(pp))) &&
+       *s !=L'\0' && pp < end_p; s++, pp++) ;
+  if (*s == L'\0') {
+    point = pp;
+    b_search_point = p;
+    search_msg(L"Search Forward: %ls", searchtext);
+    display();
+    search_failed=0;
+    goto search_forward;
+  }
 }
 if (search_failed) {
   search_msg(L"No Occurrences: %ls", searchtext);
@@ -900,27 +900,27 @@ else {
 dispmsg();
 point=0;
 b_search_point=point;
-@/@t\4@> search_forward:
+search_forward: ;
 
 @ The logic is analogous to |@<Search forward@>|.
 
 @<Search backward@>=
 if (direction==1&&!no_occurrences) search_failed=0; /* direction changed */
 for (point_t p=point; p > 0;) {
- p--;
- point_t pp;
-        wchar_t *s;
- for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
-   towlower(*s) == towlower(*ptr(pp))) &&
-   *s != L'\0'; s++, pp++) ;
- if (*s == L'\0') {
-          point = p;
-          b_search_point = pp;
-          search_msg(L"Search Backward: %ls", searchtext);
-          display();
-          search_failed=0;
-          goto search_backward;
- }
+  p--;
+  point_t pp;
+  wchar_t *s;
+  for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
+       towlower(*s) == towlower(*ptr(pp))) &&
+       *s != L'\0'; s++, pp++) ;
+  if (*s == L'\0') {
+    point = p;
+    b_search_point = pp;
+    search_msg(L"Search Backward: %ls", searchtext);
+    display();
+    search_failed=0;
+    goto search_backward;
+  }
 }
 if (search_failed) {
   search_msg(L"No Occurrences: %ls", searchtext);
@@ -934,7 +934,7 @@ else {
 dispmsg();
 point=pos(eob);
 b_search_point=point;
-@/@t\4@> search_backward:
+search_backward: ;
 
 @ |search_active| is a flag, which is used in |dispmsg| for
 special handling of msg line---when we are
@@ -965,7 +965,6 @@ void search(direction)
    int direction; /* 1 = forward; 0 = backward */
 {
   int cpos = 0;
-  wchar_t c;
   point_t o_point = point;
   int search_failed = 0;
   point_t search_point; /* FIXME: can it be used uninitialized in |switch| below? */
@@ -989,55 +988,46 @@ void search(direction)
 
   while (1) {
     refresh(); /* update the real screen */
-    if (get_wch(&c) == KEY_CODE_YES) {
-      switch (c) { /* these are codes for terminal capabilities, assigned by {\sl ncurses\/}
-                        library while decoding escape sequences via terminfo database */
-      case KEY_RESIZE:
-        search_msg(L"Search %ls: %ls",
-        direction==1?L"Forward":L"Backward",searchtext);
-        display();
-        continue;
-      case KEY_IC:
-        @<Use Insert key...@>@;
-        break;
-      }
+    wchar_t c;
+    int ret = get_wch(&c);
+    if (ret == OK) curs_set(1);
+    if (ret == KEY_CODE_YES && c == KEY_RESIZE) {
+      search_msg(L"Search %ls: %ls",
+      direction==1?L"Forward":L"Backward",searchtext);
+      display();
+      continue;
     }
-    else {
-      curs_set(1);
-      switch (c) {
-      case 0x08:
-        if (cpos == 0) continue;
-        searchtext[--cpos] = L'\0';
-        search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
-        dispmsg();
-        break;
-      case 0x0d:
-        if (search_failed) point = search_point;
-        search_active = 0;
-        return;
-      case 0x07:
-   point = o_point;
-   search_active = 0;
-   return;
-     case 0x12:
-   direction=0;
-   cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
-   @<Search backward@>@;
-   break;
-     case 0x13:
-   direction=1;
-   cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
-   @<Search forward@>@;
-   break;
-     case 0x0a:
-     @t\4@>
-     case 0x09:
-  @<Add char to search text@>;
-  break;
-     default:
-  if (iswcntrl(c)) break; /* ignore non-assigned control keys */
-  @<Add char to search text@>@;
- }
+    if (ret == KEY_CODE_YES && c == KEY_IC) {
+      @<Use Insert key...@>@;
+    }
+    if (ret == OK && c == '\b') {
+      if (cpos == 0) continue;
+      searchtext[--cpos] = L'\0';
+      search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
+      dispmsg();
+    }
+    if (ret == OK && c == '\r') {
+      if (search_failed) point = search_point;
+      search_active = 0;
+      return;
+    }
+    if (ret == OK && c == '\a') {
+      point = o_point;
+      search_active = 0;
+      return;
+    }
+    if (ret == OK && c == 0x12) {
+      direction=0;
+      cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
+      @<Search backward@>@;
+    }
+    if (ret == OK && c == 0x13) {
+      direction=1;
+      cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
+      @<Search forward@>@;
+    }
+    if (ret == OK && (c >= ' ' || c == '\t' || c == '\n')) {
+      @<Add char to search text@>;
     }
   }
 }
@@ -1181,6 +1171,6 @@ if (ret == OK && c == 0x1a) {
   |@!malloc|, |@!mbtowc|, |@!realloc| */
 #include <string.h> /* |@!memset|, |@!strlen| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
-#include <wctype.h> /* |@!iswcntrl|, |@!iswprint|, |@!towlower|, |@!towupper| */
+#include <wctype.h> /* |@!iswprint|, |@!towlower|, |@!towupper| */
 
 @* Index.
