@@ -992,19 +992,18 @@ void search(direction)
     int ret = get_wch(&c);
     if (ret == OK) curs_set(1);
     if (ret == KEY_CODE_YES && c == KEY_RESIZE) {
-      search_msg(L"Search %ls: %ls",
-      direction==1?L"Forward":L"Backward",searchtext);
+      search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward", searchtext);
       display();
-      continue;
     }
     if (ret == KEY_CODE_YES && c == KEY_IC) {
       @<Use Insert key...@>@;
     }
     if (ret == OK && c == '\b') {
-      if (cpos == 0) continue;
-      searchtext[--cpos] = L'\0';
-      search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
-      dispmsg();
+      if (cpos != 0) {
+        searchtext[--cpos] = L'\0';
+        search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward", searchtext);
+        dispmsg();
+      }
     }
     if (ret == OK && c == '\r') {
       if (search_failed) point = search_point;
@@ -1160,7 +1159,7 @@ if (ret == OK && c == 0x1a) {
 #include <ncursesw/curses.h> /* |@!COLS|, |@!FALSE|,
   |@!KEY_CODE_YES|, |@!KEY_DC|, |@!KEY_DOWN|, |@!KEY_END|, |@!KEY_ENTER|,
   |@!KEY_HOME|, |@!KEY_IC|,
-  |@!KEY_LEFT|, |@!KEY_NPAGE|, |@!KEY_PPAGE|, |@!KEY_RESIZE|, |@!KEY_RESIZE|, |@!KEY_RIGHT|,
+  |@!KEY_LEFT|, |@!KEY_NPAGE|, |@!KEY_PPAGE|, |@!KEY_RESIZE|, |@!KEY_RIGHT|,
   |@!KEY_UP|, |@!LINES|, |@!TRUE|, |@!add_wch|, |@!addwstr|, |@!chars|, |@!clrtoeol|,
   |@!curs_set|, |@!endwin|, |@!get_wch|, |@!initscr|, |@!keypad|, |@!move|, |@!noecho|,
   |@!nonl|, |@!raw|, |@!refresh|, |@!standend|, |@!standout|, |@!stdscr|,
