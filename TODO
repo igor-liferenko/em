@@ -1,3 +1,8 @@
+on exit delete the file and create new file with the same name and save buffer there and
+then delete "which em" line from script in README OR add comment why that line is needed
+-----------------
 do 100-char border via insert(L'\u258F')
+-----------------
 if envvar 'edit' exists, show first param from em.db in red and save it on exit with second param -1
+-----------------
 make case-sensivity persist between searches (if we use string of previous search - without typing new string)
