@@ -1171,5 +1171,3 @@ if (ret == OK && c == 0x1a) {
 #include <string.h> /* |@!memset|, |@!strlen| */
 #include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
 #include <wctype.h> /* |@!iswprint|, |@!towlower|, |@!towupper| */
-
-@* Index.
