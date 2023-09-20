@@ -83,6 +83,7 @@ out of visible area, move it minimal distance that it becomes visible again; HIN
 @<\vb{Ctrl}+\vb{Z}@>@;
 if (ret == KEY_CODE_YES && c == KEY_F(1)) insert(L'\u00AB');
 if (ret == KEY_CODE_YES && c == KEY_F(2)) insert(L'\u00BB');
+if (ret == KEY_CODE_YES && c == KEY_F(12)) insert(L'\u2010');
 if (ret == OK && c >= ' ') insert(c);
 
 @ Update screen if user changed window size (including changing font

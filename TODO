@@ -6,3 +6,5 @@ do 100-char border via insert(L'\u258F')
 if envvar 'edit' exists, show first param from em.db in red and save it on exit with second param -1
 -----------------
 make case-sensivity persist between searches (if we use string of previous search - without typing new string)
+-----------------
+Display L'\u2010' on gray background
