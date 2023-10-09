@@ -34,6 +34,7 @@ Add this `em' script to PATH:
       fi
       export abs=`realpath "$file"`
       [ "$abs" = `which em` ] && db=/dev/null exec ~/em/em
+      [ "${abs%/.git/COMMIT_EDITMSG}" != "$abs" ] && db=/dev/null exec ~/em/em
       if grep -sq "^$abs lock$" $db; then
         echo File is already opened
         exit 1
