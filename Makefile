@@ -7,7 +7,7 @@ eps:
 
 .PHONY: $(wildcard *.eps)
 
-INKSCAPE=inkscape --export-type=eps --export-ps-level=2 -T -o $@ 2>/dev/null
-
 em.eps:
-	@$(INKSCAPE) em.svg
+	@$(inkscape) em.svg
+
+inkscape=inkscape --export-type=eps --export-ps-level=2 -T -o $@ 2>/dev/null
