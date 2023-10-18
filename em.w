@@ -1154,21 +1154,13 @@ if (ret == OK && c == 0x1a) {
 }
 
 @ @<Header files@>=
-#include <assert.h> /* |@!assert| */
-#include <errno.h> /* |@!ENOENT|, |@!errno| */
-#include <locale.h> /* |@!LC_CTYPE|, |@!setlocale| */
-#include <ncursesw/curses.h> /* |@!COLS|, |@!FALSE|,
-  |@!KEY_CODE_YES|, |@!KEY_DC|, |@!KEY_DOWN|, |@!KEY_END|, |@!KEY_ENTER|,
-  |@!KEY_HOME|, |@!KEY_IC|,
-  |@!KEY_LEFT|, |@!KEY_NPAGE|, |@!KEY_PPAGE|, |@!KEY_RESIZE|, |@!KEY_RIGHT|,
-  |@!KEY_UP|, |@!LINES|, |@!TRUE|, |@!add_wch|, |@!addwstr|, |@!chars|, |@!clrtoeol|,
-  |@!curs_set|, |@!endwin|, |@!get_wch|, |@!initscr|, |@!keypad|, |@!move|, |@!noecho|,
-  |@!nonl|, |@!raw|, |@!refresh|, |@!standend|, |@!standout|, |@!stdscr|,
-  |@!wunctrl| */
-#include <stdarg.h> /* |@!va_end|, |@!va_start| */
-#include <stdio.h> /* |@!fclose|, |@!feof|, |@!ferror|, |@!fopen|, |@!fprintf|, |@!printf| */
-#include <stdlib.h> /* |@!EXIT_FAILURE|, |@!MB_CUR_MAX|, |@!atoi|, |@!atol|, |@!exit|, |@!getenv|,
-  |@!malloc|, |@!mbtowc|, |@!realloc| */
-#include <string.h> /* |@!memset|, |@!strlen| */
-#include <wchar.h> /* |@!fgetwc|, |@!fputwc|, |@!vswprintf|, |@!wcslen| */
-#include <wctype.h> /* |@!iswprint|, |@!towlower|, |@!towupper| */
+#include <assert.h>
+#include <errno.h>
+#include <locale.h>
+#include <ncursesw/curses.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
+#include <wctype.h>
