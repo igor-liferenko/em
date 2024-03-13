@@ -64,8 +64,6 @@ if (ret == KEY_CODE_YES && c == KEY_RESIZE) ; /* TODO: if |point| (and hence the
 out of visible area, move it minimal distance that it becomes visible again; HINT: debug
 |display| by using stty -F ... rows <decrease and increase by one to see the effect> */
 @<\vb{Ctrl}+\vb{M}, \vb{ Enter }@>@;
-@<\vb{Ctrl}+\vb{R}@>@;
-@<\vb{Ctrl}+\vb{S}@>@;
 @<\vb{Ctrl}+\vb{H}, \vb{ BackSpace }@>@;
 @<\vb{Ctrl}+\vb{P}, \vb{ \char'13 \space}@>@;
 @<\vb{Ctrl}+\vb{N}, \vb{ \char'1 \space}@>@;
@@ -180,9 +178,6 @@ int msgflag;
 messages are treated specially.
 
 @<Procedures@>=
-#define search_msg(...) @,@,@, msg(@t}\begingroup\def\vb#1{\.{#1}\endgroup@>@=__VA_ARGS__@>); @+ \
-  case_sensitive_search(case_sensitive_search_flag);
-
 void msg(wchar_t *msg, ...)
 {
  va_list args;
@@ -736,10 +731,6 @@ equals to |eop| */
    row = i;
    col = j;
   }
-                if (search_active && b_search_point!=point && point==eop)
-    point < b_search_point ? standout() : standend();
-  if (search_active && b_search_point!=point && b_search_point==eop)
-    point < b_search_point ? standend() : standout();
   p = ptr(eop);
   if (LINES - 1 <= i || eob <= p) /* maxline */
    break;
@@ -774,11 +765,6 @@ equals to |eop| */
 
  modeline();
  dispmsg();
-        if (search_active) { /* override |row| and |col|, in order that cursor will be
-                                put to msg line */
-          row = LINES - 1;
-          col = (int) wcslen(msgline);
-        }
  move(row, col); /* set cursor */
  refresh(); /* update the real screen */
 }
@@ -841,214 +827,6 @@ void delete(void)
  buffer_modified = 1;
 }
 
-@* Searching text.
-
-@ Searching is wrapped. This works by simply resetting cursor position to the beginning of
-buffer when search fails. Next time when search button is pressed, |point| will
-hold value 0, thus search will start from the beginning of buffer. (Initially, |point|
-holds current cursor position, so searching is started from this point.)
-
-Besides, here we keep cursor position of last successful search in |search_point|---to
-leave cursor there when we exit after failed search.
-
-Also, if there are no occurrences of search text, we do not change cursor position from
-which the search was started. To make this work, we save |point| only when we fail for the
-first time. Use |search_failed| to track this.
-
-And if the direction of search changes, |search_failed| must be reset.
-If we did not handle this condition, there could appear, for example, this situation:
-we start backward search at the beginning of buffer, get a
-warning that backward search failed, then press forward search button with the same
-search text (which we suppose does exist in the buffer), and immediately get a
-warning that no occurrences were found.
-
-On the other hand, if we already know that there are no occurrences, no need to
-reset |search_failed| when direction is changed. Use |no_occurrences| to track this.
-
-If |case_sensitive_search_flag| is active, search is case-sensitive, otherwise it is
-case-insensitive.
-For description of what is |case_sensitive_search_flag| see description of procedure
-|case_sensitive_search|.
-
-@<Search forward@>=
-if (direction==0&&!no_occurrences) search_failed=0; /* direction changed */
-for (point_t p=point, @!end_p=pos(eob); p < end_p; p++) {
-/* FIXME: if instead of |end_p| will be used |a| will it get into the index? */
-@^FIXME@>
-  point_t pp;
-  wchar_t *s;
-  for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
-       towlower(*s) == towlower(*ptr(pp))) &&
-       *s !=L'\0' && pp < end_p; s++, pp++) ;
-  if (*s == L'\0') {
-    point = pp;
-    b_search_point = p;
-    search_msg(L"Search Forward: %ls", searchtext);
-    display();
-    search_failed=0;
-    goto search_forward;
-  }
-}
-if (search_failed) {
-  search_msg(L"No Occurrences: %ls", searchtext);
-  no_occurrences=1;
-}
-else {
-  search_msg(L"Failing Forward Search: %ls", searchtext);
-  search_failed=1;
-  search_point=point;
-}
-dispmsg();
-point=0;
-b_search_point=point;
-search_forward: ;
-
-@ The logic is analogous to |@<Search forward@>|.
-
-@<Search backward@>=
-if (direction==1&&!no_occurrences) search_failed=0; /* direction changed */
-for (point_t p=point; p > 0;) {
-  p--;
-  point_t pp;
-  wchar_t *s;
-  for (s=searchtext, pp=p; (case_sensitive_search_flag ? *s == *ptr(pp) :
-       towlower(*s) == towlower(*ptr(pp))) &&
-       *s != L'\0'; s++, pp++) ;
-  if (*s == L'\0') {
-    point = p;
-    b_search_point = pp;
-    search_msg(L"Search Backward: %ls", searchtext);
-    display();
-    search_failed=0;
-    goto search_backward;
-  }
-}
-if (search_failed) {
-  search_msg(L"No Occurrences: %ls", searchtext);
-  no_occurrences=1;
-}
-else {
-  search_msg(L"Failing Backward Search: %ls", searchtext);
-  search_failed=1;
-  search_point=point;
-}
-dispmsg();
-point=pos(eob);
-b_search_point=point;
-search_backward: ;
-
-@ |search_active| is a flag, which is used in |dispmsg| for
-special handling of msg line---when we are
-typing search text, cursor must stay there until we exit search via C-g or C-m.
-It is also used in |display| to make it possible to use |b_search_point!=point| check
-is an indicator fi a match is found.
-
-|b_search_point| is used to determine the other part of the word to highlight it,
-and at the same time it is used as an indicator if a match was found, to determine
-if highlighting must be done.
-
-@d STRBUF_M 64
-
-@<Global...@>=
-wchar_t searchtext[STRBUF_M];
-point_t b_search_point;
-int search_active = 0;
-
-@ FIXME: check what will be if we press C-s or C-r when there is no pre-existing search string
-@^FIXME@>
-
-FIXME: check what will be if we press C-m or C-g right after C-s or C-r, if there is
-pre-existing search text
-@^FIXME@>
-
-@<Procedures@>=
-void search(direction)
-   int direction; /* 1 = forward; 0 = backward */
-{
-  int cpos = 0;
-  point_t o_point = point;
-  int search_failed = 0;
-  point_t search_point; /* FIXME: can it be used uninitialized in |switch| below? */
-@^FIXME@>
-  int no_occurrences = 0;
-  int case_sensitive_search_flag = 0;
-
-  search_active = 1;
-  b_search_point = point;
-
-  /* FIXME: check if |curs_set(0)| will work correctly in |KEY_RESIZE| event */
-@^FIXME@>
-  if (*searchtext == L'\0' || cpos != 0) {
-    search_msg(L"Search %ls: ", direction==1?L"Forward":L"Backward");
-  }
-  else {
-    search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward", searchtext);
-    curs_set(0); /* make the ``real'' cursor invisible */
-  }
-  dispmsg();
-
-  while (1) {
-    refresh(); /* update the real screen */
-    wchar_t c;
-    int ret = get_wch(&c);
-    if (ret == OK) curs_set(1);
-    if (ret == KEY_CODE_YES && c == KEY_RESIZE) {
-      search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward", searchtext);
-      display();
-    }
-    if (ret == KEY_CODE_YES && c == KEY_IC) {
-      @<Use Insert key...@>@;
-    }
-    if (ret == OK && c == '\b') {
-      if (cpos != 0) {
-        searchtext[--cpos] = L'\0';
-        search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward", searchtext);
-        dispmsg();
-      }
-    }
-    if (ret == OK && c == '\r') {
-      if (search_failed) point = search_point;
-      search_active = 0;
-      return;
-    }
-    if (ret == OK && c == '\a') {
-      point = o_point;
-      search_active = 0;
-      return;
-    }
-    if (ret == OK && c == 0x12) {
-      direction=0;
-      cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
-      @<Search backward@>@;
-    }
-    if (ret == OK && c == 0x13) {
-      direction=1;
-      cpos = (int) wcslen(searchtext); /* ``restore'' pre-existing search string */
-      @<Search forward@>@;
-    }
-    if (ret == OK && (c >= ' ' || c == '\t' || c == '\n')) {
-      @<Add char to search text@>;
-    }
-  }
-}
-
-@ @<Add char to search text@>=
-if (cpos < STRBUF_M - 1) {
-  searchtext[cpos++] = c;
-  searchtext[cpos] = L'\0';
-  search_msg(L"Search %ls: %ls", direction==1?L"Forward":L"Backward",searchtext);
-  dispmsg();
-}
-
-@ The changes to search prompt made in |case_sensitive_search|
-are displayed immediately after Insert key is pressed.
-
-@<Use Insert key as a case-sensivity switcher@>=
-case_sensitive_search_flag = !case_sensitive_search_flag;
-case_sensitive_search(case_sensitive_search_flag);
-msgflag = TRUE;
-dispmsg();
-
 @ We do this check because |point| may be set past the end of buffer if file is changed
 externally.
 
@@ -1082,12 +860,6 @@ for (int i=(LINES-1)/2;i>0;i--)
 
 @ @<\vb{Ctrl}+\vb{M}...@>=
 if ((ret == OK && c == '\r') || (ret == KEY_CODE_YES && c == KEY_ENTER)) insert(L'\n');
-
-@ @<\vb{Ctrl}+\vb{R}@>=
-if (ret == OK && c == 0x12) search(0);
-
-@ @<\vb{Ctrl}+\vb{S}@>=
-if (ret == OK && c == 0x13) search(1);
 
 @ @<\vb{Ctrl}+\vb{H}...@>=
 if (ret == OK && c == 0x08) backsp();
