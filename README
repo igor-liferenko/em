@@ -9,3 +9,8 @@ support (using wide-character API).
 
 To build EM, install libncursesw5-dev and libtinfo-dev packages,
 or build ncurses from source.
+
+Add this `em' script to PATH:
+
+    #!/bin/sh
+    file=$1 lineno=$2 ~/em/em
