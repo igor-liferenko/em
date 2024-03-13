@@ -9,37 +9,3 @@ support (using wide-character API).
 
 To build EM, install libncursesw5-dev and libtinfo-dev packages,
 or build ncurses from source.
-
-Add this `em' script to PATH:
-
-    #!/bin/sh
-    # Use as `em file line' or `em file:line' (for copy-paste from `grep -n')
-    export db=/tmp/em.db
-    if [ $# = 0 ]; then
-      tmp=`mktemp -p /tmp em-XXXXXX`
-      db=/dev/null abs= file=$tmp line=0 ~/em/em
-      echo $tmp
-    else
-      if [ $# = 1 ]; then
-        if [ "${1#*:}" != "$1" ]; then
-          export file="${1%:*}"
-          export line=${1#*:}
-        else
-          export file="$1"
-          export line=0
-        fi
-      else
-        export file="$1"
-        export line=$2
-      fi
-      export abs=`realpath "$file"`
-      [ "$abs" = `which em` ] && db=/dev/null exec ~/em/em
-      [ "${abs%/.git/COMMIT_EDITMSG}" != "$abs" ] && db=/dev/null exec ~/em/em
-      if grep -sq "^$abs lock$" $db; then
-        echo File is already opened
-        exit 1
-      fi
-      echo $abs lock >>$db
-      ~/em/em `sed -i -e "\|^$abs [0-9]\+ [0-9]\+\$|{s|$abs ||;w /dev/stdout" -e 'd}' $db`
-      sed -i "\|^$abs lock$|d" $db
-    fi
