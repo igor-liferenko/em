@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 }
 
 @ @<Initialize@>=
-  assert(argc == 3);
+  assert(argc == 1);
 
   setlocale(LC_CTYPE, "C.UTF-8");
 
@@ -50,10 +50,10 @@ int main(int argc, char **argv)
   noecho();
   keypad(stdscr, TRUE);
 
-  int lineno = atoi(argv[2]);
+  int lineno = atoi(getenv("line"));
   @<Move cursor to |lineno|@>@;
 
-display(argv[1]);
+display();
 
 @ @<Wait user input@>=
 wchar_t c;
@@ -80,7 +80,7 @@ if (ret == OK && c >= ' ') insert(c);
 @ Update screen if user changed window size (including changing font
 size) or the data or moved cursor.
 @<Update screen@>=
-display(argv[1]);
+display();
 
 @ @<Cleanup@>=
 endwin();
@@ -300,7 +300,7 @@ void movegap(offset)
 @* File input/output.
 
 @ @<Open file@>=
-if ((fp = fopen(argv[1], "r+")) == NULL) printf("%m\n"), exit(EXIT_FAILURE);
+if ((fp = fopen(getenv("file"), "r+")) == NULL) printf("%m\n"), exit(EXIT_FAILURE);
 
 @ @<Close file@>=
 fclose(fp);
@@ -319,7 +319,7 @@ the gap.
 @<Save buffer@>=
 FILE *fp;
 point_t length;
-if ((fp = fopen(argv[1], "w")) != NULL) {
+if ((fp = fopen(getenv("file"), "w")) != NULL) {
   @<Add trailing newline to non-empty buffer if it is not present@>@;
   movegap(0);
   length = (point_t) (eob - eog);
@@ -354,7 +354,7 @@ And do that if file was unchanged, just quit without doing anything to the file.
 for (point_t n = 0; n < length; n++) {
   fputwc(*(eog + n), fp);
   if (ferror(fp)) {
-    msg(L"Failed to write file \"%s\".", argv[1]);
+    msg(L"Failed to write file \"%s\".", getenv("file"));
     break;
   }
 }
@@ -536,18 +536,18 @@ point_t lncolumn(point_t offset, int column)
 }
 
 @ FIXME: find out if using `addstr' in combination with `addwstr' can
-be dangerous and use \hfil\break `addstr(argv[1]);' between \\{move}
+be dangerous and use \hfil\break `addstr(getenv("file"));' between \\{move}
 and \\{standend} instead of the `for' loop
 (mixing addstr and addwstr may be dangerous --- like printf and wprintf)
 
 @<Procedures@>=
-void modeline(char *fname)
+void modeline(void)
 {
   standout();
   move(LINES - 1, 0);
-  for (int k = 0, @!len; k < strlen(fname); k += len) {
+  for (int k = 0, @!len; k < strlen(getenv("file")); k += len) {
     wchar_t wc;
-    len = mbtowc(&wc, fname+k, MB_CUR_MAX);
+    len = mbtowc(&wc, getenv("file")+k, MB_CUR_MAX);
     cchar_t my_cchar;
     memset(&my_cchar, 0, sizeof my_cchar);
     my_cchar.chars[0] = wc;
@@ -674,7 +674,7 @@ that's the case, you can just copy that layout info into the new line,
 instead of recalculating it.
 
 @<Procedures@>=
-void display(char *fname)
+void display(void)
 {
 /* FIXME: when cursor is on bottom line (except when it is in the end of this line)
 and C-m is pressed, the cursor goes
@@ -748,7 +748,7 @@ equals to |eop| */
   j = 0; /* thereafter start of line */
  }
 
- modeline(fname);
+ modeline();
  dispmsg();
  move(row, col); /* set cursor */
  refresh(); /* update the real screen */
