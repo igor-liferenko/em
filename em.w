@@ -73,7 +73,6 @@ out of visible area, move it minimal distance that it becomes visible again; HIN
 @<\vb{Ctrl}+\vb{E}, \vb{ End }@>@;
 @<\vb{Ctrl}+\vb{D}, \vb{ Delete }@>@;
 @<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>@;
-@<\vb{Ctrl}+\vb{X}@>@;
 @<\vb{Ctrl}+\vb{Z}@>@;
 if (ret == KEY_CODE_YES && c == KEY_F(1)) insert(L'\u00AB');
 if (ret == KEY_CODE_YES && c == KEY_F(2)) insert(L'\u00BB');
@@ -862,22 +861,6 @@ if ((ret == OK && c == 0x04) || (ret == KEY_CODE_YES && c == KEY_DC)) delete();
 
 @ @<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>=
 if (ret == OK && c == '\t') insert(L'\t');
-
-@ Quit without saving.
-@<\vb{Ctrl}+\vb{X}@>=
-if (ret == OK && c == 0x18) {
-#if 0
-  if (buffer_modified) {
-    if (argc != 1)
-      if (db = fopen(getenv("db"), "a"))
-        fprintf(db, "%s %s %s\n", getenv("abs"), argv[1], argv[2]), fclose(db);
-  }
-  else
-    if (db = fopen(getenv("db"), "a"))
-      fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
-  done = 1;
-#endif
-}
 
 @ Save and quit.
 @<\vb{Ctrl}+\vb{Z}@>=
