@@ -158,7 +158,6 @@ int col;                /* cursor col */
 bool buffer_modified = 0;
 
 @ @<Global variables@>=
-FILE *db; /* save cursor */
 int done;
 
 @ @d MSGBUF 512
