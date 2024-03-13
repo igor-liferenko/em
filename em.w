@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 }
 
 @ @<Initialize@>=
-  assert(argc == 1 || argc == 3); /* (see wrapper script) */
+  assert(argc == 3);
 
   setlocale(LC_CTYPE, "C.UTF-8");
 
@@ -50,12 +50,10 @@ int main(int argc, char **argv)
   noecho();
   keypad(stdscr, TRUE);
 
-  int lineno = atoi(getenv("line"));
-  if (lineno > 0) @<Move cursor to |lineno|@>@;
-  else if (argc != 1) /* restore cursor */
-    point = atol(argv[1]), bop = atol(argv[2]);
+  int lineno = atoi(argv[2]);
+  @<Move cursor to |lineno|@>@;
 
-display();
+display(argv[1]);
 
 @ @<Wait user input@>=
 wchar_t c;
@@ -82,7 +80,7 @@ if (ret == OK && c >= ' ') insert(c);
 @ Update screen if user changed window size (including changing font
 size) or the data or moved cursor.
 @<Update screen@>=
-display();
+display(argv[1]);
 
 @ @<Cleanup@>=
 endwin();
@@ -302,12 +300,7 @@ void movegap(offset)
 @* File input/output.
 
 @ @<Open file@>=
-if ((fp = fopen(getenv("file"), "r+")) == NULL) {
-  if (errno != ENOENT) printf("%m\n"), exit(EXIT_FAILURE);
-  if ((fp = fopen(getenv("file"), "w+")) == NULL) /* create file if it does
-                                                      not exist */
-    printf("%m\n"), exit(EXIT_FAILURE);
-}
+if ((fp = fopen(argv[1], "r+")) == NULL) printf("%m\n"), exit(EXIT_FAILURE);
 
 @ @<Close file@>=
 fclose(fp);
@@ -326,8 +319,7 @@ the gap.
 @<Save buffer@>=
 FILE *fp;
 point_t length;
-if ((fp = fopen(getenv("file"), "w")) != NULL) {
-  if (fp == NULL) msg(L"Failed to open file \"%s\".", getenv("file"));
+if ((fp = fopen(argv[1], "w")) != NULL) {
   @<Add trailing newline to non-empty buffer if it is not present@>@;
   movegap(0);
   length = (point_t) (eob - eog);
@@ -362,7 +354,7 @@ And do that if file was unchanged, just quit without doing anything to the file.
 for (point_t n = 0; n < length; n++) {
   fputwc(*(eog + n), fp);
   if (ferror(fp)) {
-    msg(L"Failed to write file \"%s\".", getenv("file"));
+    msg(L"Failed to write file \"%s\".", argv[1]);
     break;
   }
 }
@@ -412,8 +404,6 @@ while (1) {
 if (eog - bog < buf_end-buf && !growgap((point_t) (buf_end-buf))) { /* if gap size
     is not sufficient, grow gap */
   fclose(fp);
-  if (db = fopen(getenv("db"), "a"))
-    fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
   printf("Failed to allocate required memory.\n"), exit(EXIT_FAILURE);
 }
 for (i = 0; i < buf_end-buf; i++)
@@ -546,18 +536,18 @@ point_t lncolumn(point_t offset, int column)
 }
 
 @ FIXME: find out if using `addstr' in combination with `addwstr' can
-be dangerous and use \hfil\break `addstr(getenv("file"));' between \\{move}
+be dangerous and use \hfil\break `addstr(argv[1]);' between \\{move}
 and \\{standend} instead of the `for' loop
 (mixing addstr and addwstr may be dangerous --- like printf and wprintf)
 
 @<Procedures@>=
-void modeline(void)
+void modeline(char *fname)
 {
   standout();
   move(LINES - 1, 0);
-  for (int k = 0, @!len; k < strlen(getenv("file")); k += len) {
+  for (int k = 0, @!len; k < strlen(fname); k += len) {
     wchar_t wc;
-    len = mbtowc(&wc, getenv("file")+k, MB_CUR_MAX);
+    len = mbtowc(&wc, fname+k, MB_CUR_MAX);
     cchar_t my_cchar;
     memset(&my_cchar, 0, sizeof my_cchar);
     my_cchar.chars[0] = wc;
@@ -684,7 +674,7 @@ that's the case, you can just copy that layout info into the new line,
 instead of recalculating it.
 
 @<Procedures@>=
-void display(void)
+void display(char *fname)
 {
 /* FIXME: when cursor is on bottom line (except when it is in the end of this line)
 and C-m is pressed, the cursor goes
@@ -758,7 +748,7 @@ equals to |eop| */
   j = 0; /* thereafter start of line */
  }
 
- modeline();
+ modeline(fname);
  dispmsg();
  move(row, col); /* set cursor */
  refresh(); /* update the real screen */
@@ -866,8 +856,6 @@ if (ret == OK && c == '\t') insert(L'\t');
 @<\vb{Ctrl}+\vb{Z}@>=
 if (ret == OK && c == 0x1a) {
   @<Save buffer@>@;
-  if (db = fopen(getenv("db"), "a"))
-    fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
   done = 1;
 }
 
