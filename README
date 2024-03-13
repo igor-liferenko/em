@@ -13,4 +13,4 @@ or build ncurses from source.
 Add this `em' script to PATH:
 
     #!/bin/sh
-    file=$1 lineno=$2 ~/em/em
+    file=$1 line=$2 ~/em/em
