@@ -72,10 +72,6 @@ out of visible area, move it minimal distance that it becomes visible again; HIN
 @<\vb{Ctrl}+\vb{A}, \vb{ Home }@>@;
 @<\vb{Ctrl}+\vb{E}, \vb{ End }@>@;
 @<\vb{Ctrl}+\vb{D}, \vb{ Delete }@>@;
-@<\vb{Ctrl}+\vb{[}@>@;
-@<\vb{Ctrl}+\vb{]}@>@;
-@<\vb{Ctrl}+\vb{W}, \vb{ PgUp }@>@;
-@<\vb{Ctrl}+\vb{V}, \vb{ PgDown }@>@;
 @<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>@;
 @<\vb{Ctrl}+\vb{X}@>@;
 @<\vb{Ctrl}+\vb{Z}@>@;
@@ -770,31 +766,10 @@ equals to |eop| */
 }
 
 @ @<Procedures@>=
-void top(void) @+ {@+ point = 0; @+}
-void bottom(void) @+ {@+ eop = point = pos(eob); @+}
 void left(void) @+ {@+ if (0 < point) point--; @+}
 void right(void) @+ {@+ if (point < pos(eob)) point++; @+}
 void up(void) @+ {@+ point = lncolumn(upup(point), col); @+}
 void down(void) @+ {@+ point = lncolumn(dndn(point), col); @+}
-
-@ @<Procedures@>=
-void pgdown(void)
-{
- bop = point = upup(eop);
- while (0 < row--)
-  down();
- eop = pos(eob);
-}
-
-@ @<Procedures@>=
-void pgup(void)
-{
- int i = LINES - 1;
- while (0 < --i) {
-  bop = upup(bop);
-  up();
- }
-}
 
 @ @<Procedures@>=
 void insert(wchar_t c)
@@ -884,18 +859,6 @@ if ((ret == OK && c == 0x05) || (ret == KEY_CODE_YES && c == KEY_END)) point = l
 
 @ @<\vb{Ctrl}+\vb{D}...@>=
 if ((ret == OK && c == 0x04) || (ret == KEY_CODE_YES && c == KEY_DC)) delete();
-
-@ @<\vb{Ctrl}+\vb{[}@>=
-if (ret == OK && c == 0x1b) top();
-
-@ @<\vb{Ctrl}+\vb{]}@>=
-if (ret == OK && c == 0x1d) bottom();
-
-@ @<\vb{Ctrl}+\vb{W}...@>=
-if ((ret == OK && c == 0x17) || (ret == KEY_CODE_YES && c == KEY_PPAGE)) pgup();
-
-@ @<\vb{Ctrl}+\vb{V}...@>=
-if ((ret == OK && c == 0x16) || (ret == KEY_CODE_YES && c == KEY_NPAGE)) pgdown();
 
 @ @<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>=
 if (ret == OK && c == '\t') insert(L'\t');
