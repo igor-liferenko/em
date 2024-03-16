@@ -181,6 +181,10 @@ sub dokey {
           setat(chr(0x00ab));
           moveright(1);
         }
+        elsif ( $esc eq 'OQ' ) {
+          setat(chr(0x00bb));
+          moveright(1);
+        }
     }
     elsif ( $ctrl == 8 || $ctrl == 127 ) {            # BACKSPACE
         backspaceat();
