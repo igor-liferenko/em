@@ -67,8 +67,7 @@ sub get_terminal_size {
 }
 
 sub load {
-    my $regexp = qr/\+(\d+)/;
-    ($filename) = grep { $_ !~ $regexp } @ARGV;
+    $filename = $ENV{'file'};
 
     if ( !open( FILE, $filename ) ) {
         @lines = ('');
@@ -109,9 +108,7 @@ sub save {
 
 sub run {
     get_terminal_size();
-    my $regexp = qr/\+(\d+)/;
-    my ($center_line_arg) = grep { $_ =~ $regexp } @ARGV;
-    my ($center_line) = $center_line_arg =~ $regexp;
+    my $center_line = $ENV{'line'};
     $topline = $center_line - ( $rows / 2 ) - 1;
     binmode(STDIN, ':utf8');
     binmode(STDOUT, ':utf8');
