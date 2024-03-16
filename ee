@@ -119,6 +119,7 @@ sub run {
     binmode(STDIN, ':utf8');
     binmode(STDOUT, ':utf8');
 
+    system( 'tput', 'smcup' );
     ReadMode(5);
     my $key;
 
@@ -133,6 +134,7 @@ sub run {
 
     ReadMode(0);
     absmove( 0, $rows + 2 );
+    system( 'tput', 'rmcup' );
     print "\n";
 }
 
@@ -141,9 +143,11 @@ sub get_nrlines {
 }
 
 sub get_escape_sequence {
-    my $esc;
+    my ( $esc, $pos );
     while ( my $key = ReadKey() ) {
+        $pos++;
         $esc .= $key;
+        next if ( $pos == 1 && $key == 'O' );
         last if ( $key =~ /[a-z~]/i );
     }
 
@@ -176,8 +180,9 @@ sub dokey {
         elsif ( $esc eq '[2~' || $esc eq '[8~' ) {                     # insert
             $ins = !$ins;
         }
-        elsif ( $esc eq '[[A' || $esc eq '[11~' ) {
-            help();
+        elsif ( $esc eq 'OP' ) {
+          setat(chr(0x00ab));
+          moveright(1);
         }
     }
     elsif ( $ctrl == 8 || $ctrl == 127 ) {            # BACKSPACE
