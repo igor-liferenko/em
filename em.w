@@ -14,6 +14,8 @@ EM is a text editor. It is implemented
 using wide-character API and ncurses library.
 This is the outline of the program.
 
+@f line x /* make |line| an unreserved word */
+
 @c
 @<Header files@>@;
 @<Typedef declarations@>@;
