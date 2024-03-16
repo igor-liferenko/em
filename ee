@@ -8,8 +8,6 @@
 
 use strict;
 
-use Encode ();
-
 $| = 1;
 $_ = '' for my (
     $x,           $y,           $topline,     $lastxsearch, $lastysearch, $ins,
@@ -70,7 +68,6 @@ sub get_terminal_size {
 
 sub load {
     my $regexp = qr/\+(\d+)/;
-    @ARGV = map { Encode::decode 'utf-8', $_ } @ARGV;
     ($filename) = grep { $_ !~ $regexp } @ARGV;
 
     if ( !open( FILE, $filename ) ) {
