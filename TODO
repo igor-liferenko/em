@@ -1,4 +1,4 @@
-use separate editor for tex and mf with this wrapper:
+use separate editor for tex,mf and git with this wrapper:
 #!/bin/sh
 file=$1 line=$2 ~/em/xxx
 (this editor must not use em.db and must have only left,right,up,down,backspace and delete keys)
