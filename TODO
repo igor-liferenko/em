@@ -1,6 +1,6 @@
 use separate editor for tex,mf and git with this wrapper:
 #!/bin/sh
-PERL_UNICODE=A ~/em/xxx "$@"
+PERL_UNICODE=A ~/em/xxx $1 +$2
 (this editor must not use em.db and must have only left,right,up,down,backspace and delete keys)
 -----------------
 on exit delete the file and create new file with the same name and save buffer there and
