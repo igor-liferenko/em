@@ -47,6 +47,7 @@ int main(int argc, char **argv)
   @<Set |eop| for proper positioning of cursor on screen@>@;
 
   assert(initscr() != NULL);
+  nonl();
   raw();
   noecho();
   keypad(stdscr, TRUE);
