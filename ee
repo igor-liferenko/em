@@ -190,11 +190,11 @@ sub dokey {
           moveright(1);
         }
     }
-    elsif ( $ctrl == 8 || $ctrl == 127 ) {            # BACKSPACE
+    elsif ( $ctrl == '\b' ) {            # BACKSPACE
         backspaceat();
         moveleft(1);
     }
-    elsif ( $ctrl == 13 || $ctrl == 10 ) {            # newline
+    elsif ( $ctrl == '\r' ) {            # newline
         newlineat();
         movedown(1);
         $x = 0;
