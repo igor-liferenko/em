@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -CA
 #
 # |ped| v0.7 Text Editor in Perl
 # (C)2005 DaanSystems, Niek Albers
