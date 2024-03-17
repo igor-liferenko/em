@@ -1,6 +1,3 @@
-use separate editor for tex,mf and git, which must not use em.db and must have only
-left,right,up,down,backspace and delete keys
------------------
 on exit delete the file and create new file with the same name and save buffer there and
 then delete "which em" line from script in README OR add comment why that line is needed
 -----------------
