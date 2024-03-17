@@ -132,7 +132,6 @@ sub run {
     ReadMode(0);
     absmove( 0, $rows + 2 );
     system( 'tput', 'rmcup' );
-    print "\n";
 }
 
 sub get_nrlines {
