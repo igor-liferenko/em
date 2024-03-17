@@ -167,13 +167,13 @@ sub dokey {
         elsif ( $esc eq '[C' )  { moveright(1) }      # right
         elsif ( $esc eq '[D' )  { moveleft(1) }       # left
         elsif ( $esc eq '[3~' ) { delat() }           # del
-        elsif ( $esc eq '[1~' ) {                     # home
+        elsif ( $esc eq '[H' ) {                     # home
             moveup( current_line_number() );
         }
-        elsif ( $esc eq '[4~' || $esc eq '[7~' ) {                     # end
+        elsif ( $esc eq '[F' ) {                     # end
             movedown( get_nrlines() - current_line_number() );
         }
-        elsif ( $esc eq '[2~' || $esc eq '[8~' ) {                     # insert
+        elsif ( $esc eq '[2~' ) {                     # insert
             $ins = !$ins;
         }
         elsif ( $esc eq 'OP' ) {
