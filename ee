@@ -43,10 +43,8 @@ sub help {
         ' http://www.daansystems.com       ',
         ' mailto:nieka@daansystems.com     ',
         '----------------------------------',
-        ' Ctrl+s Save                      ',
-        ' Ctrl+f Search                    ',
-        ' Ctrl+d Save+Exit                 ',
-        ' Ctrl+c Exit                      ',
+        ' Ctrl+s Search                    ',
+        ' Ctrl+z Save+Exit                 ',
         '                                  ',
     );
 
@@ -153,8 +151,7 @@ sub get_escape_sequence {
 sub dokey {
     my ($key) = @_;
     my $ctrl = ord($key);
-    if    ( $ctrl == 3 )  { return }                  # Ctrl+c
-    elsif ( $ctrl == 4 )  { return if ( save() ) }    # Ctrl+d
+    if    ( $ctrl == 26 )  { return if ( save() ) }   # Ctrl+z
     elsif ( $ctrl == 27 ) {                           # escape code
         my $esc = get_escape_sequence();
 
@@ -201,10 +198,7 @@ sub dokey {
     elsif ( $ctrl == 11 ) {                           # Ctrl+K
         delteol();
     }
-    elsif ( $ctrl == 19 ) {                           # Ctrl+S
-        save();
-    }
-    elsif ( $ctrl == 6 ) {                            # Ctrl+F
+    elsif ( $ctrl == 19 ) {                            # Ctrl+S
         search();
     }
     elsif ( $ctrl == 9 || ( $ctrl >= 32 && $ctrl <= 126 ) || $ctrl > 127 ) {
