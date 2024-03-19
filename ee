@@ -114,7 +114,7 @@ sub run {
     binmode(STDIN, ':utf8');
     binmode(STDOUT, ':utf8');
 
-    system( 'tput', 'smcup' );
+    system( 'tput', 'smcup' ); # https://invisible-island.net/xterm/xterm.faq.html#xterm_tite
     ReadMode(5);
     my $key;
 
