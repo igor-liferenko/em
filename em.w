@@ -14,8 +14,6 @@ EM is a text editor. It is implemented
 using wide-character API and ncurses library.
 This is the outline of the program.
 
-@f line x /* make |line| an unreserved word */
-
 @c
 @<Header files@>@;
 @<Typedef declarations@>@;
@@ -52,8 +50,8 @@ int main(int argc, char **argv)
   noecho();
   keypad(stdscr, TRUE);
 
-  int line = atoi(getenv("line"));
-  if (line > 0) @<Move cursor to |line|@>@;
+  int linе = atoi(getenv("line"));
+  if (linе > 0) @<Move cursor to |linе|@>@;
   else if (argc != 1) /* restore cursor */
     point = atol(argv[1]), bop = atol(argv[2]);
 
@@ -1069,8 +1067,8 @@ eop=pos(eob);
 
 @ This must be done after |initscr| in order that |COLS| will be initialized.
 
-@<Move cursor to |line|@>= {
-  for (point=0,line--; line>0; line--) {
+@<Move cursor to |linе|@>= {
+  for (point=0,linе--; linе>0; linе--) {
     point = lnend(point);
     right();
   }
