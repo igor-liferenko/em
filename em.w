@@ -3,8 +3,9 @@
 \input epsf
 
 @s cchar_t int
-@s delete normal @q unreserve a C++ keyword @>
-@s new normal @q unreserve a C++ keyword @>
+@s delete normal
+@s new normal
+@s line normal
 
 \font\emfont=manfnt
 \def\EM/{{\emfont EM}}
@@ -49,8 +50,8 @@ int main(int argc, char **argv)
   noecho();
   keypad(stdscr, TRUE);
 
-  int lineno = atoi(getenv("line"));
-  if (lineno > 0) @<Move cursor to |lineno|@>@;
+  int line = atoi(getenv("line"));
+  if (line > 0) @<Move cursor to |line|@>@;
   else if (argc != 1) /* restore cursor */
     point = atol(argv[1]), bop = atol(argv[2]);
 
@@ -1066,8 +1067,8 @@ eop=pos(eob);
 
 @ This must be done after |initscr| in order that |COLS| will be initialized.
 
-@<Move cursor to |lineno|@>= {
-  for (point=0,lineno--; lineno>0; lineno--) {
+@<Move cursor to |line|@>= {
+  for (point=0,line--; line>0; line--) {
     point = lnend(point);
     right();
   }
