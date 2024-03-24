@@ -50,8 +50,8 @@ int main(int argc, char **argv)
   noecho();
   keypad(stdscr, TRUE);
 
-  int linе = atoi(getenv("line"));
-  if (linе > 0) @<Move cursor to |linе|@>@;
+  int lineno = atoi(getenv("line"));
+  if (lineno > 0) @<Move cursor to |lineno|@>@;
   else if (argc != 1) /* restore cursor */
     point = atol(argv[1]), bop = atol(argv[2]);
 
@@ -1067,8 +1067,8 @@ eop=pos(eob);
 
 @ This must be done after |initscr| in order that |COLS| will be initialized.
 
-@<Move cursor to |linе|@>= {
-  for (point=0,linе--; linе>0; linе--) {
+@<Move cursor to |lineno|@>= {
+  for (point=0,lineno--; lineno>0; lineno--) {
     point = lnend(point);
     right();
   }
