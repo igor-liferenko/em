@@ -1,4 +1,4 @@
-% https://unix.stackexchange.com/questions/55423/ - how to change terminfo
+% https://invisible-island.net/xterm/xterm.faq.html#xterm_tite - how to change terminfo
 \datethis
 \input epsf
 
