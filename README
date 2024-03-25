@@ -16,7 +16,7 @@ Add this `em' script to PATH:
     # Use as `em file line' or `em file:line' (for copy-paste from `grep -n')
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
-      file=$tmp line=0 ~/em/em
+      file=$tmp line=0 chars=0 ~/em/em
       echo $tmp
     else
       if [ $# = 1 ]; then
@@ -31,6 +31,7 @@ Add this `em' script to PATH:
         export file="$1"
         export line=$2
       fi
+      export chars=`wc -m "$file" | cut -d' ' -f1`
       abs=`realpath "$file"`
       [ "$abs" = `which em` ] && exec ~/em/em
       [ "${abs%/.git/COMMIT_EDITMSG}" != "$abs" ] && exec ~/em/em
