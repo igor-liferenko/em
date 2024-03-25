@@ -418,13 +418,9 @@ while (1) {
 @<Add trailing newline to input from non-empty file if it is not present@>@;
 
 @ @<Copy contents of |buf|...@>=
-if (eog - bog < buf_end-buf && !growgap((point_t) (buf_end-buf))) { /* if gap size
+if (eog - bog < buf_end-buf && !growgap((point_t) (buf_end-buf))) /* if gap size
     is not sufficient, grow gap */
-  fclose(fp);
-  if (db = fopen(getenv("db"), "a"))
-    fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
   printf("Failed to allocate required memory.\n"), exit(EXIT_FAILURE);
-}
 for (i = 0; i < buf_end-buf; i++)
   *bog++ = buf[i];
 
