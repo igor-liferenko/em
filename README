@@ -32,8 +32,7 @@ Add this `em' script to PATH:
         export line=$2
       fi
       abs=`realpath "$file"`
-      [ "$abs" = `which em` ] && exec ~/em/em
-      [ "${abs%/.git/COMMIT_EDITMSG}" != "$abs" ] && exec ~/em/em
+      [ "$abs" = $0 ] && exec ~/em/em
       db=/tmp/em.db
       if grep -sq "^$abs lock$" $db; then
         echo File is already opened
@@ -42,9 +41,11 @@ Add this `em' script to PATH:
       echo $abs lock >>$db
       export db # `db' is written to only when it is in the environment
       export abs # `abs' is used only when `db' is in the environment
-      point=`sed -n "s|^$abs \([0-9]\+\) [0-9]\+\$|\1|p" $db`
-      chars=`wc -m <"$file"`
-      [ "$point" ] && [ $point -ge $chars ] && point=$((chars-1))
-      ~/em/em $point `sed -i -e "\|^$abs [0-9]\+ \([0-9]\+\)\$|{s//\1/;w /dev/stdout" -e 'd}' $db`
+      eval "$(sed -i -e "\|^$abs \([0-9]\+\) \([0-9]\+\)\$|{s||point=\1 bop=\2|;w /dev/stdout" -e 'd}' $db)"
+      if [ "$point" ]; then
+        chars=`wc -m <"$file"`
+        [ $point -ge $chars ] && point=$((chars-1)) # `bop' is automitically adjusted inside program if it is greater than `point'
+      fi
+      ~/em/em $point $bop
       sed -i "\|^$abs lock$|d" $db
     fi
