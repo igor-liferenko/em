@@ -1,4 +1,7 @@
 #!/usr/bin/perl -CA
+
+# TODO: use zepto
+
 #
 # |ped| v0.7 Text Editor in Perl
 # (C)2005 DaanSystems, Niek Albers
