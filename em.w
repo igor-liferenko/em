@@ -347,6 +347,8 @@ if ((fp = fopen(getenv("file"), "w")) != NULL) {
 If gap size is zero and no more memory can be allocated, do not append the
 newline.
 
+!!!!!!!!!!!!!!!!!!!! do not append to buffer - if necessary append to file after it is written
+
 @<Add trailing newline to non-empty buffer...@>=
 movegap(pos(eob));
 if (bob < bog && *(bog-1) != L'\n')
