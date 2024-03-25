@@ -336,22 +336,11 @@ FILE *fp;
 point_t length;
 if ((fp = fopen(getenv("file"), "w")) != NULL) {
   if (fp == NULL) msg(L"Failed to open file \"%s\".", getenv("file"));
-  @<Add trailing newline to non-empty buffer if it is not present@>@;
   movegap(0);
   length = (point_t) (eob - eog);
   @<Write file@>@;
   fclose(fp);
 }
-
-@ If necessary, insert trailing newline into editing buffer before writing it to the file.
-If gap size is zero and no more memory can be allocated, do not append the
-newline.
-
-@<Add trailing newline to non-empty buffer...@>=
-movegap(pos(eob));
-if (bob < bog && *(bog-1) != L'\n')
-  if (bog != eog || growgap(1)) /* if gap size is zero, grow gap */
-    *bog++ = L'\n';
 
 @ We write file character-by-character for similar reasons which are explained in
 |@<Read file@>|.
@@ -374,6 +363,7 @@ for (point_t n = 0; n < length; n++) {
     break;
   }
 }
+if (*(eog + length - 1) != L'\n') fputwc(L'\n', fp);
 
 @*1 Reading file into buffer.
 
