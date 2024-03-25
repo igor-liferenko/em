@@ -115,8 +115,8 @@ sub run {
     binmode(STDOUT, ':utf8');
 
     # https://gavenkoa-tips.readthedocs.io/en/latest/vt100.html
-    print '\e7'; # save cursor position and attributes
-    print '\e[?47h'; # switch to the alternate screen
+    print "\e7"; # save cursor position and attributes
+    print "\e[?47h"; # switch to the alternate screen
     ReadMode(5);
     my $key;
 
@@ -131,9 +131,9 @@ sub run {
 
     ReadMode(0);
     absmove( 0, $rows + 2 );
-    print '\e[2J'; # clear entire screen (the alternate screen)
-    print '\e[?47l'; # switch back to the normal screen
-    print '\e8'; # restore cursor position and attributes
+    print "\e[2J"; # clear entire screen (the alternate screen)
+    print "\e[?47l"; # switch back to the normal screen
+    print "\e8"; # restore cursor position and attributes
 }
 
 sub get_nrlines {
