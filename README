@@ -42,6 +42,9 @@ Add this `em' script to PATH:
       echo $abs lock >>$db
       export db # `db' is written to only when it is in the environment
       export abs # `abs' is used only when `db' is in the environment
-      ~/em/em `sed -i -e "\|^$abs [0-9]\+ [0-9]\+\$|{s|$abs ||;w /dev/stdout" -e 'd}' $db`
+      point=`sed -n "s|^$abs \([0-9]\+\) [0-9]\+\$|\1|p" $db`
+      chars=`wc -m <"$file"`
+      [ "$point" ] && [ $point -ge $chars ] && point=$((chars-1))
+      ~/em/em $point `sed -i -e "\|^$abs [0-9]\+ \([0-9]\+\)\$|{s//\1/;w /dev/stdout" -e 'd}' $db`
       sed -i "\|^$abs lock$|d" $db
     fi
