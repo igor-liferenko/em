@@ -41,8 +41,7 @@ int main(int argc, char **argv)
   @<Open file@>@;
   @<Read file@>@;
   @<Close file@>@;
-
-  @<Set |eop| for proper positioning of cursor on screen@>@;
+  eop = pos(eob); /* set to maximum value for proper positioning of cursor on screen */
 
   assert(initscr() != NULL);
   raw(), nonl();
@@ -1022,13 +1021,6 @@ case_sensitive_search_flag = !case_sensitive_search_flag;
 case_sensitive_search(case_sensitive_search_flag);
 msgflag = TRUE;
 dispmsg();
-
-@ Set |eop| to maximum value.
-This must be set after the file has been read, in order that the buffer is
-allocated.
-
-@<Set |eop| for proper positioning of cursor on screen@>=
-eop=pos(eob);
 
 @ This must be done after |initscr| in order that |COLS| will be initialized.
 
