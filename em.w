@@ -60,7 +60,7 @@ display();
 @ @<Wait user input@>=
 wchar_t c;
 int ret = get_wch(&c);
-if (ret == KEY_CODE_YES && c == KEY_RESIZE) ; /* TODO: if |point| (and hence the cursor) becomes
+if (ret == KEY_CODE_YES && c == KEY_RESIZE) { } /* TODO: if |point| (and hence the cursor) becomes
 out of visible area, move it minimal distance that it becomes visible again; HINT: debug
 |display| by using stty -F ... rows <decrease and increase by one to see the effect> */
 @<\vb{Ctrl}+\vb{M}, \vb{ Enter }@>@;
@@ -79,7 +79,6 @@ out of visible area, move it minimal distance that it becomes visible again; HIN
 @<\vb{Ctrl}+\vb{W}, \vb{ PgUp }@>@;
 @<\vb{Ctrl}+\vb{V}, \vb{ PgDown }@>@;
 @<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>@;
-@<\vb{Ctrl}+\vb{X}@>@;
 @<\vb{Ctrl}+\vb{Z}@>@;
 if (ret == KEY_CODE_YES && c == KEY_F(1)) insert(L'\u00AB');
 if (ret == KEY_CODE_YES && c == KEY_F(2)) insert(L'\u00BB');
@@ -1127,22 +1126,6 @@ if ((ret == OK && c == 0x16) || (ret == KEY_CODE_YES && c == KEY_NPAGE)) pgdown(
 
 @ @<\vb{Ctrl}+\vb{I}, \vb{ Tab }@>=
 if (ret == OK && c == '\t') insert(L'\t');
-
-@ Quit without saving.
-@<\vb{Ctrl}+\vb{X}@>=
-if (ret == OK && c == 0x18) {
-#if 0
-  if (buffer_modified) {
-    if (argc != 1)
-      if (db = fopen(getenv("db"), "a"))
-        fprintf(db, "%s %s %s\n", getenv("abs"), argv[1], argv[2]), fclose(db);
-  }
-  else
-    if (db = fopen(getenv("db"), "a"))
-      fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
-  done = 1;
-#endif
-}
 
 @ Save and quit.
 @<\vb{Ctrl}+\vb{Z}@>=
