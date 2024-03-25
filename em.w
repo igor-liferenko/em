@@ -363,7 +363,7 @@ for (point_t n = 0; n < length; n++) {
     break;
   }
 }
-if (*(eog + length - 1) != L'\n') fputwc(L'\n', fp);
+if (length > 0 && *(eog + length - 1) != L'\n') fputwc(L'\n', fp);
 
 @*1 Reading file into buffer.
 
@@ -404,7 +404,6 @@ while (1) {
   if (buf_end == buf) break; /* end of file */
   @<Copy contents of |buf| to editing buffer@>@;
 }
-@<Add trailing newline to input from non-empty file if it is not present@>@;
 
 @ @<Copy contents of |buf|...@>=
 if (eog - bog < buf_end-buf && !growgap((point_t) (buf_end-buf))) /* if gap size
@@ -412,15 +411,6 @@ if (eog - bog < buf_end-buf && !growgap((point_t) (buf_end-buf))) /* if gap size
   printf("Failed to allocate required memory.\n"), exit(EXIT_FAILURE);
 for (i = 0; i < buf_end-buf; i++)
   *bog++ = buf[i];
-
-@ If necessary, append newline to editing buffer after reading the file.
-If the file has zero length, newline is not appended.
-
-@<Add trailing newline to input...@>=
-if (i && buf[i-1] != L'\n') {
-  *buf_end++ = L'\n';
-  @<Copy contents of |buf|...@>@;
-}
 
 @*1 Procedures.
 
