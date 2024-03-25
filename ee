@@ -1,13 +1,6 @@
 #!/usr/bin/perl -CA
 
-# TODO: use zepto
-
-#
-# |ped| v0.7 Text Editor in Perl
-# (C)2005 DaanSystems, Niek Albers
-# License: PAL (Perl Artistic License)
-# http://www.daansystems.com
-# mailto:nieka@daansystems.com
+# TODO: use https://github.com/hughbarney/zepto
 
 use strict;
 
