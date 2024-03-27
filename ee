@@ -181,7 +181,7 @@ sub dokey {
           setat(chr(0x00bb));
           moveright(1);
         }
-     }
+    }
     elsif ( $ctrl == 8 ) {            # BACKSPACE
         backspaceat();
         moveleft(1);
