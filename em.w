@@ -361,7 +361,7 @@ for (point_t n = 0; n < length; n++) {
     break;
   }
 }
-if (length > 0 && *(eog + length - 1) != L'\n') fputwc(L'\n', fp);
+if (!ferror(fp) && length > 0 && *(eog + length - 1) != L'\n') fputwc(L'\n', fp);
 
 @*1 Reading file into buffer.
 
