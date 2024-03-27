@@ -181,11 +181,7 @@ sub dokey {
           setat(chr(0x00bb));
           moveright(1);
         }
-        elsif ( $esc eq '[24~' ) {
-          setat(chr(0x2010));
-          moveright(1);
-        }
-    }
+     }
     elsif ( $ctrl == 8 ) {            # BACKSPACE
         backspaceat();
         moveleft(1);
