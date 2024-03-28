@@ -356,10 +356,7 @@ And do that if file was unchanged, just quit without doing anything to the file.
 @<Write file@>=
 for (point_t n = 0; n < length; n++) {
   fputwc(*(eog + n), fp);
-  if (ferror(fp)) {
-    msg(L"Failed to write file \"%s\".", getenv("file"));
-    break;
-  }
+  if (ferror(fp)) break;
 }
 if (!ferror(fp) && length > 0 && *(eog + length - 1) != L'\n') fputwc(L'\n', fp);
 
