@@ -472,10 +472,9 @@ point_t segnext(point_t start, point_t finish)
  int c = 0;
 
  point_t scan = segstart(start, finish);
- while (1) {
+ while (c < COLS) {
   p = ptr(scan);
-  if (eob <= p || COLS <= c)
-   break;
+  if (eob <= p) break;
   scan++;
   if (*p == L'\n')
    break;
@@ -493,10 +492,10 @@ point_t upup(point_t off)
  point_t curr = lnbegin(off);
  point_t seg = segstart(curr, off);
  if (curr < seg)
-  off = segstart(curr, seg>0?seg-1:0); /* previous line (is considered the
+  off = segstart(curr, seg-1); /* previous line (is considered the
                   case that current line may be wrapped) */
  else
-  off = segstart(lnbegin(curr>0?curr-1:0), curr>0?curr-1:0); /* previous
+  off = seg > 0 ? segstart(lnbegin(seg-1), seg-1) : 0; /* previous
                   line (is considered the case that previous line may be wrapped) */
  return off;
 }
