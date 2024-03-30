@@ -258,6 +258,16 @@ point_t lnstart(buffer_t *bp, register point_t off)
 	return (bp->b_buf < p ? ++off : 0);
 }
 
+point_t lnfinish(buffer_t *bp, register point_t off)
+{
+  if (off == pos(bp, bp->b_ebuf)) return off;
+  register char_t *p;
+  do
+    p = ptr(bp, off++);
+  while (bp->b_ebuf > p && *p != '\n');
+  return (bp->b_ebuf > p ? --off : pos(bp, bp->b_ebuf));
+}
+
 /* Forward scan for start of logical line segment containing 'finish' */
 point_t segstart(buffer_t *bp, point_t start, point_t finish)
 {
@@ -430,6 +440,8 @@ void right() { if (curbp->b_point < pos(curbp, curbp->b_ebuf)) ++curbp->b_point;
 void up() { curbp->b_point = lncolumn(curbp, upup(curbp, curbp->b_point),curbp->b_col); }
 void down() { curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point),curbp->b_col); }
 void lnbegin() { curbp->b_point = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point); }
+void lnbeginning() { curbp->b_point = lnstart(curbp,curbp->b_point); }
+void lnending() { curbp->b_point = lnfinish(curbp,curbp->b_point); }
 void quit() { done = 1; }
 
 void lnend()
@@ -630,10 +642,10 @@ void search()
 
 /* the key bindings:  desc, keys, func */
 keymap_t keymap[] = {
-	{"C-a beginning-of-line    ", "\x01", lnbegin },
+	{"C-a beginning-of-line    ", "\x01", lnbeginning },
 	{"C-b                      ", "\x02", left },
 	{"C-d forward-delete-char  ", "\x04", delete },
-	{"C-e end-of-line          ", "\x05", lnend },
+	{"C-e end-of-line          ", "\x05", lnending },
 	{"C-f                      ", "\x06", right },
 	{"C-n                      ", "\x0E", down },
 	{"C-p                      ", "\x10", up },
@@ -654,8 +666,8 @@ keymap_t keymap[] = {
 	{"down next-line           ", "\x1B\x5B\x42", down },
 	{"left backward-character  ", "\x1B\x5B\x44", left },
 	{"right forward-character  ", "\x1B\x5B\x43", right },
-	{"home beginning-of-line   ", "\x1B\x4F\x48", lnbegin },
-	{"end end-of-line          ", "\x1B\x4F\x46", lnend },
+	{"home beginning-of-line   ", "\x1B\x4F\x48", lnbeginning },
+	{"end end-of-line          ", "\x1B\x4F\x46", lnending },
 	{"DEL forward-delete-char  ", "\x1B\x5B\x33\x7E", delete },
 	{"backspace delete-left    ", "\x7f", backsp },
 	{"PgUp                     ", "\x1B\x5B\x35\x7E",pgup },
