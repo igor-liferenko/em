@@ -31,33 +31,9 @@ sub init {
     $searchx     = 0;
 }
 
-sub help {
-    my @help = (
-        '                                  ',
-        ' |ped| V0.7 Text editor in Perl   ',
-        ' (C)2005 DaanSystems, Niek Albers ',
-        ' http://www.daansystems.com       ',
-        ' mailto:nieka@daansystems.com     ',
-        '----------------------------------',
-        ' Ctrl+s Search                    ',
-        ' Ctrl+z Save+Exit                 ',
-        '                                  ',
-    );
-
-    my $tempx = int( ( $cols / 2 ) - ( length( $help[0] ) / 2 ) );
-    my $tempy = int( ( $rows / 2 ) - ( scalar(@help) / 2 ) );
-    foreach my $helpline (@help) {
-        absmove( $tempx, $tempy++ );
-        print inverse($helpline);
-    }
-
-    get_escape_sequence() if ( ord( ReadKey() ) == 27 );
-    $forceupdate = 1;
-}
-
 sub get_terminal_size {
     ( $rows, $cols ) = split( /\s+/, `stty size` );
-    $rows -= 2;
+    $rows -= 1;
 }
 
 sub load {
@@ -344,28 +320,20 @@ sub clear {
     print "\e[2J";
 }
 
-sub header {
-    absmove( 0, 0 );
-    print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 0, 0 );
-
-    print inverse( '|ped| ' . ( '+-------' x ( ( $cols - 7 ) / 8 ) ) );
-}
-
 sub footer {
-    absmove( 0, $rows + 2 );
+    absmove( 0, $rows + 1 );
     print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 0, $rows + 2 );
+    absmove( 0, $rows + 1 );
     print inverse( '[' . ( $filename || 'Untitled' ) . ']' . ' ' . ( $status || '' ) );
 
-    my $xy = 'HELP=F1 '
+    my $xy = ''
       . ( $dos ? 'DOS' : 'UNIX' ) . ' '
       . ( $ins ? 'INS' : '' ) . ' [ '
       . ( $x + 1 ) . '/'
       . ( length( line() ) + 1 ) . ':'
       . ( current_line_number() + 1 ) . '/'
       . get_nrlines() . ' ]';
-    absmove( $cols - length2($xy), $rows + 2 );
+    absmove( $cols - length2($xy), $rows + 1 );
     print inverse($xy);
 }
 
@@ -386,15 +354,14 @@ sub draw {
         && $lastnrlines == get_nrlines()
         && !$forceupdate )
     {
-        absmove( 0, $y + 2 );
+        absmove( 0, $y + 1 );
         print "\e[K";
         drawline( current_line_number() );
     }
     else    # update screen
     {
         clear();
-        header();
-        absmove( 0, 2 );
+        absmove( 0, 1 );
 
         for ( my $pos = $topline ; $pos < $topline + $rows && $pos < get_nrlines() ; $pos++ ) {
             drawline($pos);
@@ -412,15 +379,14 @@ sub drawline {
 
     1 while $line =~ s/\t+/' ' x (length($&) * 8 - length($`) % 8)/e;
     my $realx = getrealx( $lines[$pos] );
-    if ( $realx < $cols - 7 ) {
-        $line = substr( $line, 0, $cols - 7 );
+    if ( $realx < $cols - 1 ) {
+        $line = substr( $line, 0, $cols - 1 );
     }
     else {
-        $line = substr( $line, $realx - ( $cols - 7 ), $cols - 7 );
+        $line = substr( $line, $realx - ( $cols - 1 ), $cols - 1 );
     }
 
-    my $posstring = sprintf( '%5d', $pos + 1 );
-    print inverse($posstring) . ' ' . $line . "\r\n";
+    print $line . "\r\n";
 }
 
 sub absmove {
@@ -435,7 +401,7 @@ sub getrealx {
 
 sub move {
     my $realx = getrealx( line() );
-    print "\e[" . ( $y + 2 ) . ';' . ( $realx + 7 ) . 'f';
+    print "\e[" . ( $y + 1 ) . ';' . ( $realx + 1 ) . 'f';
 }
 
 sub inverse {
@@ -445,9 +411,9 @@ sub inverse {
 
 sub input {
     my ($text) = @_;
-    absmove( 0, $rows + 2 );
+    absmove( 0, $rows + 1 );
     print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 0, $rows + 2 );
+    absmove( 0, $rows + 1 );
     print "\e[7m";
     print "$text: ";
 
