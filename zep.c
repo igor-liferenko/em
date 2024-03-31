@@ -642,10 +642,10 @@ void search()
 
 /* the key bindings:  desc, keys, func */
 keymap_t keymap[] = {
-	{"C-a beginning-of-line    ", "\x01", lnbeginning },
+	{"C-a beginning-of-line    ", "\x01", lnbegin },
 	{"C-b                      ", "\x02", left },
 	{"C-d forward-delete-char  ", "\x04", delete },
-	{"C-e end-of-line          ", "\x05", lnending },
+	{"C-e end-of-line          ", "\x05", lnend },
 	{"C-f                      ", "\x06", right },
 	{"C-n                      ", "\x0E", down },
 	{"C-p                      ", "\x10", up },
