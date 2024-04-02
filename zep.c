@@ -449,9 +449,11 @@ void lnend()
 	point_t before = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point);
 	curbp->b_point = dndn(curbp, curbp->b_point);
 	point_t after = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point);
-	if (before != after) /* without this condition, when we are on last line, cursor will
-		                    be on last char instead of after it (in file that does not
-		                    end with |'\n'|) */
+	if (before != after) /* without this condition, when we are on last line:
+	  1) in file that does not end with '\n'
+	       cursor will be on last char instead of after it
+          2) in file that ends with '\n'
+	       cursor will be in the end of previous line */
 	  left();
 }
 
