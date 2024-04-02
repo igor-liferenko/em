@@ -447,7 +447,10 @@ void quit() { done = 1; }
 /* TODO: it works incorrectly on last line if file does not end with newline - cursor is on last char instead of after it, as lnending does */
 void lnend()
 {
+	point_t before = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point);
 	curbp->b_point = dndn(curbp, curbp->b_point);
+	point_t after = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point);
+	if (before != after)
 	left();
 }
 
