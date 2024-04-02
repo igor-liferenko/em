@@ -444,14 +444,15 @@ void lnbeginning() { curbp->b_point = lnstart(curbp,curbp->b_point); }
 void lnending() { curbp->b_point = lnfinish(curbp,curbp->b_point); }
 void quit() { done = 1; }
 
-/* TODO: it works incorrectly on last line if file does not end with newline - cursor is on last char instead of after it, as lnending does */
 void lnend()
 {
 	point_t before = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point);
 	curbp->b_point = dndn(curbp, curbp->b_point);
 	point_t after = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point);
-	if (before != after)
-	left();
+	if (before != after) /* without this condition, when we are on last line, cursor will
+		                    be on last char instead of after it (in file that does not
+		                    end with |'\n'|) */
+	  left();
 }
 
 void pgdown()

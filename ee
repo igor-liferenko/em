@@ -457,3 +457,127 @@ sub ReadMode {
         system( 'stty', $stty );
     }
 }
+
+/* Reverse scan for start of logical line containing offset */
+point_t lnstart(buffer_t *bp, register point_t off)
+{
+	register char_t *p;
+	do
+		p = ptr(bp, --off);
+	while (bp->b_buf < p && *p != '\n');
+	return (bp->b_buf < p ? ++off : 0);
+}
+
+point_t lnfinish(buffer_t *bp, register point_t off)
+{
+  if (off == pos(bp, bp->b_ebuf)) return off;
+  register char_t *p;
+  do
+    p = ptr(bp, off++);
+  while (bp->b_ebuf > p && *p != '\n');
+  return (bp->b_ebuf > p ? --off : pos(bp, bp->b_ebuf));
+}
+
+/* Forward scan for start of logical line segment containing 'finish' */
+point_t segstart(buffer_t *bp, point_t start, point_t finish)
+{
+	char_t *p;
+	int c = 0;
+	point_t scan = start;
+
+	while (scan < finish) {
+		p = ptr(bp, scan);
+		if (*p == '\n') {
+			c = 0;
+			start = scan + 1;
+		} else if (COLS <= c) {
+			c = 0;
+			start = scan;
+		}
+		++scan;
+		c += *p == '\t' ? 8 - (c & 7) : 1;
+	}
+	return (c < COLS ? start : finish);
+}
+
+/* Forward scan for start of logical line segment following 'finish' */
+point_t segnext(buffer_t *bp, point_t start, point_t finish)
+{
+	char_t *p;
+	int c = 0;
+
+	point_t scan = segstart(bp, start, finish);
+	for (;;) {
+		p = ptr(bp, scan);
+		if (bp->b_ebuf <= p || COLS <= c) break;
+		++scan;
+		if (*p == '\n') break;
+		c += *p == '\t' ? 8 - (c & 7) : 1;
+	}
+	return (p < bp->b_ebuf ? scan : pos(bp, bp->b_ebuf));
+}
+
+/* Move up one screen line */
+point_t upup(buffer_t *bp, point_t off)
+{
+	point_t curr = lnstart(bp, off);
+	point_t seg = segstart(bp, curr, off);
+	if (curr < seg)
+		off = segstart(bp, curr, seg-1);
+	else
+		off = segstart(bp, lnstart(bp,curr-1), curr-1);
+	return (off);
+}
+
+/* Move down one screen line */
+point_t dndn(buffer_t *bp, point_t off) { return (segnext(bp, lnstart(bp,off), off)); }
+
+/* Return the offset of a column on the specified line */
+point_t lncolumn(buffer_t *bp, point_t offset, int column)
+{
+	int c = 0;
+	char_t *p;
+	while ((p = ptr(bp, offset)) < bp->b_ebuf && *p != '\n' && c < column) {
+		c += *p == '\t' ? 8 - (c & 7) : 1;
+		++offset;
+	}
+	return (offset);
+}
+void top() { curbp->b_point = 0; }
+void bottom() {	curbp->b_epage = curbp->b_point = pos(curbp, curbp->b_ebuf); }
+void left() { if (0 < curbp->b_point) --curbp->b_point; }
+void right() { if (curbp->b_point < pos(curbp, curbp->b_ebuf)) ++curbp->b_point; }
+void up() { curbp->b_point = lncolumn(curbp, upup(curbp, curbp->b_point),curbp->b_col); }
+void down() { curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point),curbp->b_col); }
+void lnbegin() { curbp->b_point = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point); }
+void lnbeginning() { curbp->b_point = lnstart(curbp,curbp->b_point); }
+void lnending() { curbp->b_point = lnfinish(curbp,curbp->b_point); }
+void quit() { done = 1; }
+void lnend()
+{
+	point_t before = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point);
+	curbp->b_point = dndn(curbp, curbp->b_point);
+	point_t after = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point);
+	if (before != after) /* without this condition, when we are on last line, cursor will
+		                    be on last char instead of after it (in file that does not
+		                    end with |'\n'|) */
+	  left();
+}
+
+void pgdown()
+{
+	curbp->b_page = curbp->b_point = upup(curbp, curbp->b_epage);
+	while (0 < curbp->b_row--)
+		down();
+	curbp->b_epage = pos(curbp, curbp->b_ebuf);
+}
+
+void pgup()
+{
+	int i = curbp->w_rows;
+	while (0 < --i) {
+		curbp->b_page = upup(curbp, curbp->b_page);
+		up();
+	}
+}
+
