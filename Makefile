@@ -1,6 +1,6 @@
 all:
 	ctangle em
-	gcc -w -o em em.c -lncursesw -D_XOPEN_SOURCE=600
+	gcc -o em em.c -lncursesw -D_XOPEN_SOURCE=600
 
 eps:
 	@make --no-print-directory `grep -o '^\S*\.eps' Makefile`
