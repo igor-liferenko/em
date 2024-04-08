@@ -1,5 +1,7 @@
 #!/usr/bin/perl -CA
 
+# TODO: keep all buffer in one line
+
 # TODO: use https://github.com/hughbarney/zepto
 
 use strict;
