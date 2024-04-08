@@ -8,7 +8,7 @@ $| = 1;
 $_ = '' for my (
     $x,           $y,           $topline,     $lastxsearch, $lastysearch, $ins,
     $forceupdate, $cols,        $rows,        $search,      $status,      $filename,
-    $dos,         $center_line, $lasttopline, $lastnrlines, $searchx,     $stty
+                  $center_line, $lasttopline, $lastnrlines, $searchx,     $stty
 );
 
 my @lines;
@@ -46,34 +46,29 @@ sub load {
     }
     binmode(FILE, ':utf8');
     foreach my $line (<FILE>) {
-        $dos = 1 if ( $line =~ m/\r\n$/ );
         $line =~ s/\r?\n$//;
         push( @lines, $line );
     }
 
     close(FILE);
-    $dos = $dos;
     return 1;
 }
 
 sub save {
-    my $savefilename = $filename || input('Filename');
-
-    if ( !open( FILE, ">$savefilename" ) ) {
+    if ( !open( FILE, ">$filename" ) ) {
         $status = "Save failed $!";
         return;
     }
     binmode(FILE, ':utf8');
     my $count = 0;
     foreach my $line (@lines) {
-        print FILE $line . ( $dos ? "\r\n" : "\n" );
+        print FILE $line . "\n";
         $count++;
     }
     close(FILE);
 
     $status = "Saved $count lines.";
     footer();
-    $filename = $savefilename;
     return 1;
 }
 
@@ -82,7 +77,8 @@ sub run {
     my $regexp = qr/\+(\d+)/;
     my ($center_line_arg) = grep { $_ =~ $regexp } @ARGV;
     my ($center_line) = $center_line_arg =~ $regexp;
-    $topline = $center_line - ( $rows / 2 ) - 1;
+    $topline = $center_line - ( $rows / 2 ) - 1; # rows = 9 => ( $rows / 2 ) - 1 = 3.5
+    # $topline starts from zero
     binmode(STDIN, ':utf8');
     binmode(STDOUT, ':utf8');
 
@@ -326,7 +322,6 @@ sub footer {
     print inverse( '[' . ( $filename || 'Untitled' ) . ']' . ' ' . ( $status || '' ) );
 
     my $xy = ''
-      . ( $dos ? 'DOS' : 'UNIX' ) . ' '
       . ( $ins ? 'INS' : '' ) . ' [ '
       . ( $x + 1 ) . '/'
       . ( length( line() ) + 1 ) . ':'
@@ -420,7 +415,7 @@ sub input {
     my $result = ReadLine();
     ReadMode(5);
 
-    $result =~ s/\r?\n$//;
+    chop $result;
 
     print "\e[m";
     $forceupdate = 1;
@@ -456,7 +451,7 @@ sub ReadMode {
         system( 'stty', $stty );
     }
 }
-
+__END__
 /* Reverse scan for start of logical line containing offset */
 point_t lnstart(buffer_t *bp, register point_t off)
 {
