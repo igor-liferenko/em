@@ -72,7 +72,6 @@ extern void display(void);
 extern void dispmsg(void);
 extern void modeline(buffer_t *);
 extern point_t lnstart(buffer_t *, point_t);
-extern point_t lnfinish(buffer_t *, point_t);
 extern point_t lncolumn(buffer_t *, point_t, int);
 extern point_t segstart(buffer_t *, point_t, point_t);
 extern point_t segnext(buffer_t *, point_t, point_t);

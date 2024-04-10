@@ -12,23 +12,14 @@ void right() { if (curbp->b_point < pos(curbp, curbp->b_ebuf)) ++curbp->b_point;
 void up() { curbp->b_point = lncolumn(curbp, upup(curbp, curbp->b_point),curbp->b_col); }
 void down() { curbp->b_point = lncolumn(curbp, dndn(curbp, curbp->b_point),curbp->b_col); }
 void lnbegin() { curbp->b_point = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point); }
-void lnbeginning() { curbp->b_point = lnstart(curbp,curbp->b_point); }
-void lnending() { curbp->b_point = lnfinish(curbp,curbp->b_point); }
 void quit() { done = 1; }
 void copy() { copy_cut(FALSE); }
 void cut() { copy_cut(TRUE); }
 
 void lnend()
 {
-	point_t before = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point);
 	curbp->b_point = dndn(curbp, curbp->b_point);
-	point_t after = segstart(curbp, lnstart(curbp,curbp->b_point), curbp->b_point);
-	if (before != after) /* without this condition, when we are on last line:
-	  1) in file that does not end with '\n'
-	       cursor will be on last char instead of after it
-	   2) in file that ends with '\n'
-	       cursor will be in the end of previous line */
-	  left();
+	left();
 }
 
 void pgdown()
