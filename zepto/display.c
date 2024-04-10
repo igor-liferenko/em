@@ -12,6 +12,16 @@ point_t lnstart(buffer_t *bp, register point_t off)
 	return (bp->b_buf < p ? ++off : 0);
 }
 
+point_t lnfinish(buffer_t *bp, register point_t off)
+{
+  if (off == pos(bp, bp->b_ebuf)) return off;
+  register char_t *p;
+  do
+    p = ptr(bp, off++);
+  while (bp->b_ebuf > p && *p != '\n');
+  return (bp->b_ebuf > p ? --off : pos(bp, bp->b_ebuf));
+}
+
 /* Forward scan for start of logical line segment containing 'finish' */
 point_t segstart(buffer_t *bp, point_t start, point_t finish)
 {
