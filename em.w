@@ -48,8 +48,10 @@ int main(int argc, char **argv)
   noecho();
   keypad(stdscr, TRUE);
 
-  int line = atoi(getenv("line"));
-  if (line > 0) @<Move cursor to |line|@>@;
+  if (getenv("line") != NULL) {
+    int line = atoi(getenv("line"));
+    @<Move cursor to |line|@>@;
+  }
   else if (argc != 1) /* restore cursor */
     point = atol(argv[1]), bop = atol(argv[2]);
 
@@ -1084,7 +1086,7 @@ if (ret == OK && c == '\t') insert(L'\t');
 @<\vb{Ctrl}+\vb{Z}@>=
 if (ret == OK && c == 0x1a) {
   @<Save buffer@>@;
-  if (db = fopen(getenv("db"), "a"))
+  if (getenv("db") != NULL && (db = fopen(getenv("db"), "a")) != NULL)
     fprintf(db, "%s %ld %ld\n", getenv("abs"), point, bop), fclose(db);
   done = 1;
 }
