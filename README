@@ -16,7 +16,7 @@ Add this `em' script to PATH:
     # Use as `em file line' or `em file:line' (for copy-paste from `grep -n')
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
-      file=$tmp line=0 ~/em/em
+      file=$tmp ~/em/em
       echo $tmp
     else
       if [ $# = 1 ]; then
@@ -25,27 +25,25 @@ Add this `em' script to PATH:
           export line=${1#*:}
         else
           export file="$1"
-          export line=0
         fi
       else
         export file="$1"
         export line=$2
       fi
-      abs=`realpath "$file"`
+      export abs=`realpath "$file"`
       [ "$abs" = $0 ] && exec ~/em/em
-      db=/tmp/em.db
+      export db=/tmp/em.db
       if grep -sq "^$abs lock$" $db; then
         echo File is already opened
         exit 1
       fi
-      echo $abs lock >>$db
-      export db # `db' is written to only when it is in the environment
-      export abs # `abs' is used only when `db' is in the environment
-      eval "$(sed -i -e "\|^$abs \([0-9]\+\) \([0-9]\+\)\$|{s||point=\1 bop=\2|;w /dev/stdout" -e 'd}' $db)"
+      eval `sed -n "s|^$abs \(.*\) |point=\1 bop=|p" $db`
       if [ "$point" ]; then
         chars=`wc -m <"$file"`
-        [ $point -ge $chars ] && point=$((chars-1)) # `bop' is automitically adjusted inside program if it is greater than `point'
+        [ $point -ge $chars ] && point=$((chars-1))
+        sed -i "\|^$abs |d" $db
       fi
+      echo $abs lock >>$db
       ~/em/em $point $bop
       sed -i "\|^$abs lock$|d" $db
     fi
