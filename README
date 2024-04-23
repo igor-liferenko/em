@@ -34,21 +34,21 @@ Add this `em' script to PATH:
       [ "$abs" = $0 ] && { echo Use other editor; exit 1; }
       export db=/tmp/em.db
       grep -sq "^$abs lock$" $db && { echo File is already opened; exit 1; }
-      if ! [ "$edit" ]; then
+      if ! [ "$line" ]; then
         eval `sed -n "s|^$abs \(.*\) |point=\1 bop=|p" $db 2>/dev/null`
         if [ "$point" ]; then
           chars=`wc -m <"$file"`
           [ $point -ge $chars ] && point=$((chars-1))
-          sed -i "\|^$abs |d" $db
         fi
       fi
+      [ "$edit ] || sed -i "\|^$abs |d" $db
       echo $abs lock >>$db
-      if ! [ "$edit" ]; then
-        ~/em/em $point $bop
-      else
+      if [ "$edit" ]; then # don't save cursor position if called from tex/mf
         printf '\e]11;#d4e8db\a'
-        env -u db ~/em/em # don't save cursor position if called from tex/mf
+        env -u db ~/em/em
         printf '\e]11;white\a'
+      else
+        ~/em/em $point $bop
       fi
       sed -i "\|^$abs lock$|d" $db
     fi
