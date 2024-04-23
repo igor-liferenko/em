@@ -37,7 +37,7 @@ Add this `em' script to PATH:
         echo File is already opened
         exit 1
       fi
-      eval `sed -n "s|^$abs \(.*\) |point=\1 bop=|p" $db`
+      eval `sed -n "s|^$abs \(.*\) |point=\1 bop=|p" $db 2>/dev/null`
       if [ "$point" ]; then
         chars=`wc -m <"$file"`
         [ $point -ge $chars ] && point=$((chars-1))
