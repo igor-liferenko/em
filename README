@@ -34,7 +34,7 @@ Add this `em' script to PATH:
       [ "$abs" = $0 ] && { echo Use other editor; exit 1; }
       export db=/tmp/em.db
       grep -sq "^$abs lock$" $db && { echo File is already opened; exit 1; }
-      if ! [ "$edit ]; then
+      if ! [ "$edit" ]; then
         eval `sed -n "s|^$abs \(.*\) |point=\1 bop=|p" $db 2>/dev/null`
         if [ "$point" ]; then
           chars=`wc -m <"$file"`
