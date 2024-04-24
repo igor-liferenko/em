@@ -31,17 +31,15 @@ Add this `em' script to PATH:
         export line=$2
       fi
       export abs=`realpath "$file"`
-      [ "$abs" = $0 ] && { echo Use other editor; exit 1; }
+      [ "$abs" = $0 ] && { printf 'Edit ~/em/README and then do: sed -n \x27/bin.sh/,$s/^    //p\x27 ~/em/README >`which em`\n'; exit 1; }
       export db=/tmp/em.db
       grep -sq "^$abs lock$" $db && { echo File is already opened; exit 1; }
-      if ! [ "$line" ]; then
-        eval `sed -n "s|^$abs \(.*\) |point=\1 bop=|p" $db 2>/dev/null`
-        if [ "$point" ]; then
-          chars=`wc -m <"$file"`
-          [ $point -ge $chars ] && point=$((chars-1))
-        fi
+      eval `sed -n "s|^$abs \(.*\) |point=\1 bop=|p" $db 2>/dev/null`
+      if [ "$point" ]; then
+        chars=`wc -m <"$file"`
+        [ $point -ge $chars ] && point=$((chars-1))
       fi
-      [ "$edit ] || sed -i "\|^$abs |d" $db
+      [ "$edit" ] || sed -i "\|^$abs |d" $db 2>/dev/null
       echo $abs lock >>$db
       if [ "$edit" ]; then # don't save cursor position if called from tex/mf
         printf '\e]11;#d4e8db\a'
