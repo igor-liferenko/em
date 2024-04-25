@@ -1,0 +1,9 @@
+#!/bin/sh
+save=`stty -g`
+stty raw -echo
+printf '\e[?47h'
+printf '\e[2J'
+printf '\e[1;1f'
+perl -w ./keys.pl
+printf '\e[?47l'
+stty $save
