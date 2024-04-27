@@ -30,6 +30,7 @@ Add this `em' script to PATH:
         export file="$1"
         export line=$2
       fi
+      iconv -f UTF-8 -t UCS-2 $file >/dev/null 2>&1 || { echo File is not UTF-8; exit 1; }
       export abs=`realpath "$file"`
       [ "$abs" = $0 ] && { printf 'Edit ~/em/README and then do: sed -n \x27/bin.sh/,$s/^    //p\x27 ~/em/README >`which em`\n'; exit 1; }
       export db=/tmp/em.db
