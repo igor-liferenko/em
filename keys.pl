@@ -69,7 +69,6 @@ while (!$done) {
     for my $key (@keys) {
       my $i = 0;
       while (1) {
-        last if $i > scalar(@buffer) || $i > length($$key[1]);
         if ($i == scalar(@buffer) && $i == length($$key[1])) {
           @buffer = ();
           prnt $$key[0];
@@ -79,7 +78,7 @@ while (!$done) {
         last if $buffer[$i] ne substr($$key[1], $i, 1);
         $i++;
       }
-      $submatch = 1 if $i == scalar(@buffer) && $i != length($$key[1]);
+      $submatch = 1 if $i == scalar(@buffer) && $i < length($$key[1]);
     }
   } while ($submatch);
 }
