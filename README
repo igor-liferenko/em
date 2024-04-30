@@ -31,7 +31,7 @@ Add this `em' script to PATH:
         export line=$2
       fi
       export abs=`realpath "$file"`
-      [ "$abs" = $0 ] && { /bin/printf 'Edit ~/em/README and then do: sed -n \x27/bin.sh/,$s/^    //p\x27 ~/em/README >`which em`\n'; exit 1; } # (built-in printf in dash does not handle \x27)
+      [ "$abs" = $0 ] && { printf 'Edit ~/em/README and then do: sed -n \47/bin.sh/,$s/^    //p\47 ~/em/README >`which em`\n'; exit 1; }
       export db=/tmp/em.db
       grep -sq "^$abs lock$" $db && { echo File is already opened; exit 1; }
       eval `sed -n "s|^$abs \(.*\) |point=\1 bop=|p" $db 2>/dev/null`
