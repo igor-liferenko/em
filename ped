@@ -8,6 +8,20 @@
 
 use strict;
 
+my @keys = (
+  [ 'F1',       "\eOP"  ],
+  [ 'Up',       "\e[A"  ],
+  [ 'Down',     "\e[B"  ],
+  [ 'Left',     "\e[D"  ],
+  [ 'Right',    "\e[C"  ],
+  [ 'Home',     "\e[H"  ],
+  [ 'End',      "\e[F"  ],
+  [ 'Insert',   "\e[2~" ],
+  [ 'Delete',   "\e[3~" ],
+  [ 'PageUp',   "\e[5~" ],
+  [ 'PageDown', "\e[6~" ]
+);
+
 $| = 1;
 $_ = '' for my (
     $x,           $y,           $topline,     $lastxsearch, $lastysearch, $ins,
@@ -151,31 +165,17 @@ sub dokey {
     my $ctrl = ord($key);
     if    ( $ctrl == 3 )  { return }                  # Ctrl+c
     elsif ( $ctrl == 4 )  { return if ( save() ) }    # Ctrl+d
-    elsif ( $ctrl == 27 ) {                           # escape code
-        my $esc = get_escape_sequence();
-
-        if    ( $esc eq '[A' ) { moveup(1) }          # up
-        elsif ( $esc eq '[B' ) {
-            movedown(1);
-        }                                             # down
-        elsif ( $esc eq '[5~' ) { moveup($rows) }     # pgup
-        elsif ( $esc eq '[6~' ) { movedown($rows) }   # pgdn
-        elsif ( $esc eq '[C' )  { moveright(1) }      # right
-        elsif ( $esc eq '[D' )  { moveleft(1) }       # left
-        elsif ( $esc eq '[3~' ) { delat() }           # del
-        elsif ( $esc eq '[1~' ) {                     # home
-            moveup( current_line_number() );
-        }
-        elsif ( $esc eq '[4~' || $esc eq '[7~' ) {                     # end
-            movedown( get_nrlines() - current_line_number() );
-        }
-        elsif ( $esc eq '[2~' || $esc eq '[8~' ) {                     # insert
-            $ins = !$ins;
-        }
-        elsif ( $esc eq '[[A' || $esc eq '[11~' ) {
-            help();
-        }
-    }
+    elsif ( $key eq 'Up' ) { moveup(1) }
+    elsif ( $key eq 'Down' ) { movedown(1) }
+    elsif ( $key eq 'PageUp' ) { moveup($rows) }
+    elsif ( $key eq 'PageDown' ) { movedown($rows) }
+    elsif ( $key eq 'Right' )  { moveright(1) }
+    elsif ( $key eq 'Left' )  { moveleft(1) }
+    elsif ( $key eq 'Delete' ) { delat() }
+    elsif ( $key eq 'Home' ) { moveup( current_line_number() ) }
+    elsif ( $key eq 'End' ) { movedown( get_nrlines() - current_line_number() ) }
+    elsif ( $key eq 'Insert' ) { $ins = !$ins }
+    elsif ( $key eq 'F1' ) { help() }
     elsif ( $ctrl == 8 || $ctrl == 127 ) {            # BACKSPACE
         backspaceat();
         moveleft(1);
@@ -468,10 +468,47 @@ sub length2 {
     return length($text);
 }
 
+use Time::HiRes 'ualarm';
+my @buffer = ();
 sub ReadKey {
-    my $key = '';
-    sysread( STDIN, $key, 1 );
-    return $key;
+  # if recorded bytes remain, handle next recorded byte
+  if (scalar @buffer) {
+    return shift @buffer;
+  }
+  my $submatch;
+  do {
+    my $k = '';
+    if (scalar(@buffer) == 1) { # to use ^[
+      eval {
+        local $SIG{ALRM} = sub { die };
+        ualarm 300_000;
+        read(STDIN, $k, 1);
+        ualarm 0;
+      };
+      return shift @buffer if $@;
+    }
+    else { read(STDIN, $k, 1) }
+    push @buffer, $k;
+    $submatch = 0;
+    for my $key (@keys) {
+      my $i = 0;
+      while (1) {
+        if ($i == scalar(@buffer) && $i == length($$key[1])) {
+          @buffer = ();
+          return $$key[0];
+        }
+        last if $i == scalar(@buffer) || $i == length($$key[1]);
+        last if $buffer[$i] ne substr($$key[1], $i, 1);
+        $i++;
+      }
+      $submatch = 1 if $i == scalar(@buffer) && $i < length($$key[1]);
+    }
+  } while ($submatch);
+  if (scalar(@buffer) > 1) {
+    $buffer[0] = '[';
+    return '^';
+  }
+  return shift @buffer;
 }
 
 sub ReadLine {
