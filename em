@@ -88,7 +88,6 @@ sub load {
         @lines = ('');
         return;
     }
-    binmode(FILE);
     foreach my $line (<FILE>) {
         $dos = 1 if ( $line =~ m/\r\n$/ );
         $line =~ s/\r?\n$//;
@@ -107,7 +106,6 @@ sub save {
         $status = "Save failed $!";
         return;
     }
-    binmode(FILE);
     my $count = 0;
     foreach my $line (@lines) {
         print FILE $line . ( $dos ? "\r\n" : "\n" );
@@ -127,7 +125,6 @@ sub run {
     my ($center_line_arg) = grep { $_ =~ $regexp } @ARGV;
     my ($center_line) = $center_line_arg =~ $regexp;
     $topline = $center_line - ( $rows / 2 ) - 1;
-    binmode(STDIN);
 
     ReadMode(5);
     my $key;
@@ -194,7 +191,8 @@ sub dokey {
     elsif ( $ctrl == 6 ) {                            # Ctrl+F
         search();
     }
-    elsif ( $ctrl == 9 || ( $ctrl >= 32 && $ctrl <= 126 ) ) {
+    elsif ( $ctrl == 9 || ( $ctrl >= 32 && $ctrl != 127 ) ) {
+
         setat($key);
         moveright(1);
     }
