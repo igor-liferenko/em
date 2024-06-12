@@ -113,7 +113,7 @@ sub run {
     }
 
     ReadMode(0);
-    absmove( 0, $rows + 2 );
+    absmove( 1, $rows + 2 );
     print "\n";
 }
 
@@ -305,17 +305,17 @@ sub clear {
 }
 
 sub header {
-    absmove( 0, 0 );
+    absmove( 1, 1 );
     print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 0, 0 );
+    absmove( 1, 1 );
 
     print inverse( '|ped| ' . ( '+-------' x ( ( $cols - 7 ) / 8 ) ) );
 }
 
 sub footer {
-    absmove( 0, $rows + 2 );
+    absmove( 1, $rows + 2 );
     print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 0, $rows + 2 );
+    absmove( 1, $rows + 2 );
     print inverse( '[' . ( $filename || 'Untitled' ) . ']' . ' ' . ( $status || '' ) );
 
     my $xy = 'HELP=F1 '
@@ -346,7 +346,7 @@ sub draw {
         && $lastnrlines == get_nrlines()
         && !$forceupdate )
     {
-        absmove( 0, $y + 2 );
+        absmove( 1, $y + 2 );
         print "\e[K";
         drawline( current_line_number() );
     }
@@ -354,7 +354,7 @@ sub draw {
     {
         clear();
         header();
-        absmove( 0, 2 );
+        absmove( 1, 2 );
 
         for ( my $pos = $topline ; $pos < $topline + $rows && $pos < get_nrlines() ; $pos++ ) {
             drawline($pos);
@@ -405,9 +405,9 @@ sub inverse {
 
 sub input {
     my ($text) = @_;
-    absmove( 0, $rows + 2 );
+    absmove( 1, $rows + 2 );
     print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 0, $rows + 2 );
+    absmove( 1, $rows + 2 );
     print "\e[7m";
     print "$text: ";
 
