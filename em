@@ -49,32 +49,6 @@ sub init {
     $searchx     = 0;
 }
 
-sub help {
-    my @help = (
-        '                                  ',
-        ' |ped| V0.7 Text editor in Perl   ',
-        ' (C)2005 DaanSystems, Niek Albers ',
-        ' http://www.daansystems.com       ',
-        ' mailto:nieka@daansystems.com     ',
-        '----------------------------------',
-        ' Ctrl+s Save                      ',
-        ' Ctrl+f Search                    ',
-        ' Ctrl+d Save+Exit                 ',
-        ' Ctrl+c Exit                      ',
-        '                                  ',
-    );
-
-    my $tempx = int( ( $cols / 2 ) - ( length( $help[0] ) / 2 ) );
-    my $tempy = int( ( $rows / 2 ) - ( scalar(@help) / 2 ) );
-    foreach my $helpline (@help) {
-        absmove( $tempx, $tempy++ );
-        print inverse($helpline);
-    }
-
-    get_escape_sequence() if ( ord( ReadKey() ) == 27 );
-    $forceupdate = 1;
-}
-
 sub get_terminal_size {
     ( $rows, $cols ) = split( /\s+/, `stty size` );
     $rows -= 2;
@@ -147,16 +121,6 @@ sub get_nrlines {
     return scalar(@lines);
 }
 
-sub get_escape_sequence {
-    my $esc;
-    while ( my $key = ReadKey() ) {
-        $esc .= $key;
-        last if ( $key =~ /[a-z~]/i );
-    }
-
-    return $esc;
-}
-
 sub dokey {
     my ($key) = @_;
     my $ctrl = ord($key);
@@ -172,7 +136,7 @@ sub dokey {
     elsif ( $key eq 'Home' ) { moveup( current_line_number() ) }
     elsif ( $key eq 'End' ) { movedown( get_nrlines() - current_line_number() ) }
     elsif ( $key eq 'Insert' ) { $ins = !$ins }
-    elsif ( $key eq 'F1' ) { help() }
+    elsif ( $key eq 'F1' ) { return 1 }
     elsif ( $ctrl == 8 || $ctrl == 127 ) {            # BACKSPACE
         backspaceat();
         moveleft(1);
