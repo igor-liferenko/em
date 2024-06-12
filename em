@@ -363,15 +363,14 @@ sub drawline {
 
     1 while $line =~ s/\t+/' ' x (length($&) * 8 - length($`) % 8)/e;
     my $realx = getrealx( $lines[$pos] );
-    if ( $realx < $cols - 7 ) {
-        $line = substr( $line, 0, $cols - 7 );
+    if ( $realx < $cols - 1 ) {
+        $line = substr( $line, 0, $cols - 1 );
     }
     else {
-        $line = substr( $line, $realx - ( $cols - 7 ), $cols - 7 );
+        $line = substr( $line, $realx - ( $cols - 1 ), $cols - 1 );
     }
 
-    my $posstring = sprintf( '%5d', $pos + 1 );
-    print inverse($posstring) . ' ' . $line . "\r\n";
+    print $line . "\r\n";
 }
 
 sub absmove {
@@ -386,7 +385,7 @@ sub getrealx {
 
 sub move {
     my $realx = getrealx( line() );
-    print "\e[" . ( $y + 1 ) . ';' . ( $realx + 7 ) . 'f';
+    print "\e[" . ( $y + 1 ) . ';' . ( $realx + 1 ) . 'f';
 }
 
 sub inverse {
