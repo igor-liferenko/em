@@ -51,7 +51,7 @@ sub init {
 
 sub get_terminal_size {
     ( $rows, $cols ) = split( /\s+/, `stty size` );
-    $rows -= 2;
+    $rows -= 1;
 }
 
 sub load {
@@ -113,7 +113,7 @@ sub run {
     }
 
     ReadMode(0);
-    absmove( 1, $rows + 2 );
+    absmove( 1, $rows + 1 );
     print "\n";
 }
 
@@ -304,18 +304,10 @@ sub clear {
     print "\e[2J";
 }
 
-sub header {
-    absmove( 1, 1 );
-    print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 1, 1 );
-
-    print inverse( '|ped| ' . ( '+-------' x ( ( $cols - 7 ) / 8 ) ) );
-}
-
 sub footer {
-    absmove( 1, $rows + 2 );
+    absmove( 1, $rows + 1 );
     print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 1, $rows + 2 );
+    absmove( 1, $rows + 1 );
     print inverse( '[' . ( $filename || 'Untitled' ) . ']' . ' ' . ( $status || '' ) );
 
     my $xy = 'HELP=F1 '
@@ -325,7 +317,7 @@ sub footer {
       . ( length( line() ) + 1 ) . ':'
       . ( current_line_number() + 1 ) . '/'
       . get_nrlines() . ' ]';
-    absmove( $cols - length2($xy), $rows + 2 );
+    absmove( $cols - length2($xy), $rows + 1 );
     print inverse($xy);
 }
 
@@ -346,15 +338,14 @@ sub draw {
         && $lastnrlines == get_nrlines()
         && !$forceupdate )
     {
-        absmove( 1, $y + 2 );
+        absmove( 1, $y + 1 );
         print "\e[K";
         drawline( current_line_number() );
     }
     else    # update screen
     {
         clear();
-        header();
-        absmove( 1, 2 );
+        absmove( 1, 1 );
 
         for ( my $pos = $topline ; $pos < $topline + $rows && $pos < get_nrlines() ; $pos++ ) {
             drawline($pos);
@@ -395,7 +386,7 @@ sub getrealx {
 
 sub move {
     my $realx = getrealx( line() );
-    print "\e[" . ( $y + 2 ) . ';' . ( $realx + 7 ) . 'f';
+    print "\e[" . ( $y + 1 ) . ';' . ( $realx + 7 ) . 'f';
 }
 
 sub inverse {
@@ -405,9 +396,9 @@ sub inverse {
 
 sub input {
     my ($text) = @_;
-    absmove( 1, $rows + 2 );
+    absmove( 1, $rows + 1 );
     print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 1, $rows + 2 );
+    absmove( 1, $rows + 1 );
     print "\e[7m";
     print "$text: ";
 
