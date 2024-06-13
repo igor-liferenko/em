@@ -4,11 +4,14 @@ Add this `em' script to PATH:
     # Use as `em file line' or `em file:line' (for copy-paste from `grep -n')
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
-      printf '\E7'
-      printf '\E[?47h'
+      printf '\e7'
+      printf '\e[?47h'
+      save=`stty -g`
+      stty raw -echo
       perl -CSDA ~/em/em $tmp
-      printf '\E[?47l'
-      printf '\E8'
+      stty $save
+      printf '\e[?47l'
+      printf '\e8'
       echo $tmp
     else
       if [ $# = 1 ]; then
@@ -35,10 +38,13 @@ Add this `em' script to PATH:
       [ "$hash" ] && [ $hash != `md5sum "$file" | head -c32`-`stty size | tr ' ' -` ] && line=
       sed -i "\|^$abs |d" $db 2>/dev/null
       echo $abs lock >>$db
-      printf '\E7'
-      printf '\E[?47h'
+      printf '\e7'
+      printf '\e[?47h'
+      save=`stty -g`
+      stty raw -echo
       perl -CSDA ~/em/em "$file" `[ "$line" ] && echo +$line`
-      printf '\E[?47l'
-      printf '\E8'
+      stty $save
+      printf '\e[?47l'
+      printf '\e8'
       sed -i "\|^$abs lock$|d" $db
     fi
