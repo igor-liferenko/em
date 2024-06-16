@@ -1,22 +1,16 @@
 #!/usr/bin/perl
-#
-# |ped| v0.7 Text Editor in Perl
-# (C)2005 DaanSystems, Niek Albers
-# License: PAL (Perl Artistic License)
-# http://www.daansystems.com
-# mailto:nieka@daansystems.com
 
 use strict;
 
 my @keys = (
   [ 'F1',       "\eOP"  ],
+  [ 'F2',       "\eOQ"  ],
   [ 'Up',       "\e[A"  ],
   [ 'Down',     "\e[B"  ],
   [ 'Left',     "\e[D"  ],
   [ 'Right',    "\e[C"  ],
   [ 'Home',     "\e[H"  ],
   [ 'End',      "\e[F"  ],
-  [ 'Insert',   "\e[2~" ],
   [ 'Delete',   "\e[3~" ],
   [ 'PageUp',   "\e[5~" ],
   [ 'PageDown', "\e[6~" ]
@@ -24,14 +18,13 @@ my @keys = (
 
 $| = 1;
 $_ = '' for my (
-    $x,           $y,           $topline,     $lastxsearch, $lastysearch, $ins,
-    $forceupdate, $cols,        $rows,        $search,      $status,      $filename,
-    $dos,         $center_line, $lasttopline, $lastnrlines, $searchx,     $stty
+    $x,           $y,           $topline,
+    $forceupdate, $cols,        $rows,
+    $center_line, $lasttopline, $lastnrlines, $filename
 );
 
 my @lines;
 
-# catch terminal resize
 $SIG{WINCH} = sub { close STDIN };
 
 init();
@@ -39,10 +32,7 @@ load();
 run();
 
 sub init {
-    $lastxsearch = -1;
     $forceupdate = 1;
-    $ins         = 1;
-    $searchx     = 0;
 }
 
 sub get_terminal_size {
@@ -51,7 +41,7 @@ sub get_terminal_size {
 }
 
 sub load {
-    my $regexp = qr/\+(\d+)/;
+    my $regexp = qr/\+([\d-]+)/;
     ($filename) = grep { $_ !~ $regexp } @ARGV;
 
     if ( !open( FILE, $filename ) ) {
@@ -59,44 +49,35 @@ sub load {
         return;
     }
     foreach my $line (<FILE>) {
-        $dos = 1 if ( $line =~ m/\r\n$/ );
-        $line =~ s/\r?\n$//;
+        chomp $line;
         push( @lines, $line );
     }
 
     close(FILE);
-    $dos = $dos;
     return 1;
 }
 
 sub save {
-    my $savefilename = $filename || input('Filename');
-
-    if ( !open( FILE, ">$savefilename" ) ) {
-        $status = "Save failed $!";
-        return;
-    }
-    my $count = 0;
+    open( FILE, ">$filename" );
     foreach my $line (@lines) {
-        print FILE $line . ( $dos ? "\r\n" : "\n" );
-        $count++;
+        print FILE $line . "\n";
     }
     close(FILE);
-
-    $status = "Saved $count lines.";
-    footer();
-    $filename = $savefilename;
-    return 1;
 }
 
 sub run {
     get_terminal_size();
-    my $regexp = qr/\+(\d+)/;
+    my $regexp = qr/\+([\d-]+)/;
     my ($center_line_arg) = grep { $_ =~ $regexp } @ARGV;
     my ($center_line) = $center_line_arg =~ $regexp;
-    $topline = $center_line - ( $rows / 2 ) - 1;
+    if ( $center_line =~ /(.*)-(.*)-(.*)/ ) {
+      $topline = $1; $x = $2; $y = $3;
+    }
+    elsif ( $center_line ) {
+      $topline = $center_line - int( $rows / 2 ) - 1;
+      $y = $topline < 0 ? $center_line - 1 : $center_line - $topline - 1;
+    }
 
-    ReadMode(5);
     my $key;
 
     while (1) {
@@ -107,10 +88,6 @@ sub run {
         move();
         $key = ReadKey();
     }
-
-    ReadMode(0);
-    absmove( 1, $rows + 1 );
-    print "\n";
 }
 
 sub get_nrlines {
@@ -119,9 +96,31 @@ sub get_nrlines {
 
 sub dokey {
     my ($key) = @_;
-    my $ctrl = ord($key);
-    if    ( $ctrl == 3 )  { return }                  # Ctrl+c
-    elsif ( $ctrl == 4 )  { return if ( save() ) }    # Ctrl+d
+    $key = chr(0x00ab) if $key eq 'F1';
+    $key = chr(0x00bb) if $key eq 'F2';
+    if ( $key eq chr(0x08) ) {
+        backspaceat();
+        moveleft(1);
+    }
+    elsif ( $key eq chr(0x0b) ) {
+        delteol();
+    }
+    elsif ( $key eq chr(0x0d) ) {
+        newlineat();
+        movedown(1);
+        $x = 0;
+    }
+    elsif ( $key eq chr(0x1a) )  {
+      save();
+      if ($ENV{db}) {
+        open DB, ">>$ENV{db}";
+        print DB "$ENV{abs} $topline-$x-$y ", `md5sum $filename | head -c32`, '-', `stty size | tr ' ' -`;
+        close DB;
+      }
+      return;
+    }
+    elsif ( $key eq chr(0x1b) ) { moveup( current_line_number() ) }
+    elsif ( $key eq chr(0x1d) ) { movedown( get_nrlines() - current_line_number() ) }
     elsif ( $key eq 'Resize' ) {
       save();
       return;
@@ -133,30 +132,9 @@ sub dokey {
     elsif ( $key eq 'Right' )  { moveright(1) }
     elsif ( $key eq 'Left' )  { moveleft(1) }
     elsif ( $key eq 'Delete' ) { delat() }
-    elsif ( $key eq 'Home' ) { moveup( current_line_number() ) }
-    elsif ( $key eq 'End' ) { movedown( get_nrlines() - current_line_number() ) }
-    elsif ( $key eq 'Insert' ) { $ins = !$ins }
-    elsif ( $key eq 'F1' ) { return 1 }
-    elsif ( $ctrl == 8 || $ctrl == 127 ) {            # BACKSPACE
-        backspaceat();
-        moveleft(1);
-    }
-    elsif ( $ctrl == 13 || $ctrl == 10 ) {            # newline
-        newlineat();
-        movedown(1);
-        $x = 0;
-    }
-    elsif ( $ctrl == 11 ) {                           # Ctrl+K
-        delteol();
-    }
-    elsif ( $ctrl == 19 ) {                           # Ctrl+S
-        save();
-    }
-    elsif ( $ctrl == 6 ) {                            # Ctrl+F
-        search();
-    }
-    elsif ( $ctrl == 9 || ( $ctrl >= 32 && $ctrl != 127 ) ) {
-
+    elsif ( $key eq 'Home' ) { $x = 0 }
+    elsif ( $key eq 'End' ) { $x = length( line() ) }
+    elsif ( $key eq chr(0x09) || ( ord($key) >= 32 && $key ne chr(0x7f) ) ) {
         setat($key);
         moveright(1);
     }
@@ -214,24 +192,6 @@ sub movedown {
 
     # check for corsormovement beyond line length2
     $y = $tempy;
-}
-
-sub search {
-    $search = input('search') if ( !$search );
-    my $found;
-    for ( my $i = current_line_number() ; $i < get_nrlines() ; $i++ ) {
-        $found = index( lc( $lines[$i] ), lc($search), $searchx );
-        if ( $found != -1 ) {
-            $x       = $found;
-            $searchx = $found + 1;
-            $y       = 0;
-            $topline = $i;
-            move();
-            last;
-        }
-        else { $searchx = 0 }
-    }
-    if ( $found == -1 ) { movedown( get_nrlines() - current_line_number() ); $status = 'Reached end of file.'; $search = '' }
 }
 
 sub delteol {
@@ -292,12 +252,8 @@ sub setat {
     my ($key) = @_;
 
     my $begin = substr( line(), 0, $x );
-    my $end = substr( line(), $ins ? $x : $x + 1 );
+    my $end = substr( line(), $x );
     line( 0, $begin . $key . $end );
-}
-
-sub error {
-    die "failed: @_";
 }
 
 sub clear {
@@ -308,17 +264,7 @@ sub footer {
     absmove( 1, $rows + 1 );
     print inverse( ' ' x ( $cols - 1 ) );
     absmove( 1, $rows + 1 );
-    print inverse( '[' . ( $filename || 'Untitled' ) . ']' . ' ' . ( $status || '' ) );
-
-    my $xy = 'HELP=F1 '
-      . ( $dos ? 'DOS' : 'UNIX' ) . ' '
-      . ( $ins ? 'INS' : '' ) . ' [ '
-      . ( $x + 1 ) . '/'
-      . ( length( line() ) + 1 ) . ':'
-      . ( current_line_number() + 1 ) . '/'
-      . get_nrlines() . ' ]';
-    absmove( $cols - length2($xy), $rows + 1 );
-    print inverse($xy);
+    print inverse( $filename );
 }
 
 sub current_line_number {
@@ -370,6 +316,8 @@ sub drawline {
         $line = substr( $line, $realx - ( $cols - 1 ), $cols - 1 );
     }
 
+    $line .= "\e[41m \e[m" if length2( $lines[$pos] ) > $cols - 1;
+
     print $line . "\r\n";
 }
 
@@ -390,30 +338,10 @@ sub move {
 
 sub inverse {
     my ($text) = @_;
-    return "\e[7m" . $text . "\e[m";
-}
-
-sub input {
-    my ($text) = @_;
-    absmove( 1, $rows + 1 );
-    print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 1, $rows + 1 );
-    print "\e[7m";
-    print "$text: ";
-
-    ReadMode(0);
-    my $result = ReadLine();
-    ReadMode(5);
-
-    $result =~ s/\r?\n$//;
-
-    print "\e[m";
-    $forceupdate = 1;
-    return $result;
+    return ( $ENV{edit} ? "\e[35m" : '' ) . "\e[7m" . $text . "\e[m";
 }
 
 sub length2 {
-
     # calculate length with tabs expanded
     my ($text) = @_;
     1 while $text =~ s/\t+/' ' x (length($&) * 8 - length($`) % 8)/e;
@@ -429,7 +357,7 @@ sub ReadKey {
   }
   my $submatch;
   do {
-    my $k = '';
+    my $k;
     if (scalar(@buffer) == 1) { # to use ^[
       eval {
         local $SIG{ALRM} = sub { die };
@@ -461,20 +389,4 @@ sub ReadKey {
     return '^';
   }
   return shift @buffer;
-}
-
-sub ReadLine {
-    return <STDIN>;
-}
-
-sub ReadMode {
-    my ($mode) = @_;
-    if ( $mode == 5 ) {
-        $stty = `stty -g`;
-        chomp($stty);
-        system( 'stty', 'raw', '-echo' );
-    }
-    elsif ( $mode == 0 ) {
-        system( 'stty', $stty );
-    }
 }
