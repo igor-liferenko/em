@@ -32,11 +32,7 @@ $_ = '' for my (
 my @lines;
 
 # catch terminal resize
-$SIG{WINCH} = sub {
-    get_terminal_size();
-    $forceupdate = 1;
-    draw();
-};
+$SIG{WINCH} = sub { close STDIN };
 
 init();
 load();
@@ -126,6 +122,10 @@ sub dokey {
     my $ctrl = ord($key);
     if    ( $ctrl == 3 )  { return }                  # Ctrl+c
     elsif ( $ctrl == 4 )  { return if ( save() ) }    # Ctrl+d
+    elsif ( $key eq 'Resize' ) {
+      save();
+      return;
+    }
     elsif ( $key eq 'Up' ) { moveup(1) }
     elsif ( $key eq 'Down' ) { movedown(1) }
     elsif ( $key eq 'PageUp' ) { moveup($rows) }
@@ -439,7 +439,7 @@ sub ReadKey {
       };
       return shift @buffer if $@;
     }
-    else { read(STDIN, $k, 1) }
+    else { return 'Resize' if !defined read(STDIN, $k, 1) }
     push @buffer, $k;
     $submatch = 0;
     for my $key (@keys) {
