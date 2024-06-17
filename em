@@ -3,24 +3,24 @@
 use strict;
 
 my @keys = (
-  [ 'F1',       "\eOP"  ],
-  [ 'F2',       "\eOQ"  ],
-  [ 'Up',       "\e[A"  ],
-  [ 'Down',     "\e[B"  ],
-  [ 'Left',     "\e[D"  ],
-  [ 'Right',    "\e[C"  ],
-  [ 'Home',     "\e[H"  ],
-  [ 'End',      "\e[F"  ],
-  [ 'Delete',   "\e[3~" ],
-  [ 'PageUp',   "\e[5~" ],
-  [ 'PageDown', "\e[6~" ]
+    [ 'F1',       "\eOP"  ],
+    [ 'F2',       "\eOQ"  ],
+    [ 'Up',       "\e[A"  ],
+    [ 'Down',     "\e[B"  ],
+    [ 'Left',     "\e[D"  ],
+    [ 'Right',    "\e[C"  ],
+    [ 'Home',     "\e[H"  ],
+    [ 'End',      "\e[F"  ],
+    [ 'Delete',   "\e[3~" ],
+    [ 'PageUp',   "\e[5~" ],
+    [ 'PageDown', "\e[6~" ]
 );
 
 $| = 1;
 $_ = '' for my (
     $x,           $y,           $topline,
-    $forceupdate, $cols,        $rows,
-    $center_line, $lasttopline, $lastnrlines, $filename
+    $cols,        $rows,        $filename,
+    $center_line, $lasttopline, $lastnrlines, $forceupdate
 );
 
 my @lines;
@@ -31,9 +31,7 @@ init();
 load();
 run();
 
-sub init {
-    $forceupdate = 1;
-}
+sub init { $forceupdate = 1 }
 
 sub get_terminal_size {
     ( $rows, $cols ) = split( /\s+/, `stty size` );
@@ -52,9 +50,7 @@ sub load {
         chomp $line;
         push( @lines, $line );
     }
-
     close(FILE);
-    return 1;
 }
 
 sub save {
@@ -71,27 +67,23 @@ sub run {
     my ($center_line_arg) = grep { $_ =~ $regexp } @ARGV;
     my ($center_line) = $center_line_arg =~ $regexp;
     if ( $center_line =~ /(.*)-(.*)-(.*)/ ) {
-      $topline = $1; $x = $2; $y = $3;
+        $topline = $1; $x = $2; $y = $3;
     }
-    elsif ( $center_line ) {
-      $topline = $center_line - int( $rows / 2 ) - 1;
-      $y = $topline < 0 ? $center_line - 1 : $center_line - $topline - 1;
+    elsif ($center_line) {
+        $topline = $center_line - int( $rows / 2 ) - 1;
+        $y = $topline < 0 ? $center_line - 1 : $center_line - $topline - 1;
     }
 
     my $key;
 
     while (1) {
         $lasttopline = $topline;
-        $lastnrlines = get_nrlines();
+        $lastnrlines = scalar(@lines);
         last if ( !dokey($key) );
         draw();
         move();
         $key = ReadKey();
     }
-}
-
-sub get_nrlines {
-    return scalar(@lines);
 }
 
 sub dokey {
@@ -111,19 +103,19 @@ sub dokey {
         $x = 0;
     }
     elsif ( $key eq chr(0x1a) )  {
-      save();
-      if ($ENV{db}) {
-        open DB, ">>$ENV{db}";
-        print DB "$ENV{abs} $topline-$x-$y ", `md5sum $filename | head -c32`, '-', `stty size | tr ' ' -`;
-        close DB;
-      }
-      return;
+        save();
+        if ($ENV{db}) {
+            open DB, ">>$ENV{db}";
+            print DB "$ENV{abs} $topline-$x-$y ", `md5sum $filename | head -c32`, '-', `stty size | tr ' ' -`;
+            close DB;
+        }
+        return;
     }
     elsif ( $key eq chr(0x1b) ) { moveup( current_line_number() ) }
-    elsif ( $key eq chr(0x1d) ) { movedown( get_nrlines() - current_line_number() ) }
+    elsif ( $key eq chr(0x1d) ) { movedown( scalar(@lines) - current_line_number() ) }
     elsif ( $key eq 'Resize' ) {
-      save();
-      return;
+        save();
+        return;
     }
     elsif ( $key eq 'Up' ) { moveup(1) }
     elsif ( $key eq 'Down' ) { movedown(1) }
@@ -145,7 +137,7 @@ sub moveright {
     my ($amount) = @_;
     $x += $amount;
     if ( $x > length( line() ) ) {
-        if ( current_line_number() < get_nrlines() - 1 ) {
+        if ( current_line_number() < scalar(@lines) - 1 ) {
             $x = 0;
             movedown(1);
         }
@@ -155,21 +147,25 @@ sub moveright {
 sub moveleft {
     my ($amount) = @_;
     $x -= $amount;
-
     if ( $x < 0 ) {
-        $x = length2( line(-1) );
-        moveup(1);
+        if ( current_line_number() > 0 ) {
+            $x = length2( line(-1) );
+            moveup(1);
+        }
+        else { $x = 0 }
     }
 }
 
 sub moveup {
     my ($amount) = @_;
     $y -= $amount;
-
-    # check for topline, move up
     if ( $y < 0 ) {
         $topline += $y;
         $y = 0;
+    }
+    if ( $topline < 0 ) {
+        $topline = 0;
+        $x = 0;
     }
 }
 
@@ -177,32 +173,30 @@ sub movedown {
     my ($amount) = @_;
     my $tempy = $y + $amount;
 
-    my $nrlines = get_nrlines();
-
-    # move down
-    if ( ( $topline + $tempy ) >= $nrlines ) {
+    my $nrlines = scalar(@lines);
+    if ( $topline + $tempy >= $nrlines ) {
         $topline = $nrlines - $rows;
-        $topline = 0 if ( $topline < 0 );
-        $tempy   = $nrlines - $topline - 1;
+        $topline = 0 if $topline < 0;
+        $tempy = $nrlines - $topline - 1;
+        $x = length( line() );
     }
     elsif ( $tempy >= $rows ) {
-        $topline += ( $tempy - $rows + 1 );
+        $topline += $tempy - $rows + 1;
         $tempy = $rows - 1;
+        $x = length( line() );
     }
 
-    # check for corsormovement beyond line length2
     $y = $tempy;
 }
 
 sub delteol {
     line( 0, substr( line(), 0, $x ) );
-    delat() if ( $x == 0 );
+    delat() if $x == 0;
 }
 
 sub newlineat {
     my $begin = substr( line(), 0, $x );
-    my $end   = substr( line(), $x );
-
+    my $end = substr( line(), $x );
     line( 0, $begin );
     splice( @lines, current_line_number() + 1, 0, $end );
 }
@@ -221,16 +215,19 @@ sub delat {
 }
 
 sub backspaceat {
-    if ( $x <= 0 && $y > 0 ) {
-        $x = length2( line(-1) ) + 1;
-        line( -1, line(-1) . line() );
-        splice( @lines, current_line_number(), 1 );
-        moveup(1);
+    if ( $x <= 0 ) {
+        system 'zenity --info 2>/dev/null &' if $x < 0; # can this happen?
+        if ( current_line_number() > 0 ) {
+            $x = length2( line(-1) ) + 1;
+            line( -1, line(-1) . line() );
+            splice( @lines, current_line_number(), 1 );
+            moveup(1);
+        }
     }
     else {
-        my $begin = substr( line(), 0, $x ? $x - 1 : 0 );
-        my $end   = substr( line(), $x );
-        my $line  = $begin . $end;
+        my $begin = substr( line(), 0, $x - 1 );
+        my $end = substr( line(), $x );
+        my $line = $begin . $end;
         line( 0, $line );
     }
 }
@@ -239,7 +236,6 @@ sub line {
     my ( $offset, $text ) = @_;
     $offset ||= 0;
     my $pos = current_line_number() + $offset;
-
     if ( defined($text) ) {
         $lines[$pos] = $text;
     }
@@ -250,21 +246,9 @@ sub line {
 
 sub setat {
     my ($key) = @_;
-
     my $begin = substr( line(), 0, $x );
     my $end = substr( line(), $x );
     line( 0, $begin . $key . $end );
-}
-
-sub clear {
-    print "\e[2J";
-}
-
-sub footer {
-    absmove( 1, $rows + 1 );
-    print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 1, $rows + 1 );
-    print inverse( $filename );
 }
 
 sub current_line_number {
@@ -273,41 +257,31 @@ sub current_line_number {
 
 sub draw {
     my $len = length( line() );
-    $x = $len if ( $x > $len );
-    if ( $topline < 0 ) {
-        $topline = 0;
-        $x       = 0;
-    }
-
-    # update only current line
-    if (   $lasttopline == $topline
-        && $lastnrlines == get_nrlines()
-        && !$forceupdate )
-    {
+    $x = $len if $x > $len;
+    if ( $lasttopline == $topline && $lastnrlines == scalar(@lines) && !$forceupdate ) {
         absmove( 1, $y + 1 );
         print "\e[K";
         drawline( current_line_number() );
     }
-    else    # update screen
-    {
-        clear();
+    else {
+        print "\e[2J";
         absmove( 1, 1 );
-
-        for ( my $pos = $topline ; $pos < $topline + $rows && $pos < get_nrlines() ; $pos++ ) {
+        for ( my $pos = $topline; $pos < $topline + $rows && $pos < scalar(@lines); $pos++ ) {
             drawline($pos);
         }
         $forceupdate = 0;
     }
-    footer();
+    absmove( 1, $rows + 1 );
+    print inverse( ' ' x ( $cols - 1 ) );
+    absmove( 1, $rows + 1 );
+    print inverse($filename);
 }
 
 sub drawline {
     my ($pos) = @_;
     my $line = $lines[$pos];
-
-    # expand tabs
-
     1 while $line =~ s/\t+/' ' x (length($&) * 8 - length($`) % 8)/e;
+
     my $realx = getrealx( $lines[$pos] );
     if ( $realx < $cols - 1 ) {
         $line = substr( $line, 0, $cols - 1 );
@@ -317,7 +291,6 @@ sub drawline {
     }
 
     $line .= "\e[41m \e[m" if length2( $lines[$pos] ) > $cols - 1;
-
     print $line . "\r\n";
 }
 
@@ -342,7 +315,6 @@ sub inverse {
 }
 
 sub length2 {
-    # calculate length with tabs expanded
     my ($text) = @_;
     1 while $text =~ s/\t+/' ' x (length($&) * 8 - length($`) % 8)/e;
     return length($text);
@@ -351,42 +323,42 @@ sub length2 {
 use Time::HiRes 'ualarm';
 my @buffer;
 sub ReadKey {
-  # if recorded bytes remain, handle next recorded byte
-  if (scalar @buffer) {
-    return shift @buffer;
-  }
-  my $submatch;
-  do {
-    my $k;
-    if (scalar(@buffer) == 1) { # to use ^[
-      eval {
-        local $SIG{ALRM} = sub { die };
-        ualarm 300_000;
-        read(STDIN, $k, 1);
-        ualarm 0;
-      };
-      return shift @buffer if $@;
+    # if recorded bytes remain, handle next recorded byte
+    if ( scalar(@buffer) ) {
+        return shift(@buffer);
     }
-    else { return 'Resize' if !defined read(STDIN, $k, 1) }
-    push @buffer, $k;
-    $submatch = 0;
-    for my $key (@keys) {
-      my $i = 0;
-      while (1) {
-        if ($i == scalar(@buffer) && $i == length($$key[1])) {
-          @buffer = ();
-          return $$key[0];
+    my $submatch;
+    do {
+        my $k;
+        if ( scalar(@buffer) == 1 ) { # to use ^[ / ESC
+            eval {
+                local $SIG{ALRM} = sub { die };
+                ualarm 300_000;
+                read(STDIN, $k, 1);
+                ualarm 0;
+            };
+            return shift(@buffer) if $@;
         }
-        last if $i == scalar(@buffer) || $i == length($$key[1]);
-        last if $buffer[$i] ne substr($$key[1], $i, 1);
-        $i++;
-      }
-      $submatch = 1 if $i == scalar(@buffer) && $i < length($$key[1]);
+        else { return 'Resize' if !defined read(STDIN, $k, 1) }
+        push( @buffer, $k );
+        $submatch = 0;
+        for my $key (@keys) {
+            my $i = 0;
+            while (1) {
+                if ( $i == scalar(@buffer) && $i == length( $$key[1] ) ) {
+                    @buffer = ();
+                    return $$key[0];
+                }
+                last if $i == scalar(@buffer) || $i == length( $$key[1] );
+                last if $buffer[$i] ne substr( $$key[1], $i, 1 );
+                $i++;
+            }
+            $submatch = 1 if $i == scalar(@buffer) && $i < length( $$key[1] );
+        }
+    } while ($submatch);
+    if ( scalar(@buffer) > 1 ) {
+        $buffer[0] = '[';
+        return '^';
     }
-  } while ($submatch);
-  if (scalar(@buffer) > 1) {
-    $buffer[0] = '[';
-    return '^';
-  }
-  return shift @buffer;
+    return shift(@buffer);
 }
