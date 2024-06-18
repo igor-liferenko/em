@@ -35,7 +35,7 @@ Add this `em' script to PATH:
       grep -sq "^$abs lock$" $db && { echo File is already opened; exit 1; }
       [ "$line" ] && [ `wc -l <"$file"` -lt $line ] && { echo Line number greater than number of lines; exit 1; }
       [ "$line" ] || eval `sed -n "s|^$abs \(.*\) |line=\1 hash=|p" $db 2>/dev/null`
-      [ "$hash" ] && [ $hash != `md5sum "$file" | head -c32`-`stty size | tr ' ' -` ] && line=
+      [ "$hash" ] && [ $hash != `md5sum "$file" 2>/dev/null | head -c32`-`stty size | tr ' ' -` ] && line=
       sed -i "\|^$abs |d" $db 2>/dev/null
       echo $abs lock >>$db
       printf '\e7'
