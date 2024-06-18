@@ -111,7 +111,7 @@ sub dokey {
         }
         return;
     }
-    elsif ( $key eq chr(0x1b) ) { moveup( current_line_number() ) }
+    elsif ( $key eq chr(0x1b) ) { moveup( current_line_number() + 1 ) }
     elsif ( $key eq chr(0x1d) ) { movedown( scalar(@lines) - current_line_number() ) }
     elsif ( $key eq 'Resize' ) {
         save();
@@ -167,26 +167,29 @@ sub moveup {
         $topline = 0;
         $x = 0;
     }
+    $x = length( line() ) if $x > length( line() );
 }
 
 sub movedown {
     my ($amount) = @_;
     my $tempy = $y + $amount;
+    my $xx = 0;
 
     my $nrlines = scalar(@lines);
     if ( $topline + $tempy >= $nrlines ) {
         $topline = $nrlines - $rows;
         $topline = 0 if $topline < 0;
         $tempy = $nrlines - $topline - 1;
-        $x = length( line() );
+        $xx = 1;
     }
     elsif ( $tempy >= $rows ) {
         $topline += $tempy - $rows + 1;
         $tempy = $rows - 1;
-        $x = length( line() );
+        $xx = 1;
     }
 
     $y = $tempy;
+    $x = length( line() ) if $xx || $x > length( line() );
 }
 
 sub delteol {
@@ -215,13 +218,13 @@ sub delat {
 }
 
 sub backspaceat {
-    if ( $x <= 0 ) {
-        system 'zenity --info 2>/dev/null &' if $x < 0; # can this happen?
+    if ( $x == 0 ) {
         if ( current_line_number() > 0 ) {
             $x = length2( line(-1) ) + 1;
             line( -1, line(-1) . line() );
             splice( @lines, current_line_number(), 1 );
-            moveup(1);
+            if ( $y > 0 ) { $y-- }
+            else { $topline-- }
         }
     }
     else {
@@ -234,7 +237,6 @@ sub backspaceat {
 
 sub line {
     my ( $offset, $text ) = @_;
-    $offset ||= 0;
     my $pos = current_line_number() + $offset;
     if ( defined($text) ) {
         $lines[$pos] = $text;
@@ -256,8 +258,6 @@ sub current_line_number {
 }
 
 sub draw {
-    my $len = length( line() );
-    $x = $len if $x > $len;
     if ( $lasttopline == $topline && $lastnrlines == scalar(@lines) && !$forceupdate ) {
         absmove( 1, $y + 1 );
         print "\e[K";
