@@ -25,10 +25,14 @@ Add this `em' script to PATH:
         export file="$1"
         export line=$2
       fi
-      if [ -e "$file" ]; then
-        iconv -f UTF-8 -t UCS-2 "$file" >/dev/null 2>&1 || { echo Bad input; exit 1; }
-        grep -q $'\r' $1 && { printf 'RUN:\nsed -i \x27s/\\r$//\x27 %s\n' "$file"; exit 1; }
+      if ! [ -f "$file" ]; then
+        [ -e "$file" ] && { echo Not a regular file; exit 1; }
+        touch "$file" 2>/dev/null || { echo Permission denied; exit 1; }
       fi
+      [ -r "$file" ] || { echo Permission denied; exit 1; }
+      [ -w "$file" ] || { echo Permission denied; exit 1; }
+      iconv -f UTF-8 -t UCS-2 "$file" >/dev/null 2>&1 || { echo Bad input; exit 1; }
+      grep -q $'\r' $1 && { printf 'RUN:\nsed -i \x27s/\\r$//\x27 %s\n' "$file"; exit 1; }
       export abs=`realpath "$file"`
       [ "$abs" = `realpath $0` ] && { printf 'Edit ~/em/README and then do:\nsed -n \x27/#!/,$s/^    //p\x27 ~/em/README >`which em`\n'; exit 1; }
       export db=/tmp/em.db

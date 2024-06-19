@@ -17,73 +17,43 @@ my @keys = (
 );
 
 $| = 1;
-$_ = '' for my (
-    $x,           $y,           $topline,
-    $cols,        $rows,        $filename,
-    $center_line, $lasttopline, $lastnrlines, $forceupdate
-);
-
-my @lines;
 
 $SIG{WINCH} = sub { close STDIN };
 
-init();
-load();
-run();
+my ( $rows, $cols ) = split( /\s+/, `stty size` );
+$rows -= 1;
 
-sub init { $forceupdate = 1 }
-
-sub get_terminal_size {
-    ( $rows, $cols ) = split( /\s+/, `stty size` );
-    $rows -= 1;
+my ( $topline, $x, $y );
+my $regexp = qr/\+([\d-]+)/;
+my ($center_line_arg) = grep { $_ =~ $regexp } @ARGV;
+my ($center_line) = $center_line_arg =~ $regexp;
+if ( $center_line =~ /(.*)-(.*)-(.*)/ ) {
+    $topline = $1; $x = $2; $y = $3;
+}
+elsif ($center_line) {
+    $topline = $center_line - int( $rows / 2 ) - 1;
+    $y = $topline < 0 ? $center_line - 1 : $center_line - $topline - 1;
 }
 
-sub load {
-    my $regexp = qr/\+([\d-]+)/;
-    ($filename) = grep { $_ !~ $regexp } @ARGV;
-
-    if ( !open( FILE, $filename ) ) {
-        @lines = ('');
-        return;
-    }
-    foreach my $line (<FILE>) {
-        chomp $line;
-        push( @lines, $line );
-    }
-    close(FILE);
+my @lines;
+my ($filename) = grep { $_ !~ $regexp } @ARGV;
+open( FILE, $filename );
+for my $line (<FILE>) {
+    chomp($line);
+    push( @lines, $line );
 }
+close(FILE);
 
-sub save {
-    open( FILE, ">$filename" );
-    foreach my $line (@lines) {
-        print FILE $line . "\n";
-    }
-    close(FILE);
-}
+my $forceupdate = 1;
 
-sub run {
-    get_terminal_size();
-    my $regexp = qr/\+([\d-]+)/;
-    my ($center_line_arg) = grep { $_ =~ $regexp } @ARGV;
-    my ($center_line) = $center_line_arg =~ $regexp;
-    if ( $center_line =~ /(.*)-(.*)-(.*)/ ) {
-        $topline = $1; $x = $2; $y = $3;
-    }
-    elsif ($center_line) {
-        $topline = $center_line - int( $rows / 2 ) - 1;
-        $y = $topline < 0 ? $center_line - 1 : $center_line - $topline - 1;
-    }
-
-    my $key;
-
-    while (1) {
-        $lasttopline = $topline;
-        $lastnrlines = scalar(@lines);
-        last if ( !dokey($key) );
-        draw();
-        move();
-        $key = ReadKey();
-    }
+my ( $key, $lasttopline, $lastnrlines );
+while (1) {
+    $lasttopline = $topline;
+    $lastnrlines = scalar(@lines);
+    last if ( !dokey($key) );
+    draw();
+    move();
+    $key = ReadKey();
 }
 
 sub dokey {
@@ -131,6 +101,14 @@ sub dokey {
         moveright(1);
     }
     return 1;
+}
+
+sub save {
+    open( FILE, ">$filename" );
+    for my $line (@lines) {
+        print FILE $line, "\n";
+    }
+    close(FILE);
 }
 
 sub moveright {
