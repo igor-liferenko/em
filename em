@@ -20,7 +20,7 @@ $| = 1;
 
 $SIG{WINCH} = sub { close STDIN };
 
-my ( $rows, $cols ) = split( /\s+/, `stty size` );
+my ( $rows, $cols ) = split( / /, `stty size` );
 $rows -= 1;
 
 my ( $topline, $x, $y );
