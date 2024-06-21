@@ -5,12 +5,11 @@ Add this `em' script to PATH:
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
       printf '\e7'
-      printf '\e[?47h'
+      printf '\e[?1049h'
       save=`stty -g`
       stty raw -echo
       perl -CSDA ~/em/em $tmp
       stty $save
-      printf '\e[2J'
       printf '\e[?47l'
       printf '\e8'
       echo $tmp
@@ -44,12 +43,11 @@ Add this `em' script to PATH:
       sed -i "\|^$abs |d" $db 2>/dev/null
       echo $abs lock >>$db
       printf '\e7'
-      printf '\e[?47h'
+      printf '\e[?1049h'
       save=`stty -g`
       stty raw -echo
       perl -CSDA ~/em/em "$file" `[ "$line" ] && echo +$line`
       stty $save
-      printf '\e[2J'
       printf '\e[?47l'
       printf '\e8'
       sed -i "\|^$abs lock$|d" $db

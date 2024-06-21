@@ -49,8 +49,23 @@ my $fullupdate = 1;
 my $key;
 while (1) {
     last if ( !dokey($key) );
-    draw();
-    move();
+    if ($fullupdate) {
+        print "\e[H";
+        print "\e[J";
+        for ( my $pos = $topline; $pos < $topline + $rows && $pos < scalar(@lines); $pos++ ) {
+            drawline($pos);
+        }
+        print "\e[", $rows + 1, ';1f';
+        print "\e[35m" if $ENV{edit};
+        print "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
+        $fullupdate = 0;
+    }
+    else {
+        print "\e[", $y + 1, ';1f';
+        print "\e[K";
+        drawline( current_line_number() );
+    }
+    print "\e[", $y + 1, ';', getrealx( line() ) + 1, 'f';
     $key = readkey();
 }
 
@@ -239,25 +254,6 @@ sub current_line_number {
     return $topline + $y;
 }
 
-sub draw {
-    if ($fullupdate) {
-        print "\e[H";
-        print "\e[J";
-        for ( my $pos = $topline; $pos < $topline + $rows && $pos < scalar(@lines); $pos++ ) {
-            drawline($pos);
-        }
-        print "\e[", $rows + 1, ';1f';
-        print "\e[35m" if $ENV{edit};
-        print "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
-        $fullupdate = 0;
-    }
-    else {
-        print "\e[", $y + 1, ';1f';
-        print "\e[K";
-        drawline( current_line_number() );
-    }
-}
-
 sub drawline {
     my ($pos) = @_;
     my $line = $lines[$pos];
@@ -278,11 +274,6 @@ sub drawline {
 sub getrealx {
     my ($line) = @_;
     return length2( substr( $line, 0, $x ) );
-}
-
-sub move {
-    my $realx = getrealx( line() );
-    print "\e[" . ( $y + 1 ) . ';' . ( $realx + 1 ) . 'f';
 }
 
 sub length2 {
