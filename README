@@ -5,7 +5,7 @@ Add this `em' script to PATH:
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
       printf '\e7'
-      printf '\e[?1049h'
+      printf '\e[?47h'
       save=`stty -g`
       stty raw -echo
       perl -CSDA ~/em/em $tmp
@@ -43,7 +43,7 @@ Add this `em' script to PATH:
       sed -i "\|^$abs |d" $db 2>/dev/null
       echo $abs lock >>$db
       printf '\e7'
-      printf '\e[?1049h'
+      printf '\e[?47h'
       save=`stty -g`
       stty raw -echo
       perl -CSDA ~/em/em "$file" `[ "$line" ] && echo +$line`
