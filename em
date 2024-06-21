@@ -44,12 +44,10 @@ for my $line (<FILE>) {
 }
 close(FILE);
 
-my $forceupdate = 1;
+my $global = 1;
 
-my ( $key, $lasttopline, $lastnrlines );
+my $key;
 while (1) {
-    $lasttopline = $topline;
-    $lastnrlines = scalar(@lines);
     last if ( !dokey($key) );
     draw();
     move();
@@ -138,6 +136,7 @@ sub moveup {
     my ($amount) = @_;
     $y -= $amount;
     if ( $y < 0 ) {
+        $global = 1 if $topline > 0;
         $topline += $y;
         $y = 0;
     }
@@ -151,23 +150,23 @@ sub moveup {
 sub movedown {
     my ($amount) = @_;
     my $tempy = $y + $amount;
-    my $xx = 0;
 
     my $nrlines = scalar(@lines);
     if ( $topline + $tempy >= $nrlines ) {
+        $global = 1 if $topline > 0;
         $topline = $nrlines - $rows;
         $topline = 0 if $topline < 0;
         $tempy = $nrlines - $topline - 1;
-        $xx = 1;
+        $x = length( $lines[ $topline + $tempy ] );
     }
     elsif ( $tempy >= $rows ) {
         $topline += $tempy - $rows + 1;
         $tempy = $rows - 1;
-        $xx = 1;
+        $global = 1;
     }
 
     $y = $tempy;
-    $x = length( line() ) if $xx || $x > length( line() );
+    $x = length( line() ) if $x > length( line() );
 }
 
 sub delteol {
@@ -180,6 +179,7 @@ sub newlineat {
     my $end = substr( line(), $x );
     line( 0, $begin );
     splice( @lines, current_line_number() + 1, 0, $end );
+    $global = 1;
 }
 
 sub delat {
@@ -192,6 +192,7 @@ sub delat {
     else {
         line( 0, line() . line(1) );
         splice( @lines, current_line_number() + 1, 1 );
+        $global = 1;
     }
 }
 
@@ -201,7 +202,10 @@ sub backspaceat {
             $x = length2( line(-1) ) + 1;
             line( -1, line(-1) . line() );
             splice( @lines, current_line_number(), 1 );
-            if ( $y > 0 ) { $y-- }
+            if ( $y > 0 ) {
+              $y--;
+              $global = 1;
+            }
             else { $topline-- }
         }
     }
@@ -236,23 +240,22 @@ sub current_line_number {
 }
 
 sub draw {
-    if ( $lasttopline == $topline && $lastnrlines == scalar(@lines) && !$forceupdate ) {
-        absmove( 1, $y + 1 );
-        print "\e[K";
-        drawline( current_line_number() );
-    }
-    else {
+    if ($global) {
         print "\e[2J";
         absmove( 1, 1 );
         for ( my $pos = $topline; $pos < $topline + $rows && $pos < scalar(@lines); $pos++ ) {
             drawline($pos);
         }
-        $forceupdate = 0;
+        absmove( 1, $rows + 1 );
+        print "\e[35m" if $ENV{edit};
+        print "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
+        $global = 0;
     }
-    absmove( 1, $rows + 1 );
-    print inverse( ' ' x ( $cols - 1 ) );
-    absmove( 1, $rows + 1 );
-    print inverse($filename);
+    else {
+        absmove( 1, $y + 1 );
+        print "\e[K";
+        drawline( current_line_number() );
+    }
 }
 
 sub drawline {
@@ -285,11 +288,6 @@ sub getrealx {
 sub move {
     my $realx = getrealx( line() );
     print "\e[" . ( $y + 1 ) . ';' . ( $realx + 1 ) . 'f';
-}
-
-sub inverse {
-    my ($text) = @_;
-    return ( $ENV{edit} ? "\e[35m" : '' ) . "\e[7m" . $text . "\e[m";
 }
 
 sub length2 {

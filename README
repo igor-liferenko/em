@@ -10,6 +10,7 @@ Add this `em' script to PATH:
       stty raw -echo
       perl -CSDA ~/em/em $tmp
       stty $save
+      printf '\e[2J'
       printf '\e[?47l'
       printf '\e8'
       echo $tmp
@@ -48,6 +49,7 @@ Add this `em' script to PATH:
       stty raw -echo
       perl -CSDA ~/em/em "$file" `[ "$line" ] && echo +$line`
       stty $save
+      printf '\e[2J'
       printf '\e[?47l'
       printf '\e8'
       sed -i "\|^$abs lock$|d" $db
