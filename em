@@ -44,14 +44,14 @@ for my $line (<FILE>) {
 }
 close(FILE);
 
-my $global = 1;
+my $fullupdate = 1;
 
 my $key;
 while (1) {
     last if ( !dokey($key) );
     draw();
     move();
-    $key = ReadKey();
+    $key = readkey();
 }
 
 sub dokey {
@@ -136,7 +136,7 @@ sub moveup {
     my ($amount) = @_;
     $y -= $amount;
     if ( $y < 0 ) {
-        $global = 1 if $topline > 0;
+        $fullupdate = 1 if $topline > 0;
         $topline += $y;
         $y = 0;
     }
@@ -153,16 +153,16 @@ sub movedown {
 
     my $nrlines = scalar(@lines);
     if ( $topline + $tempy >= $nrlines ) {
-        $global = 1 if $topline > 0;
+        $fullupdate = 1;
         $topline = $nrlines - $rows;
         $topline = 0 if $topline < 0;
         $tempy = $nrlines - $topline - 1;
         $x = length( $lines[ $topline + $tempy ] );
     }
     elsif ( $tempy >= $rows ) {
+        $fullupdate = 1;
         $topline += $tempy - $rows + 1;
         $tempy = $rows - 1;
-        $global = 1;
     }
 
     $y = $tempy;
@@ -179,7 +179,7 @@ sub newlineat {
     my $end = substr( line(), $x );
     line( 0, $begin );
     splice( @lines, current_line_number() + 1, 0, $end );
-    $global = 1;
+    $fullupdate = 1;
 }
 
 sub delat {
@@ -192,7 +192,7 @@ sub delat {
     else {
         line( 0, line() . line(1) );
         splice( @lines, current_line_number() + 1, 1 );
-        $global = 1;
+        $fullupdate = 1;
     }
 }
 
@@ -204,7 +204,7 @@ sub backspaceat {
             splice( @lines, current_line_number(), 1 );
             if ( $y > 0 ) {
               $y--;
-              $global = 1;
+              $fullupdate = 1;
             }
             else { $topline-- }
         }
@@ -240,19 +240,19 @@ sub current_line_number {
 }
 
 sub draw {
-    if ($global) {
-        print "\e[2J";
-        absmove( 1, 1 );
+    if ($fullupdate) {
+        print "\e[H";
+        print "\e[J";
         for ( my $pos = $topline; $pos < $topline + $rows && $pos < scalar(@lines); $pos++ ) {
             drawline($pos);
         }
-        absmove( 1, $rows + 1 );
+        print "\e[", $rows + 1, ';1f';
         print "\e[35m" if $ENV{edit};
         print "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
-        $global = 0;
+        $fullupdate = 0;
     }
     else {
-        absmove( 1, $y + 1 );
+        print "\e[", $y + 1, ';1f';
         print "\e[K";
         drawline( current_line_number() );
     }
@@ -275,11 +275,6 @@ sub drawline {
     print $line . "\r\n";
 }
 
-sub absmove {
-    my ( $x, $y ) = @_;
-    print "\e[" . $y . ';' . $x . 'f';
-}
-
 sub getrealx {
     my ($line) = @_;
     return length2( substr( $line, 0, $x ) );
@@ -298,7 +293,7 @@ sub length2 {
 
 use Time::HiRes 'ualarm';
 my @buffer;
-sub ReadKey {
+sub readkey {
     # if recorded bytes remain, handle next recorded byte
     if ( scalar(@buffer) ) {
         return shift(@buffer);
