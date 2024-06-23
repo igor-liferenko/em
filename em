@@ -50,6 +50,7 @@ my $key;
 while (1) {
     last if ( !dokey($key) );
     if ($fullupdate) {
+        $fullupdate = 0;
         print "\e[H";
         print "\e[J";
         for ( my $pos = $topline; $pos < $topline + $rows && $pos < scalar(@lines); $pos++ ) {
@@ -58,7 +59,6 @@ while (1) {
         print "\e[", $rows + 1, ';1f';
         print "\e[35m" if $ENV{edit};
         print "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
-        $fullupdate = 0;
     }
     else {
         print "\e[", $y + 1, ';1f';
