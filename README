@@ -1,3 +1,8 @@
+If you notice data from another application in alternate screen,
+do as said here:
+
+    https://invisible-island.net/xterm/xterm.faq.html#xterm_tite
+
 Add this `em' script to PATH:
 
     #!/bin/bash
