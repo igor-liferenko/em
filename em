@@ -268,7 +268,7 @@ sub drawline {
     }
 
     $line .= "\e[41m \e[m" if length2( $lines[$pos] ) > $cols - 1;
-    print $line . "\r\n";
+    print $line, "\r\n";
 }
 
 sub getrealx {
