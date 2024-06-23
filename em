@@ -168,16 +168,16 @@ sub movedown {
 
     my $nrlines = scalar(@lines);
     if ( $topline + $tempy >= $nrlines ) {
-        $fullupdate = 1; # if $topline > 0 ?
         $topline = $nrlines - $rows;
         $topline = 0 if $topline < 0;
         $tempy = $nrlines - $topline - 1;
         $x = length( $lines[ $topline + $tempy ] );
+        $fullupdate = 1 if $rows < $nrlines;
     }
     elsif ( $tempy >= $rows ) {
-        $fullupdate = 1;
         $topline += $tempy - $rows + 1;
         $tempy = $rows - 1;
+        $fullupdate = 1;
     }
 
     $y = $tempy;
