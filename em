@@ -44,6 +44,9 @@ for my $line (<FILE>) {
 }
 close(FILE);
 
+my $fname = $filename;
+substr( $fname, 0, length( $ENV{HOME} ) ) = '~' if !index( $filename, $ENV{HOME} );
+
 my $fullupdate = 1;
 
 my $key;
@@ -58,7 +61,7 @@ while (1) {
         }
         print "\e[", $rows + 1, ';1f';
         print "\e[35m" if $ENV{edit};
-        print "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
+        print "\e[7m", $fname, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
     }
     else {
         print "\e[", $y + 1, ';1f';
