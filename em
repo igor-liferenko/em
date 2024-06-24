@@ -65,7 +65,8 @@ while (1) {
         print "\e[K";
         drawline( current_line_number() );
     }
-    print "\e[", $y + 1, ';', getrealx( line() ) + 1, 'f';
+    my $realx = getrealx( line() );
+    print "\e[", $y + 1, ';', ( $realx < $cols ? $realx + 1 : $cols ), 'f';
     $key = readkey();
 }
 

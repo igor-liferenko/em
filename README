@@ -1,6 +1,3 @@
-If you notice data from another application in alternate screen,
-change 1049 to 1047 in terminfo.
-
 Add this `em' script to PATH:
 
     #!/bin/bash
