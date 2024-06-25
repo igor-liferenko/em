@@ -66,8 +66,7 @@ while (1) {
         print "\e[K";
         drawline( current_line_number() );
     }
-    my $realx = getrealx( line() );
-    print "\e[", $y + 1, ';', ( $realx < $cols ? $realx + 1 : $cols ), 'f';
+    print "\e[", $y + 1, ';', ( $x < $cols ? $x + 1 : $cols ), 'f';
     $key = readkey();
 }
 
@@ -77,7 +76,7 @@ sub dokey
     if ( $key eq chr(0x08) ) {
         if ( $x == 0 ) {
             if ( current_line_number() > 0 ) {
-                $x = length2( line(-1) ) + 1;
+                $x = length( line(-1) ) + 1;
                 line( -1, line(-1) . line() );
                 splice( @lines, current_line_number(), 1 );
                 if ( $y > 0 ) {
@@ -166,7 +165,7 @@ sub moveleft
     $x -= shift;
     if ( $x < 0 ) {
         if ( current_line_number() > 0 ) {
-            $x = length2( line(-1) );
+            $x = length( line(-1) );
             moveup(1);
         }
         else { $x = 0 }
@@ -212,7 +211,7 @@ sub movedown
 
 sub delat
 {
-    my $len = length2( line() );
+    my $len = length( line() );
     if ( $x < $len ) {
         my $begin = substr( line(), 0, $x );
         my $end = substr( line(), $x + 1 );
@@ -242,30 +241,17 @@ sub drawline
 {
     my ($pos) = @_;
     my $line = $lines[$pos];
-    1 while $line =~ s/\t+/' ' x (length($&) * 8 - length($`) % 8)/e;
 
-    my $realx = getrealx( $lines[$pos] );
-    if ( $realx < $cols - 1 ) {
+    if ( $x < $cols - 1 ) {
         $line = substr( $line, 0, $cols - 1 );
     }
     else {
-        $line = substr( $line, $realx - ( $cols - 1 ), $cols - 1 );
+        $line = substr( $line, $x - ( $cols - 1 ), $cols - 1 );
     }
 
-    $line .= "\e[41m \e[m" if length2( $lines[$pos] ) > $cols - 1;
+    $line .= "\e[41m \e[m" if length( $lines[$pos] ) > $cols - 1;
+    1 while $line =~ s/\t+/"\e[1m\e[33m" . chr(0x2588) x length($&) . "\e[m"/e;
     print $line, "\r\n";
-}
-
-sub getrealx
-{
-    return length2( substr( shift, 0, $x ) );
-}
-
-sub length2
-{
-    my ($text) = @_;
-    1 while $text =~ s/\t+/' ' x (length($&) * 8 - length($`) % 8)/e;
-    return length($text);
 }
 
 use Time::HiRes 'ualarm';
