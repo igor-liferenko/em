@@ -70,7 +70,8 @@ while (1) {
     $key = readkey();
 }
 
-sub dokey {
+sub dokey
+{
     my ($key) = @_;
     if ( $key eq chr(0x08) ) {
         backspaceat();
@@ -113,7 +114,8 @@ sub dokey {
     return 1;
 }
 
-sub save {
+sub save
+{
     open( FILE, ">$filename" );
     for my $line (@lines) {
         print FILE $line, "\n";
@@ -121,9 +123,9 @@ sub save {
     close(FILE);
 }
 
-sub moveright {
-    my ($amount) = @_;
-    $x += $amount;
+sub moveright
+{
+    $x += shift;
     if ( $x > length( line() ) ) {
         if ( current_line_number() < scalar(@lines) - 1 ) {
             $x = 0;
@@ -132,9 +134,9 @@ sub moveright {
     }
 }
 
-sub moveleft {
-    my ($amount) = @_;
-    $x -= $amount;
+sub moveleft
+{
+    $x -= shift;
     if ( $x < 0 ) {
         if ( current_line_number() > 0 ) {
             $x = length2( line(-1) );
@@ -144,9 +146,9 @@ sub moveleft {
     }
 }
 
-sub moveup {
-    my ($amount) = @_;
-    $y -= $amount;
+sub moveup
+{
+    $y -= shift;
     if ( $y < 0 ) {
         $fullupdate = 1 if $topline > 0;
         $topline += $y;
@@ -159,9 +161,9 @@ sub moveup {
     $x = length( line() ) if $x > length( line() );
 }
 
-sub movedown {
-    my ($amount) = @_;
-    my $tempy = $y + $amount;
+sub movedown
+{
+    my $tempy = $y + shift;
 
     my $nrlines = scalar(@lines);
     if ( $topline + $tempy >= $nrlines ) {
@@ -181,12 +183,14 @@ sub movedown {
     $x = length( line() ) if $x > length( line() );
 }
 
-sub delteol {
+sub delteol
+{
     line( 0, substr( line(), 0, $x ) );
     delat() if $x == 0;
 }
 
-sub newlineat {
+sub newlineat
+{
     my $begin = substr( line(), 0, $x );
     my $end = substr( line(), $x );
     line( 0, $begin );
@@ -194,7 +198,8 @@ sub newlineat {
     $fullupdate = 1;
 }
 
-sub delat {
+sub delat
+{
     my $len = length2( line() );
     if ( $x < $len ) {
         my $begin = substr( line(), 0, $x );
@@ -208,7 +213,8 @@ sub delat {
     }
 }
 
-sub backspaceat {
+sub backspaceat
+{
     if ( $x == 0 ) {
         if ( current_line_number() > 0 ) {
             $x = length2( line(-1) ) + 1;
@@ -229,29 +235,28 @@ sub backspaceat {
     }
 }
 
-sub line {
+sub line
+{
     my ( $offset, $text ) = @_;
     my $pos = current_line_number() + $offset;
-    if ( defined($text) ) {
-        $lines[$pos] = $text;
-    }
-    else {
-        return $lines[$pos];
-    }
+    if ( defined($text) ) { $lines[$pos] = $text }
+    else { return $lines[$pos] }
 }
 
-sub setat {
-    my ($key) = @_;
+sub setat
+{
     my $begin = substr( line(), 0, $x );
     my $end = substr( line(), $x );
-    line( 0, $begin . $key . $end );
+    line( 0, $begin . shift . $end );
 }
 
-sub current_line_number {
+sub current_line_number
+{
     return $topline + $y;
 }
 
-sub drawline {
+sub drawline
+{
     my ($pos) = @_;
     my $line = $lines[$pos];
     1 while $line =~ s/\t+/' ' x (length($&) * 8 - length($`) % 8)/e;
@@ -268,12 +273,13 @@ sub drawline {
     print $line, "\r\n";
 }
 
-sub getrealx {
-    my ($line) = @_;
-    return length2( substr( $line, 0, $x ) );
+sub getrealx
+{
+    return length2( substr( shift, 0, $x ) );
 }
 
-sub length2 {
+sub length2
+{
     my ($text) = @_;
     1 while $text =~ s/\t+/' ' x (length($&) * 8 - length($`) % 8)/e;
     return length($text);
@@ -281,7 +287,8 @@ sub length2 {
 
 use Time::HiRes 'ualarm';
 my @buffer;
-sub readkey {
+sub readkey
+{
     # if recorded bytes remain, handle next recorded byte
     if ( scalar(@buffer) ) {
         return shift(@buffer);
