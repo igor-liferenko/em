@@ -3,20 +3,21 @@
 use strict;
 
 my @keys = (
-    [ chr(0x00ab), "\eOP"   ], # F1
-    [ chr(0x00bb), "\eOQ"   ], # F2
-    [ 'Top',       "\e[E"   ], # KP_ENTER
-    [ 'Bottom',    "\e[24~" ], # F12
-    [ 'PageUp',    "\e[5~"  ],
-    [ 'PageDown',  "\e[6~"  ],
-    [ 'Up',        "\e[A"   ],
-    [ 'Down',      "\e[B"   ],
-    [ 'Home',      "\e[H"   ],
-    [ 'End',       "\e[F"   ],
-    [ 'Left',      "\e[D"   ],
-    [ 'Right',     "\e[C"   ],
-    [ 'KillToEOL', "\e[2~"  ], # Insert
-    [ 'Delete',    "\e[3~"  ]
+    [ chr(0x00ab),      "\eOP"   ],
+    [ chr(0x00bb),      "\eOQ"   ],
+    [ '\nopagenumbers', "\eOR"   ],
+    [ 'Top',            "\e[E"   ], # disable F11
+    [ 'Bottom',         "\e[24~" ],
+    [ 'PageUp',         "\e[5~"  ],
+    [ 'PageDown',       "\e[6~"  ],
+    [ 'Up',             "\e[A"   ],
+    [ 'Down',           "\e[B"   ],
+    [ 'Home',           "\e[H"   ],
+    [ 'End',            "\e[F"   ],
+    [ 'Left',           "\e[D"   ],
+    [ 'Right',          "\e[C"   ],
+    [ 'KillToEOL',      "\e[2~"  ],
+    [ 'Delete',         "\e[3~"  ]
 );
 
 $| = 1;
@@ -73,7 +74,7 @@ while (1) {
 sub dokey
 {
     my ($key) = @_;
-    if ( $key eq chr(0x08) ) { # BackSpace
+    if ( $key eq chr(0x08) ) {
         if ( $x == 0 ) {
             if ( current_line_number() > 0 ) {
                 $x = length2( line(-1) ) + 1;
@@ -94,7 +95,7 @@ sub dokey
         }
         moveleft(1);
     }
-    elsif ( $key eq chr(0x0d) ) { # Return
+    elsif ( $key eq chr(0x0d) ) {
         my $begin = substr( line(), 0, $x );
         my $end = substr( line(), $x );
         line( 0, $begin );
@@ -103,7 +104,7 @@ sub dokey
         movedown(1);
         $x = 0;
     }
-    elsif ( $key eq chr(0x1b) )  { # ESC
+    elsif ( $key eq chr(0x1b) )  {
         save();
         if ($ENV{db}) {
             open DB, ">>$ENV{db}";
@@ -135,7 +136,7 @@ sub dokey
         my $begin = substr( line(), 0, $x );
         my $end = substr( line(), $x );
         line( 0, $begin . $key . $end );
-        moveright(1);
+        moveright( length($key) );
     }
     return 1;
 }
