@@ -6,7 +6,7 @@ my @keys = (
     [ chr(0x00ab),      "\eOP"   ],
     [ chr(0x00bb),      "\eOQ"   ],
     [ '\nopagenumbers', "\eOR"   ],
-    [ 'Top',            "\e[E"   ], # disable F11
+    [ 'Top',            "\e[23~" ],
     [ 'Bottom',         "\e[24~" ],
     [ 'PageUp',         "\e[5~"  ],
     [ 'PageDown',       "\e[6~"  ],
