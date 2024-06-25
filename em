@@ -3,10 +3,10 @@
 use strict;
 
 my @keys = (
-    [ chr(0x00ab), "\eOP"   ],
-    [ chr(0x00bb), "\eOQ"   ],
-    [ 'Top',       "\e[E"   ],
-    [ 'Bottom',    "\e[24~" ],
+    [ chr(0x00ab), "\eOP"   ], # F1
+    [ chr(0x00bb), "\eOQ"   ], # F2
+    [ 'Top',       "\e[E"   ], # KP_ENTER
+    [ 'Bottom',    "\e[24~" ], # F12
     [ 'PageUp',    "\e[5~"  ],
     [ 'PageDown',  "\e[6~"  ],
     [ 'Up',        "\e[A"   ],
@@ -15,7 +15,7 @@ my @keys = (
     [ 'End',       "\e[F"   ],
     [ 'Left',      "\e[D"   ],
     [ 'Right',     "\e[C"   ],
-    [ 'Kill',      "\e[2~"  ],
+    [ 'KillToEOL', "\e[2~"  ], # Insert
     [ 'Delete',    "\e[3~"  ]
 );
 
@@ -73,16 +73,37 @@ while (1) {
 sub dokey
 {
     my ($key) = @_;
-    if ( $key eq chr(0x08) ) {
-        backspaceat();
+    if ( $key eq chr(0x08) ) { # BackSpace
+        if ( $x == 0 ) {
+            if ( current_line_number() > 0 ) {
+                $x = length2( line(-1) ) + 1;
+                line( -1, line(-1) . line() );
+                splice( @lines, current_line_number(), 1 );
+                if ( $y > 0 ) {
+                    $y--;
+                    $fullupdate = 1;
+                }
+                else { $topline-- }
+            }
+        }
+        else {
+            my $begin = substr( line(), 0, $x - 1 );
+            my $end = substr( line(), $x );
+            my $line = $begin . $end;
+            line( 0, $line );
+        }
         moveleft(1);
     }
-    elsif ( $key eq chr(0x0d) ) {
-        newlineat();
+    elsif ( $key eq chr(0x0d) ) { # Return
+        my $begin = substr( line(), 0, $x );
+        my $end = substr( line(), $x );
+        line( 0, $begin );
+        splice( @lines, current_line_number() + 1, 0, $end );
+        $fullupdate = 1;
         movedown(1);
         $x = 0;
     }
-    elsif ( $key eq chr(0x1b) )  {
+    elsif ( $key eq chr(0x1b) )  { # ESC
         save();
         if ($ENV{db}) {
             open DB, ">>$ENV{db}";
@@ -105,10 +126,15 @@ sub dokey
     elsif ( $key eq 'End' ) { $x = length( line() ) }
     elsif ( $key eq 'Left' )  { moveleft(1) }
     elsif ( $key eq 'Right' )  { moveright(1) }
-    elsif ( $key eq 'Kill' ) { delteol() }
+    elsif ( $key eq 'KillToEOL' ) {
+        line( 0, substr( line(), 0, $x ) );
+        delat() if $x == 0;
+    }
     elsif ( $key eq 'Delete' ) { delat() }
     elsif ( $key eq chr(0x09) || !grep( $key eq $_, map( chr, 0 .. 31 ), chr(0x7f) ) ) {
-        setat($key);
+        my $begin = substr( line(), 0, $x );
+        my $end = substr( line(), $x );
+        line( 0, $begin . $key . $end );
         moveright(1);
     }
     return 1;
@@ -183,21 +209,6 @@ sub movedown
     $x = length( line() ) if $x > length( line() );
 }
 
-sub delteol
-{
-    line( 0, substr( line(), 0, $x ) );
-    delat() if $x == 0;
-}
-
-sub newlineat
-{
-    my $begin = substr( line(), 0, $x );
-    my $end = substr( line(), $x );
-    line( 0, $begin );
-    splice( @lines, current_line_number() + 1, 0, $end );
-    $fullupdate = 1;
-}
-
 sub delat
 {
     my $len = length2( line() );
@@ -213,41 +224,12 @@ sub delat
     }
 }
 
-sub backspaceat
-{
-    if ( $x == 0 ) {
-        if ( current_line_number() > 0 ) {
-            $x = length2( line(-1) ) + 1;
-            line( -1, line(-1) . line() );
-            splice( @lines, current_line_number(), 1 );
-            if ( $y > 0 ) {
-              $y--;
-              $fullupdate = 1;
-            }
-            else { $topline-- }
-        }
-    }
-    else {
-        my $begin = substr( line(), 0, $x - 1 );
-        my $end = substr( line(), $x );
-        my $line = $begin . $end;
-        line( 0, $line );
-    }
-}
-
 sub line
 {
     my ( $offset, $text ) = @_;
     my $pos = current_line_number() + $offset;
     if ( defined($text) ) { $lines[$pos] = $text }
     else { return $lines[$pos] }
-}
-
-sub setat
-{
-    my $begin = substr( line(), 0, $x );
-    my $end = substr( line(), $x );
-    line( 0, $begin . shift . $end );
 }
 
 sub current_line_number
