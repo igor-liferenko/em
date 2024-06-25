@@ -3,17 +3,20 @@
 use strict;
 
 my @keys = (
-    [ 'F1',       "\eOP"  ],
-    [ 'F2',       "\eOQ"  ],
-    [ 'Up',       "\e[A"  ],
-    [ 'Down',     "\e[B"  ],
-    [ 'Left',     "\e[D"  ],
-    [ 'Right',    "\e[C"  ],
-    [ 'Home',     "\e[H"  ],
-    [ 'End',      "\e[F"  ],
-    [ 'Delete',   "\e[3~" ],
-    [ 'PageUp',   "\e[5~" ],
-    [ 'PageDown', "\e[6~" ]
+    [ chr(0x00ab), "\eOP"   ],
+    [ chr(0x00bb), "\eOQ"   ],
+    [ 'Top',       "\e[E"   ],
+    [ 'Bottom',    "\e[24~" ],
+    [ 'PageUp',    "\e[5~"  ],
+    [ 'PageDown',  "\e[6~"  ],
+    [ 'Up',        "\e[A"   ],
+    [ 'Down',      "\e[B"   ],
+    [ 'Home',      "\e[H"   ],
+    [ 'End',       "\e[F"   ],
+    [ 'Left',      "\e[D"   ],
+    [ 'Right',     "\e[C"   ],
+    [ 'Kill',      "\e[2~"  ],
+    [ 'Delete',    "\e[3~"  ]
 );
 
 $| = 1;
@@ -45,7 +48,7 @@ my $fullupdate = 1;
 
 my $key;
 while (1) {
-    last if ( !dokey($key) );
+    last if defined($key) && !dokey($key);
     if ($fullupdate) {
         $fullupdate = 0;
         print "\e[H";
@@ -69,21 +72,16 @@ while (1) {
 
 sub dokey {
     my ($key) = @_;
-    $key = chr(0x00ab) if $key eq 'F1';
-    $key = chr(0x00bb) if $key eq 'F2';
     if ( $key eq chr(0x08) ) {
         backspaceat();
         moveleft(1);
-    }
-    elsif ( $key eq chr(0x0b) ) {
-        delteol();
     }
     elsif ( $key eq chr(0x0d) ) {
         newlineat();
         movedown(1);
         $x = 0;
     }
-    elsif ( $key eq chr(0x1a) )  {
+    elsif ( $key eq chr(0x1b) )  {
         save();
         if ($ENV{db}) {
             open DB, ">>$ENV{db}";
@@ -92,22 +90,23 @@ sub dokey {
         }
         return;
     }
-    elsif ( $key eq chr(0x1b) ) { moveup( current_line_number() + 1 ) }
-    elsif ( $key eq chr(0x1d) ) { movedown( scalar(@lines) - current_line_number() ) }
     elsif ( $key eq 'Resize' ) {
         save();
         return;
     }
-    elsif ( $key eq 'Up' ) { moveup(1) }
-    elsif ( $key eq 'Down' ) { movedown(1) }
+    elsif ( $key eq 'Top' ) { moveup( current_line_number() + 1 ) }
+    elsif ( $key eq 'Bottom' ) { movedown( scalar(@lines) - current_line_number() ) }
     elsif ( $key eq 'PageUp' ) { moveup($rows) }
     elsif ( $key eq 'PageDown' ) { movedown($rows) }
-    elsif ( $key eq 'Right' )  { moveright(1) }
-    elsif ( $key eq 'Left' )  { moveleft(1) }
-    elsif ( $key eq 'Delete' ) { delat() }
+    elsif ( $key eq 'Up' ) { moveup(1) }
+    elsif ( $key eq 'Down' ) { movedown(1) }
     elsif ( $key eq 'Home' ) { $x = 0 }
     elsif ( $key eq 'End' ) { $x = length( line() ) }
-    elsif ( $key eq chr(0x09) || ( ord($key) >= 32 && $key ne chr(0x7f) ) ) {
+    elsif ( $key eq 'Left' )  { moveleft(1) }
+    elsif ( $key eq 'Right' )  { moveright(1) }
+    elsif ( $key eq 'Kill' ) { delteol() }
+    elsif ( $key eq 'Delete' ) { delat() }
+    elsif ( $key eq chr(0x09) || !grep( $key eq $_, map( chr, 0 .. 31 ), chr(0x7f) ) ) {
         setat($key);
         moveright(1);
     }
@@ -294,12 +293,12 @@ sub readkey {
             eval {
                 local $SIG{ALRM} = sub { die };
                 ualarm 300_000;
-                read(STDIN, $k, 1);
+                read( STDIN, $k, 1 );
                 ualarm 0;
             };
             return shift(@buffer) if $@;
         }
-        else { return 'Resize' if !defined read(STDIN, $k, 1) }
+        else { return 'Resize' if !defined( read( STDIN, $k, 1 ) ) }
         push( @buffer, $k );
         $submatch = 0;
         for my $key (@keys) {
