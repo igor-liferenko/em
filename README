@@ -47,7 +47,7 @@ Add this `em' script to PATH:
       printf '\e[?47h'
       save=`stty -g`
       stty raw -echo
-      perl -CSDA ~/em/em "$file" `[ "$line" ] && echo +$line`
+      perl -CSDA ~/em/em "$file" $line
       stty $save
       printf '\e[2J'
       printf '\e[?47l'

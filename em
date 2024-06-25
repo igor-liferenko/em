@@ -20,23 +20,8 @@ $| = 1;
 
 $SIG{WINCH} = sub { close STDIN };
 
-my ( $rows, $cols ) = split( / /, `stty size` );
-$rows -= 1;
-
-my ( $topline, $x, $y );
-my $regexp = qr/\+([\d-]+)/;
-my ($center_line_arg) = grep { $_ =~ $regexp } @ARGV;
-my ($center_line) = $center_line_arg =~ $regexp;
-if ( $center_line =~ /(.*)-(.*)-(.*)/ ) {
-    $topline = $1; $x = $2; $y = $3;
-}
-elsif ($center_line) {
-    $topline = $center_line - int( $rows / 2 ) - 1;
-    $y = $topline < 0 ? $center_line - 1 : $center_line - $topline - 1;
-}
-
 my @lines;
-my ($filename) = grep { $_ !~ $regexp } @ARGV;
+my $filename = $ARGV[0];
 open( FILE, $filename );
 for my $line (<FILE>) {
     chomp($line);
@@ -44,8 +29,17 @@ for my $line (<FILE>) {
 }
 close(FILE);
 
-my $fname = $filename;
-substr( $fname, 0, length( $ENV{HOME} ) ) = '~' if !index( $filename, $ENV{HOME} );
+my ( $rows, $cols ) = split( / /, `stty size` );
+$rows -= 1;
+
+my ( $topline, $x, $y );
+if ( $ARGV[1] =~ /(.*)-(.*)-(.*)/ ) {
+    $topline = $1; $x = $2; $y = $3;
+}
+elsif ( $ARGV[1] ) {
+    $topline = $ARGV[1] - int( $rows / 2 ) - 1;
+    $y = $topline < 0 ? $ARGV[1] - 1 : $ARGV[1] - $topline - 1;
+}
 
 my $fullupdate = 1;
 
@@ -61,7 +55,7 @@ while (1) {
         }
         print "\e[", $rows + 1, ';1f';
         print "\e[35m" if $ENV{edit};
-        print "\e[7m", $fname, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
+        print "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
     }
     else {
         print "\e[", $y + 1, ';1f';
