@@ -3,21 +3,21 @@
 use strict;
 
 my @keys = (
-    [ chr(0x00ab),      "\eOP"   ],
-    [ chr(0x00bb),      "\eOQ"   ],
-    [ '\nopagenumbers', "\eOR"   ],
-    [ 'Top',            "\e[23~" ],
-    [ 'Bottom',         "\e[24~" ],
-    [ 'PageUp',         "\e[5~"  ],
-    [ 'PageDown',       "\e[6~"  ],
-    [ 'Up',             "\e[A"   ],
-    [ 'Down',           "\e[B"   ],
-    [ 'Home',           "\e[H"   ],
-    [ 'End',            "\e[F"   ],
-    [ 'Left',           "\e[D"   ],
-    [ 'Right',          "\e[C"   ],
-    [ 'KillToEOL',      "\e[2~"  ],
-    [ 'Delete',         "\e[3~"  ]
+    [ "\eOP",   chr(0x00ab) ],
+    [ "\eOQ",   chr(0x00bb) ],
+    [ "\eOR",   '\nopagenumbers' ],
+    [ "\e[23~", 'Top' ],
+    [ "\e[24~", 'Bottom' ],
+    [ "\e[5~",  'PageUp' ],
+    [ "\e[6~",  'PageDown' ],
+    [ "\e[A",   'Up' ],
+    [ "\e[B",   'Down' ],
+    [ "\e[H",   'Home' ],
+    [ "\e[F",   'End' ],
+    [ "\e[D",   'Left' ],
+    [ "\e[C",   'Right' ],
+    [ "\e[2~",  'KillToEOL' ],
+    [ "\e[3~",  'Delete' ]
 );
 
 $| = 1;
@@ -106,7 +106,7 @@ sub dokey
     }
     elsif ( $key eq chr(0x1b) )  {
         save();
-        if ($ENV{db}) {
+        if ( $ENV{db} ) {
             open DB, ">>$ENV{db}";
             print DB "$ENV{abs} $topline-$x-$y ", `md5sum $filename | head -c32`, '-', `stty size | tr ' ' -`;
             close DB;
@@ -132,7 +132,7 @@ sub dokey
         delat() if $x == 0;
     }
     elsif ( $key eq 'Delete' ) { delat() }
-    elsif ( $key eq chr(0x09) || !grep( $key eq $_, map( chr, 0 .. 31 ), chr(0x7f) ) ) {
+    elsif ( !grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31 ), chr(0x7f) ) ) {
         my $begin = substr( line(), 0, $x );
         my $end = substr( line(), $x );
         line( 0, $begin . $key . $end );
@@ -294,15 +294,15 @@ sub readkey
         for my $key (@keys) {
             my $i = 0;
             while (1) {
-                if ( $i == scalar(@buffer) && $i == length( $$key[1] ) ) {
+                if ( $i == scalar(@buffer) && $i == length( $$key[0] ) ) {
                     @buffer = ();
-                    return $$key[0];
+                    return $$key[1];
                 }
-                last if $i == scalar(@buffer) || $i == length( $$key[1] );
-                last if $buffer[$i] ne substr( $$key[1], $i, 1 );
+                last if $i == scalar(@buffer) || $i == length( $$key[0] );
+                last if $buffer[$i] ne substr( $$key[0], $i, 1 );
                 $i++;
             }
-            $submatch = 1 if $i == scalar(@buffer) && $i < length( $$key[1] );
+            $submatch = 1 if $i == scalar(@buffer) && $i < length( $$key[0] );
         }
     } while ($submatch);
     if ( scalar(@buffer) > 1 ) {
