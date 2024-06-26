@@ -3,21 +3,21 @@
 use strict;
 
 my @keys = (
-    [ "\eOP",   chr(0x00ab) ],
-    [ "\eOQ",   chr(0x00bb) ],
-    [ "\eOR",   '\nopagenumbers' ],
-    [ "\e[23~", 'Top' ],
-    [ "\e[24~", 'Bottom' ],
-    [ "\e[5~",  'PageUp' ],
+    [ "\eOP",   'F1'       ],
+    [ "\eOQ",   'F2'       ],
+    [ "\eOR",   'F3'       ],
+    [ "\e[23~", 'F11'      ],
+    [ "\e[24~", 'F12'      ],
+    [ "\e[5~",  'PageUp'   ],
     [ "\e[6~",  'PageDown' ],
-    [ "\e[A",   'Up' ],
-    [ "\e[B",   'Down' ],
-    [ "\eOH",   'Home' ],
-    [ "\eOF",   'End' ],
-    [ "\e[D",   'Left' ],
-    [ "\e[C",   'Right' ],
-    [ "\e[2~",  'KillToEOL' ],
-    [ "\e[3~",  'Delete' ]
+    [ "\e[A",   'Up'       ],
+    [ "\e[B",   'Down'     ],
+    [ "\e[H",   'Home'     ],
+    [ "\e[F",   'End'      ],
+    [ "\e[D",   'Left'     ],
+    [ "\e[C",   'Right'    ],
+    [ "\e[2~",  'Insert'   ],
+    [ "\e[3~",  'Delete'   ]
 );
 
 $| = 1;
