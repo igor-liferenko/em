@@ -32,7 +32,7 @@ close(FILE);
 my ( $rows, $cols ) = split( /[ \n]/, `stty size` );
 $rows -= 1;
 
-my ( $topline, $x, $y, $lasttopline, $lastnrlines ) = (0) x 5;
+my ( $topline, $x, $y ) = (0) x 3;
 if ( $ARGV[1] =~ /(.*)-(.*)-(.*)/ ) {
     $topline = $1; $x = $2; $y = $3;
 }
@@ -46,8 +46,8 @@ my $fullupdate = 1;
 my $key;
 
 while (1) {
-    $lasttopline = $topline;
-    $lastnrlines = scalar(@lines);
+    my $lasttopline = $topline;
+    my $lastnrlines = scalar(@lines);
     last if defined($key) && !dokey();
     $fullupdate = 1 if $lasttopline != $topline || $lastnrlines != scalar(@lines);
     $fullupdate = 0 if $lasttopline != $topline && $lastnrlines != scalar(@lines);
