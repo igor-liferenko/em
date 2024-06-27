@@ -32,7 +32,7 @@ close(FILE);
 my ( $rows, $cols ) = split( /[ \n]/, `stty size` );
 $rows -= 1;
 
-my ( $topline, $x, $y ) = ( 0, 0, 0 );
+my ( $topline, $x, $y, $lasttopline, $lastnrlines ) = (0) x 5;
 if ( $ARGV[1] =~ /(.*)-(.*)-(.*)/ ) {
     $topline = $1; $x = $2; $y = $3;
 }
@@ -43,12 +43,11 @@ elsif ( $ARGV[1] ) {
 
 my $fullupdate = 1;
 
-my ( $key, $lasttopline, $lastnrlines, $lastcurline );
+my $key;
 
 while (1) {
     $lasttopline = $topline;
     $lastnrlines = scalar(@lines);
-    $lastcurline = current_line_number();
     last if defined($key) && !dokey();
     $fullupdate = 1 if $lasttopline != $topline || $lastnrlines != scalar(@lines);
     $fullupdate = 0 if $lasttopline != $topline && $lastnrlines != scalar(@lines);
@@ -64,16 +63,11 @@ while (1) {
         print "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
     }
     else {
-        if ( $lastcurline != current_line_number() && length( $lines[$lastcurline] ) > $cols - 1 ) {
-            print "\e[", $lastcurline - $topline + 1, ';1f';
-            print "\e[K";
-            draw_line($lastcurline);
-        }
         print "\e[", $y + 1, ';1f';
         print "\e[K";
         draw_line( current_line_number() );
     }
-    print "\e[", $y + 1, ';', ( $x < $cols ? $x + 1 : $cols ), 'f';
+    print "\e[", $y + 1, ';', $x + 1, 'f';
     $key = readkey();
 }
 
@@ -88,7 +82,10 @@ sub dokey {
     elsif ( $key eq 'Up' ) { moveup(1) }
     elsif ( $key eq 'Down' ) { movedown(1) }
     elsif ( $key eq 'Home' ) { $x = 0 }
-    elsif ( $key eq 'End' ) { $x = length( line() ) }
+    elsif ( $key eq 'End' ) {
+        $x = length( line() );
+        $x = $cols - 1 if $x >= $cols;
+    }
     elsif ( $key eq 'Left' )  { moveleft(1) }
     elsif ( $key eq 'Right' )  { moveright(1) }
     elsif ( $key eq 'Insert' ) { delteol() }
@@ -96,6 +93,7 @@ sub dokey {
     elsif ( $key eq chr(0x08) ) {
         backspaceat();
         moveleft(1);
+        $x = $cols - 1 if $x >= $cols;
     }
     elsif ( $key eq chr(0x0d) ) {
         newlineat();
@@ -108,14 +106,15 @@ sub dokey {
         close(FILE);
         if ( $key eq chr(0x1b) && $ENV{db} ) {
             open DB, ">>$ENV{db}";
-            print DB "$ENV{abs} $topline-$x-$y ", `md5sum $filename | head -c32`, '-', `stty size | tr ' ' -`;
+            print DB "$ENV{abs} $topline-$x-$y ", `md5sum $filename | head -c32`, '-',
+                `stty size | tr ' ' -`;
             close DB;
         }
         return 0;
     }
     else {
         if ( grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31 ), chr(0x7f) ) ) {
-            $key = '^' . chr( ord($key) < 0100 ? ord($key) + 0100 : ord($key) - 0100 );
+            $key = '^' . chr( ord($key) + ( ord($key) < 0100 ? 0100 : -0100 ) );
         }
         setat();
         moveright( length($key) );
@@ -125,12 +124,15 @@ sub dokey {
 
 sub moveright {
     $x += shift;
-    if ( $x > length( line() ) ) {
+    if ( $x > length( line() ) || $x >= $cols ) {
         if ( current_line_number() < scalar(@lines) - 1 ) {
             $x = 0;
             movedown(1);
         }
-        else { $x = length( line() ) }
+        else {
+            $x = length( line() );
+            $x = $cols - 1 if $x >= $cols;
+        }
     }
 }
 
@@ -139,6 +141,7 @@ sub moveleft {
     if ( $x < 0 ) {
         if ( current_line_number() > 0 ) {
             $x = length( line(-1) );
+            $x = $cols - 1 if $x >= $cols;
             moveup(1);
         }
         else { $x = 0 }
@@ -241,26 +244,8 @@ sub draw_line {
     my ($pos) = @_;
     my $line = $lines[$pos];
 
-    if ( $pos - $topline != $y || $x <= $cols - 1 ) {
-        $line = substr( $line, 0, $cols - 1 );
-        if ( length( $lines[$pos] ) > $cols - 1 ) {
-            if ( $pos - $topline == $y && $x == $cols - 1 ) {
-                $line .= "\e[31m \e[m";
-            }
-            else {
-                $line .= "\e[41m\e[1m\e[31m\x{2588}\e[m";
-            }
-        }
-    }
-    else {
-        $line = substr( $line, $x - ( $cols - 1 ), $cols - 1 );
-        if ( $x == length( $lines[$pos] ) ) {
-            $line .= "\e[31m<\e[m";
-        }
-        else {
-            $line .= "\e[31m>\e[m";
-        }
-    }
+    $line = substr( $line, 0, $cols - 1 );
+    $line .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length( $lines[$pos] ) >= $cols;
 
     $line =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
     print $line, "\r\n";
