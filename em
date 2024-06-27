@@ -24,16 +24,12 @@ $| = 1;
 
 $SIG{WINCH} = sub { close STDIN };
 
-my @lines;
 my $filename = $ARGV[0];
 open( FILE, $filename );
-for (<FILE>) {
-    chomp;
-    push( @lines, $_ );
-}
+chomp( my @lines = <FILE> );
 close(FILE);
 
-my ( $rows, $cols ) = split( / /, `stty size | tr -d '\n'` );
+my ( $rows, $cols ) = split( /[ \n]/, `stty size` );
 $rows -= 1;
 
 my ( $topline, $x, $y ) = ( 0, 0, 0 );
@@ -47,10 +43,15 @@ elsif ( $ARGV[1] ) {
 
 my $fullupdate = 1;
 
-my $key;
+my ( $key, $lasttopline, $lastnrlines, $lastcurline );
 
 while (1) {
+    $lasttopline = $topline;
+    $lastnrlines = scalar(@lines);
+    $lastcurline = current_line_number();
     last if defined($key) && !dokey();
+    $fullupdate = 1 if $lasttopline != $topline || $lastnrlines != scalar(@lines);
+    $fullupdate = 0 if $lasttopline != $topline && $lastnrlines != scalar(@lines);
     if ($fullupdate) {
         $fullupdate = 0;
         print "\e[H";
@@ -63,6 +64,11 @@ while (1) {
         print "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
     }
     else {
+        if ( $lastcurline != current_line_number() && length( $lines[$lastcurline] ) > $cols - 1 ) {
+            print "\e[", $lastcurline - $topline + 1, ';1f';
+            print "\e[K";
+            draw_line($lastcurline);
+        }
         print "\e[", $y + 1, ';1f';
         print "\e[K";
         draw_line( current_line_number() );
@@ -98,9 +104,7 @@ sub dokey {
     }
     elsif ( $key eq chr(0x1b) || $key eq 'Resize' )  {
         open( FILE, ">$filename" );
-        for (@lines) {
-            print FILE $_, "\n";
-        }
+        print( FILE "$_\n" ) for @lines;
         close(FILE);
         if ( $key eq chr(0x1b) && $ENV{db} ) {
             open DB, ">>$ENV{db}";
@@ -144,7 +148,6 @@ sub moveleft {
 sub moveup {
     $y -= shift;
     if ( $y < 0 ) {
-        $fullupdate = 1 if $topline > 0;
         $topline += $y;
         $y = 0;
     }
@@ -164,12 +167,10 @@ sub movedown {
         $topline = 0 if $topline < 0;
         $tempy = $nrlines - $topline - 1;
         $x = length( $lines[ $topline + $tempy ] );
-        $fullupdate = 1 if $rows < $nrlines;
     }
     elsif ( $tempy >= $rows ) {
         $topline += $tempy - $rows + 1;
         $tempy = $rows - 1;
-        $fullupdate = 1;
     }
 
     $y = $tempy;
@@ -186,7 +187,6 @@ sub newlineat {
     my $end = substr( line(), $x );
     line( 0, $begin );
     splice( @lines, current_line_number() + 1, 0, $end );
-    $fullupdate = 1;
 }
 
 sub delat {
@@ -199,7 +199,6 @@ sub delat {
     else {
         line( 0, line() . line(1) );
         splice( @lines, current_line_number() + 1, 1 );
-        $fullupdate = 1;
     }
 }
 
@@ -209,10 +208,7 @@ sub backspaceat {
             $x = length( line(-1) ) + 1;
             line( -1, line(-1) . line() );
             splice( @lines, current_line_number(), 1 );
-            if ( $y > 0 ) {
-              $y--;
-              $fullupdate = 1;
-            }
+            if ( $y > 0 ) { $y-- }
             else { $topline-- }
         }
     }
@@ -247,17 +243,23 @@ sub draw_line {
 
     if ( $pos - $topline != $y || $x <= $cols - 1 ) {
         $line = substr( $line, 0, $cols - 1 );
-        $line .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length( $lines[$pos] ) > $cols - 1;
+        if ( length( $lines[$pos] ) > $cols - 1 ) {
+            if ( $pos - $topline == $y && $x == $cols - 1 ) {
+                $line .= "\e[31m \e[m";
+            }
+            else {
+                $line .= "\e[41m\e[1m\e[31m\x{2588}\e[m";
+            }
+        }
     }
     else {
         $line = substr( $line, $x - ( $cols - 1 ), $cols - 1 );
-        if ( $x > $cols ) {
-            $line .= "\e[1m\e[35m \e[m";
+        if ( $x == length( $lines[$pos] ) ) {
+            $line .= "\e[31m<\e[m";
         }
         else {
-            $line .= "\e[45m\x{2588}\e[m";
+            $line .= "\e[31m>\e[m";
         }
-        $fullupdate = 1;
     }
 
     $line =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
