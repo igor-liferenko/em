@@ -101,10 +101,9 @@ sub dokey {
         print( FILE "$_\n" ) for @lines;
         close(FILE);
         if ( $key eq chr(0x1b) && $ENV{db} ) {
-            open DB, ">>$ENV{db}";
-            print DB "$ENV{abs} $topline-$x-$y ", `md5sum $filename | head -c32`, '-',
-                `stty size | tr ' ' -`;
-            close DB;
+            open( DB, ">>$ENV{db}" );
+            print( DB "$ENV{abs} $topline-$x-$y ", `md5sum $filename | head -c32`, '-', `stty size | tr ' ' -` );
+            close(DB);
         }
         return 0;
     }
@@ -121,7 +120,6 @@ sub dokey {
 
 sub moveright {
     $x += shift;
-    $x = $cols - 1 if $x >= $cols;
     if ( $x > length( line() ) ) {
         if ( curlinenr() < scalar(@lines) - 1 ) {
             $x = 0;
@@ -237,12 +235,15 @@ sub curlinenr {
 sub drawline {
     my ($pos) = @_;
     my $line = substr( $lines[$pos], 0, $cols - 1 );
-    $line .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length( $lines[$pos] ) >= $cols - 1;
     $line =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
+    if ( length( $lines[$pos] ) > $cols - 1 ) {
+        if ( substr( $lines[$pos], $cols - 1 ) =~ /^ +$/ ) {
+            $line =~ s/ +$/"\e[46m\e[1m\e[36m" . "\x{2588}" x length($&) . "\e[m"/e;
+        }
+    }
+    else { $line =~ s/ +$/"\e[46m\e[1m\e[36m" . "\x{2588}" x length($&) . "\e[m"/e }
+    $line .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length( $lines[$pos] ) > $cols - 1;
     print( $line, "\r\n" );
-
-    # TODO: if tail was cut with substr and it contains only spaces or if tail was not cut, do
-    # $line =~ s/ +$/"\e[47m\e[1m\e[30m" . ' ' x length($&) . "\e[m"/e
 }
 
 use Time::HiRes 'ualarm';
