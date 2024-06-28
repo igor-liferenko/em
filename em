@@ -53,21 +53,21 @@ while (1) {
     $fullupdate = 0 if $lasttopline != $topline && $lastnrlines != scalar(@lines);
     if ($fullupdate) {
         $fullupdate = 0;
-        print "\e[H";
-        print "\e[J";
+        print( "\e[H" );
+        print( "\e[J" );
         for ( my $pos = $topline; $pos < $topline + $rows && $pos < scalar(@lines); $pos++ ) {
-            draw_line($pos);
+            drawline($pos);
         }
-        print "\e[", $rows + 1, ';1f';
-        print "\e[34m" if $ENV{edit};
-        print "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m";
+        print( "\e[", $rows + 1, ';1f' );
+        print( "\e[34m" ) if $ENV{edit};
+        print( "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m" );
     }
     else {
-        print "\e[", $y + 1, ';1f';
-        print "\e[K";
-        draw_line( current_line_number() );
+        print( "\e[", $y + 1, ';1f' );
+        print( "\e[K" );
+        drawline( curlinenr() );
     }
-    print "\e[", $y + 1, ';', $x + 1, 'f';
+    print( "\e[", $y + 1, ';', $x + 1, 'f' );
     $key = readkey();
 }
 
@@ -75,17 +75,14 @@ sub dokey {
     if ( $key eq 'F1' ) { $key = chr(0x00ab) }
     if ( $key eq 'F2' ) { $key = chr(0x00bb) }
     if ( $key eq 'F3' ) { $key = '\nopagenumbers' }
-    if ( $key eq 'F11' ) { moveup( current_line_number() + 1 ) }
-    elsif ( $key eq 'F12' ) { movedown( scalar(@lines) - current_line_number() ) }
+    if ( $key eq 'F11' ) { moveup( curlinenr() + 1 ) }
+    elsif ( $key eq 'F12' ) { movedown( scalar(@lines) - curlinenr() ) }
     elsif ( $key eq 'PageUp' ) { moveup($rows) }
     elsif ( $key eq 'PageDown' ) { movedown($rows) }
     elsif ( $key eq 'Up' ) { moveup(1) }
     elsif ( $key eq 'Down' ) { movedown(1) }
     elsif ( $key eq 'Home' ) { $x = 0 }
-    elsif ( $key eq 'End' ) {
-        $x = length( line() );
-        $x = $cols - 1 if $x >= $cols;
-    }
+    elsif ( $key eq 'End' ) { $x = length( line() ) }
     elsif ( $key eq 'Left' )  { moveleft(1) }
     elsif ( $key eq 'Right' )  { moveright(1) }
     elsif ( $key eq 'Insert' ) { delteol() }
@@ -93,7 +90,6 @@ sub dokey {
     elsif ( $key eq chr(0x08) ) {
         backspaceat();
         moveleft(1);
-        $x = $cols - 1 if $x >= $cols;
     }
     elsif ( $key eq chr(0x0d) ) {
         newlineat();
@@ -113,35 +109,33 @@ sub dokey {
         return 0;
     }
     else {
-        if ( grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31 ), chr(0x7f) ) ) {
-            $key = '^' . chr( ord($key) + ( ord($key) < 0100 ? 0100 : -0100 ) );
+        if ( grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31 ) ) ) {
+            $key = '^' . chr( ord($key) + 64 );
         }
         setat();
         moveright( length($key) );
     }
+    $x = $cols - 1 if $x >= $cols;
     return 1;
 }
 
 sub moveright {
     $x += shift;
-    if ( $x > length( line() ) || $x >= $cols ) {
-        if ( current_line_number() < scalar(@lines) - 1 ) {
+    $x = $cols - 1 if $x >= $cols;
+    if ( $x > length( line() ) ) {
+        if ( curlinenr() < scalar(@lines) - 1 ) {
             $x = 0;
             movedown(1);
         }
-        else {
-            $x = length( line() );
-            $x = $cols - 1 if $x >= $cols;
-        }
+        else { $x = length( line() ) }
     }
 }
 
 sub moveleft {
     $x -= shift;
     if ( $x < 0 ) {
-        if ( current_line_number() > 0 ) {
+        if ( curlinenr() > 0 ) {
             $x = length( line(-1) );
-            $x = $cols - 1 if $x >= $cols;
             moveup(1);
         }
         else { $x = 0 }
@@ -189,7 +183,7 @@ sub newlineat {
     my $begin = substr( line(), 0, $x );
     my $end = substr( line(), $x );
     line( 0, $begin );
-    splice( @lines, current_line_number() + 1, 0, $end );
+    splice( @lines, curlinenr() + 1, 0, $end );
 }
 
 sub delat {
@@ -201,16 +195,16 @@ sub delat {
     }
     else {
         line( 0, line() . line(1) );
-        splice( @lines, current_line_number() + 1, 1 );
+        splice( @lines, curlinenr() + 1, 1 );
     }
 }
 
 sub backspaceat {
     if ( $x == 0 ) {
-        if ( current_line_number() > 0 ) {
+        if ( curlinenr() > 0 ) {
             $x = length( line(-1) ) + 1;
             line( -1, line(-1) . line() );
-            splice( @lines, current_line_number(), 1 );
+            splice( @lines, curlinenr(), 1 );
             if ( $y > 0 ) { $y-- }
             else { $topline-- }
         }
@@ -225,7 +219,7 @@ sub backspaceat {
 
 sub line {
     my ( $offset, $text ) = @_;
-    my $pos = current_line_number() + $offset;
+    my $pos = curlinenr() + $offset;
     if ( defined($text) ) { $lines[$pos] = $text }
     else { return $lines[$pos] }
 }
@@ -236,19 +230,16 @@ sub setat {
     line( 0, $begin . $key . $end );
 }
 
-sub current_line_number {
+sub curlinenr {
     return $topline + $y;
 }
 
-sub draw_line {
+sub drawline {
     my ($pos) = @_;
-    my $line = $lines[$pos];
-
-    $line = substr( $line, 0, $cols - 1 );
-    $line .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length( $lines[$pos] ) >= $cols;
-
+    my $line = substr( $lines[$pos], 0, $cols - 1 );
+    $line .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length( $lines[$pos] ) >= $cols - 1;
     $line =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
-    print $line, "\r\n";
+    print( $line, "\r\n" );
 
     # TODO: if tail was cut with substr and it contains only spaces or if tail was not cut, do
     # $line =~ s/ +$/"\e[47m\e[1m\e[30m" . ' ' x length($&) . "\e[m"/e
