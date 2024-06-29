@@ -6,6 +6,13 @@ my @keys = (
     [ "\eOP",   'F1'       ],
     [ "\eOQ",   'F2'       ],
     [ "\eOR",   'F3'       ],
+    [ "\eOS",   'F4'       ],
+    [ "\e[15~",   'F5'       ],
+    [ "\e[17~",   'F6'       ],
+    [ "\e[18~",   'F7'       ],
+    [ "\e[19~",   'F8'       ],
+    [ "\e[20~",   'F9'       ],
+    [ "\e[21~",   'F10'       ],
     [ "\e[23~", 'F11'      ],
     [ "\e[24~", 'F12'      ],
     [ "\e[5~",  'PageUp'   ],
@@ -75,6 +82,13 @@ sub dokey {
     if ( $key eq 'F1' ) { $key = chr(0x00ab) }
     if ( $key eq 'F2' ) { $key = chr(0x00bb) }
     if ( $key eq 'F3' ) { $key = '\nopagenumbers' }
+    if ( $key eq 'F4' ) { $key = '\nointerlineskip' }
+    if ( $key eq 'F5' ) { $key = '\offinterlineskip' }
+    if ( $key eq 'F6' ) { $key = '\pdfpagewidth' }
+    if ( $key eq 'F7' ) { $key = '\pdfpageheight' }
+    if ( $key eq 'F8' ) { $key = '\pdfhorigin' }
+    if ( $key eq 'F9' ) { $key = '\pdfvorigin' }
+    if ( $key eq 'F10' ) { $key = '\advance' }
     if ( $key eq 'F11' ) { moveup( curlinenr() + 1 ) }
     elsif ( $key eq 'F12' ) { movedown( scalar(@lines) - curlinenr() ) }
     elsif ( $key eq 'PageUp' ) { moveup($rows) }
