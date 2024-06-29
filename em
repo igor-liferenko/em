@@ -119,7 +119,7 @@ sub dokey {
 }
 
 sub moveright {
-    $x += shift;
+    $x += $_[0];
     if ( $x > length( line() ) ) {
         if ( curlinenr() < scalar(@lines) - 1 ) {
             $x = 0;
@@ -130,7 +130,7 @@ sub moveright {
 }
 
 sub moveleft {
-    $x -= shift;
+    $x -= $_[0];
     if ( $x < 0 ) {
         if ( curlinenr() > 0 ) {
             $x = length( line(-1) );
@@ -141,7 +141,7 @@ sub moveleft {
 }
 
 sub moveup {
-    $y -= shift;
+    $y -= $_[0];
     if ( $y < 0 ) {
         $topline += $y;
         $y = 0;
@@ -154,7 +154,7 @@ sub moveup {
 }
 
 sub movedown {
-    my $tempy = $y + shift;
+    my $tempy = $y + $_[0];
 
     my $nrlines = scalar(@lines);
     if ( $topline + $tempy >= $nrlines ) {
@@ -216,9 +216,8 @@ sub backspaceat {
 }
 
 sub line {
-    my ( $offset, $text ) = @_;
-    my $pos = curlinenr() + $offset;
-    if ( defined($text) ) { $lines[$pos] = $text }
+    my $pos = curlinenr() + $_[0];
+    if ( defined( $_[1] ) ) { $lines[$pos] = $_[1] }
     else { return $lines[$pos] }
 }
 
@@ -233,23 +232,22 @@ sub curlinenr {
 }
 
 sub drawline {
-    my ($pos) = @_;
-    my $line = substr( $lines[$pos], 0, $cols - 1 );
+    my $len = length( $lines[ $_[0] ] );
+    my $line = substr( $lines[ $_[0] ], 0, $cols - 1 );
     $line =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
-    if ( length( $lines[$pos] ) > $cols - 1 ) {
-        if ( substr( $lines[$pos], $cols - 1 ) =~ /^ +$/ ) {
+    if ( $len > $cols - 1 ) {
+        if ( substr( $lines[ $_[0] ], $cols - 1 ) =~ /^ +$/ ) {
             $line =~ s/ +$/"\e[46m\e[1m\e[36m" . "\x{2588}" x length($&) . "\e[m"/e;
         }
     }
     else { $line =~ s/ +$/"\e[46m\e[1m\e[36m" . "\x{2588}" x length($&) . "\e[m"/e }
-    $line .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length( $lines[$pos] ) > $cols - 1;
+    $line .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if $len > $cols - 1;
     print( $line, "\r\n" );
 }
 
 use Time::HiRes 'ualarm';
 my @buffer;
-sub readkey
-{
+sub readkey {
     # if recorded bytes remain, handle next recorded byte
     if ( scalar(@buffer) ) {
         return shift(@buffer);
