@@ -108,8 +108,8 @@ sub dokey {
         return 0;
     }
     else {
-        if ( grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31 ), chr(0x7f) ) ) {
-            $key = '^' . chr( ord($key) + ( ord($key) < 64 ? 64 : -64 ) );
+        if ( grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31, 127 ) ) ) {
+            $key = '^' . ( ord($key) < 64 ? chr( ord($key) + 64 ) : '?' );
         }
         setat();
         moveright( length($key) );
