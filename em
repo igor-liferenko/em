@@ -7,12 +7,12 @@ my @keys = (
     [ "\eOQ",   'F2'       ],
     [ "\eOR",   'F3'       ],
     [ "\eOS",   'F4'       ],
-    [ "\e[15~",   'F5'       ],
-    [ "\e[17~",   'F6'       ],
-    [ "\e[18~",   'F7'       ],
-    [ "\e[19~",   'F8'       ],
-    [ "\e[20~",   'F9'       ],
-    [ "\e[21~",   'F10'       ],
+    [ "\e[15~", 'F5'       ],
+    [ "\e[17~", 'F6'       ],
+    [ "\e[18~", 'F7'       ],
+    [ "\e[19~", 'F8'       ],
+    [ "\e[20~", 'F9'       ],
+    [ "\e[21~", 'F10'      ],
     [ "\e[23~", 'F11'      ],
     [ "\e[24~", 'F12'      ],
     [ "\e[5~",  'PageUp'   ],
@@ -246,17 +246,17 @@ sub curlinenr {
 }
 
 sub drawline {
-    my $len = length( $lines[ $_[0] ] );
-    my $line = substr( $lines[ $_[0] ], 0, $cols - 1 );
-    $line =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
-    if ( $len > $cols - 1 ) {
-        if ( substr( $lines[ $_[0] ], $cols - 1 ) =~ /^ +$/ ) {
-            $line =~ s/ +$/"\e[46m\e[1m\e[36m" . "\x{2588}" x length($&) . "\e[m"/e;
+    my $line = $lines[ $_[0] ];
+    my $ln = substr( $line, 0, $cols - 1 );
+    $ln =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
+    if ( length($line) > $cols - 1 ) {
+        if ( substr( $line, $cols - 1 ) =~ /^ +$/ ) {
+            $ln =~ s/ +$/"\e[46m\e[1m\e[36m" . "\x{2588}" x length($&) . "\e[m"/e;
         }
     }
-    else { $line =~ s/ +$/"\e[46m\e[1m\e[36m" . "\x{2588}" x length($&) . "\e[m"/e }
-    $line .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if $len > $cols - 1;
-    print( $line, "\r\n" );
+    else { $ln =~ s/ +$/"\e[46m\e[1m\e[36m" . "\x{2588}" x length($&) . "\e[m"/e }
+    $ln .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length($line) > $cols - 1;
+    print( $ln, "\r\n" );
 }
 
 use Time::HiRes 'ualarm';
