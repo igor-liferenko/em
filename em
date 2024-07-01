@@ -57,7 +57,6 @@ while (1) {
     my $lastnrlines = scalar(@lines);
     last if defined($key) && !dokey();
     $fullupdate = 1 if $lasttopline != $topline || $lastnrlines != scalar(@lines);
-    $fullupdate = 0 if $lasttopline != $topline && $lastnrlines != scalar(@lines);
     if ($fullupdate) {
         $fullupdate = 0;
         print( "\e[H" );
