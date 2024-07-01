@@ -101,35 +101,30 @@ sub dokey {
     elsif ( $key eq 'Right' )  { moveright(1) }
     elsif ( $key eq 'Insert' ) { delteol() }
     elsif ( $key eq 'Delete' ) { delat() }
-    elsif ( $key eq chr(0x08) ) {
-        backspaceat();
-        moveleft(1);
-    }
-    elsif ( $key eq chr(0x0d) ) {
-        newlineat();
-        movedown(1);
-        $x = 0;
-    }
-    elsif ( $key eq chr(0x1b) || $key eq 'Resize' )  {
-        open( FILE, ">$filename" );
-        print( FILE "$_\n" ) for @lines;
-        close(FILE);
-        if ( $key eq chr(0x1b) && $ENV{db} ) {
-            open( DB, ">>$ENV{db}" );
-            print( DB "$ENV{abs} $topline-$x-$y ", `md5sum $filename | head -c32`, '-', `stty size | tr ' ' -` );
-            close(DB);
-        }
-        return 0;
-    }
+    elsif ( $key eq chr(0x08) ) { backspaceat(), moveleft(1) }
+    elsif ( $key eq chr(0x0d) ) { newlineat(), movedown(1), $x = 0 }
+    elsif ( $key eq chr(0x1b) ) { savefile(), savecursor(), return 0 }
+    elsif ( $key eq 'Resize' )  { savefile(), return 0 }
     else {
-        if ( grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31, 127 ) ) ) {
-            $key = '^' . ( ord($key) < 64 ? chr( ord($key) + 64 ) : '?' );
-        }
+        $key = '^' . ( ord($key) < 64 ? chr( ord($key) + 64 ) : '?' ) if grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31, 127 ) );
         setat();
         moveright( length($key) );
     }
     $x = $cols - 1 if $x >= $cols;
     return 1;
+}
+
+sub savefile {
+    open( FILE, ">$filename" );
+    print( FILE "$_\n" ) for @lines;
+    close(FILE);
+}
+
+sub savecursor {
+    return unless $ENV{db};
+    open( DB, ">>$ENV{db}" );
+    print( DB "$ENV{abs} $topline-$x-$y ", `md5sum $filename | head -c32`, '-', `stty size | tr ' ' -` );
+    close(DB);
 }
 
 sub moveright {
@@ -187,14 +182,14 @@ sub movedown {
 }
 
 sub delteol {
-    line( 0, substr( line(), 0, $x ) );
+    line() = substr( line(), 0, $x );
     delat() if $x == 0;
 }
 
 sub newlineat {
     my $begin = substr( line(), 0, $x );
     my $end = substr( line(), $x );
-    line( 0, $begin );
+    line() = $begin;
     splice( @lines, curlinenr() + 1, 0, $end );
 }
 
@@ -203,10 +198,10 @@ sub delat {
     if ( $x < $len ) {
         my $begin = substr( line(), 0, $x );
         my $end = substr( line(), $x + 1 );
-        line( 0, $begin . $end );
+        line() = $begin . $end;
     }
     else {
-        line( 0, line() . line(1) );
+        line() = line() . line(1);
         splice( @lines, curlinenr() + 1, 1 );
     }
 }
@@ -215,7 +210,7 @@ sub backspaceat {
     if ( $x == 0 ) {
         if ( curlinenr() > 0 ) {
             $x = length( line(-1) ) + 1;
-            line( -1, line(-1) . line() );
+            line(-1) = line(-1) . line();
             splice( @lines, curlinenr(), 1 );
             if ( $y > 0 ) { $y-- }
             else { $topline-- }
@@ -225,20 +220,18 @@ sub backspaceat {
         my $begin = substr( line(), 0, $x - 1 );
         my $end = substr( line(), $x );
         my $line = $begin . $end;
-        line( 0, $line );
+        line() = $line;
     }
 }
 
-sub line {
-    my $pos = curlinenr() + $_[0];
-    if ( defined( $_[1] ) ) { $lines[$pos] = $_[1] }
-    else { return $lines[$pos] }
+sub line : lvalue {
+    $lines[ curlinenr() + $_[0] ];
 }
 
 sub setat {
     my $begin = substr( line(), 0, $x );
     my $end = substr( line(), $x );
-    line( 0, $begin . $key . $end );
+    line() = $begin . $key . $end;
 }
 
 sub curlinenr {
