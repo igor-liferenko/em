@@ -61,9 +61,8 @@ while (1) {
         $fullupdate = 0;
         print( "\e[H" );
         print( "\e[J" );
-        for ( my $pos = $topline; $pos < $topline + $rows && $pos < scalar(@lines); $pos++ ) {
-            drawline($pos);
-        }
+        my $n = $topline;
+        drawline($n++) while $n < $topline + $rows && $n < scalar(@lines);
         print( "\e[", $rows + 1, ';1f' );
         print( "\e[34m" ) if $ENV{edit};
         print( "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m" );
@@ -100,14 +99,15 @@ sub dokey {
     elsif ( $key eq 'Right' )  { moveright(1) }
     elsif ( $key eq 'Insert' ) { delteol() }
     elsif ( $key eq 'Delete' ) { delat() }
-    elsif ( $key eq chr(0x08) ) { backspaceat(), moveleft(1) }
-    elsif ( $key eq chr(0x0d) ) { newlineat(), movedown(1), $x = 0 }
-    elsif ( $key eq chr(0x1b) ) { savefile(), savecursor(), return 0 }
+    elsif ( $key eq "\cH" ) { backspaceat(), moveleft(1) }
+    elsif ( $key eq "\r" ) { newlineat(), movedown(1), $x = 0 }
+    elsif ( $key eq "\e" ) { savefile(), savecursor(), return 0 }
     elsif ( $key eq 'Resize' )  { savefile(), return 0 }
     else {
-        $key = '^' . ( ord($key) < 64 ? chr( ord($key) + 64 ) : '?' ) if grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31, 127 ) );
-        setat();
-        moveright( length($key) );
+        if ( grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31, 127 ) ) ) {
+            $key = '^' . ( ord($key) < 64 ? chr( ord($key) + 64 ) : '?' );
+        }
+        setat(), moveright( length($key) ) if $x < $cols - 1 || length( line() ) < $cols;
     }
     $x = $cols - 1 if $x >= $cols;
     return 1;
@@ -122,7 +122,8 @@ sub savefile {
 sub savecursor {
     return unless $ENV{db};
     open( DB, ">>$ENV{db}" );
-    print( DB "$ENV{abs} $topline-$x-$y ", `md5sum $filename | head -c32`, '-', `stty size | tr ' ' -` );
+    print( DB "$ENV{abs} $topline-$x-$y" );
+    printf( DB " %s%.0s-%s-%s", map( split(/ +/), `md5sum $filename`, `stty size` ) );
     close(DB);
 }
 
@@ -186,18 +187,14 @@ sub delteol {
 }
 
 sub newlineat {
-    my $begin = substr( line(), 0, $x );
-    my $end = substr( line(), $x );
-    line() = $begin;
-    splice( @lines, curlinenr() + 1, 0, $end );
+    splice( @lines, curlinenr() + 1, 0, substr( line(), $x ) );
+    line() = substr( line(), 0, $x );
 }
 
 sub delat {
     my $len = length( line() );
     if ( $x < $len ) {
-        my $begin = substr( line(), 0, $x );
-        my $end = substr( line(), $x + 1 );
-        line() = $begin . $end;
+        line() = substr( line(), 0, $x ) . substr( line(), $x + 1 );
     }
     else {
         line() = line() . line(1);
@@ -216,10 +213,7 @@ sub backspaceat {
         }
     }
     else {
-        my $begin = substr( line(), 0, $x - 1 );
-        my $end = substr( line(), $x );
-        my $line = $begin . $end;
-        line() = $line;
+        line() = substr( line(), 0, $x - 1 ) . substr( line(), $x );
     }
 }
 
@@ -228,25 +222,17 @@ sub line : lvalue {
 }
 
 sub setat {
-    my $begin = substr( line(), 0, $x );
-    my $end = substr( line(), $x );
-    line() = $begin . $key . $end;
+    line() = substr( line(), 0, $x ) . $key . substr( line(), $x );
 }
 
 sub curlinenr {
-    return $topline + $y;
+    $topline + $y;
 }
 
 sub drawline {
     my $line = $lines[ $_[0] ];
     my $ln = substr( $line, 0, $cols - 1 );
     $ln =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
-    if ( length($line) > $cols - 1 ) {
-        if ( substr( $line, $cols - 1 ) =~ /^ +$/ ) {
-            $ln =~ s/ +$/"\e[46m\e[1m\e[36m" . "\x{2588}" x length($&) . "\e[m"/e;
-        }
-    }
-    else { $ln =~ s/ +$/"\e[46m\e[1m\e[36m" . "\x{2588}" x length($&) . "\e[m"/e }
     $ln .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length($line) > $cols - 1;
     print( $ln, "\r\n" );
 }
