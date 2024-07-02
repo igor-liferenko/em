@@ -104,9 +104,8 @@ sub dokey {
     elsif ( $key eq "\e" ) { savefile(), savecursor(), return 0 }
     elsif ( $key eq 'Resize' )  { savefile(), return 0 }
     else {
-        if ( grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31, 127 ) ) ) {
+        grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31, 127 ) ) and
             $key = '^' . ( ord($key) < 64 ? chr( ord($key) + 64 ) : '?' );
-        }
         setat(), moveright( length($key) ) if $x < $cols - 1 || length( line() ) < $cols;
     }
     $x = $cols - 1 if $x >= $cols;
@@ -192,8 +191,7 @@ sub newlineat {
 }
 
 sub delat {
-    my $len = length( line() );
-    if ( $x < $len ) {
+    if ( $x < length( line() ) ) {
         line() = substr( line(), 0, $x ) . substr( line(), $x + 1 );
     }
     else {
