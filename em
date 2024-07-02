@@ -64,7 +64,7 @@ while (1) {
         my $n = $topline;
         drawline($n++) while $n < $topline + $rows && $n < scalar(@lines);
         print( "\e[", $rows + 1, ';1f' );
-        print( "\e[34m" ) if $ENV{edit};
+        print( "\e[34m" ) if $ENV{edit}; # texmf
         print( "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m" );
     }
     else {
@@ -119,7 +119,7 @@ sub savefile {
 }
 
 sub savecursor {
-    return unless $ENV{db};
+    return unless $ENV{db}; # /tmp
     open( DB, ">>$ENV{db}" );
     print( DB "$ENV{abs} $topline-$x-$y" );
     printf( DB " %s%.0s-%s-%s", map( split(/ +/), `md5sum $filename`, `stty size` ) );
@@ -195,7 +195,7 @@ sub delat {
         line() = substr( line(), 0, $x ) . substr( line(), $x + 1 );
     }
     else {
-        line() = line() . line(1);
+        line() = line() . line(+1);
         splice( @lines, curlinenr() + 1, 1 );
     }
 }
