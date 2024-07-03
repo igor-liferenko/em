@@ -183,14 +183,6 @@ sub delteol {
     delat() if $x == 0;
 }
 
-sub newlineat {
-    splice( @lines, curlinenr() + 1, 0, substr( line(), $x ) );
-    line() = substr( line(), 0, $x );
-    $x = 0;
-    if ( $y == $rows - 1 ) { $topline++ }
-    else { $y++ }
-}
-
 sub delat {
     if ( $x < length( line() ) ) {
         line() = substr( line(), 0, $x ) . substr( line(), $x + 1 );
@@ -199,6 +191,14 @@ sub delat {
         line() = line() . line(+1);
         splice( @lines, curlinenr() + 1, 1 );
     }
+}
+
+sub newlineat {
+    splice( @lines, curlinenr() + 1, 0, substr( line(), $x ) );
+    line() = substr( line(), 0, $x );
+    $x = 0;
+    if ( $y == $rows - 1 ) { $topline++ }
+    else { $y++ }
 }
 
 sub backspaceat {
