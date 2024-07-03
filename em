@@ -64,7 +64,7 @@ while (1) {
         my $n = $topline;
         drawline($n++) while $n < $topline + $rows && $n < scalar(@lines);
         print( "\e[", $rows + 1, ';1f' );
-        print( "\e[34m" ) if $ENV{edit}; # texmf
+        print( "\e[34m" ) if $ENV{edit};
         print( "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m" );
     }
     else {
@@ -99,8 +99,8 @@ sub dokey {
     elsif ( $key eq 'Right' )  { moveright(1) }
     elsif ( $key eq 'Insert' ) { delteol() }
     elsif ( $key eq 'Delete' ) { delat() }
-    elsif ( $key eq "\cH" ) { backspaceat(), moveleft(1) }
-    elsif ( $key eq "\r" ) { newlineat(), movedown(1), $x = 0 }
+    elsif ( $key eq "\cH" ) { backspaceat() }
+    elsif ( $key eq "\r" ) { newlineat() }
     elsif ( $key eq "\e" ) { savefile(), savecursor(), return 0 }
     elsif ( $key eq 'Resize' )  { savefile(), return 0 }
     else {
@@ -119,7 +119,7 @@ sub savefile {
 }
 
 sub savecursor {
-    return unless $ENV{db}; # /tmp
+    return unless $ENV{db};
     open( DB, ">>$ENV{db}" );
     print( DB "$ENV{abs} $topline-$x-$y" );
     printf( DB " %s%.0s-%s-%s", map( split(/ +/), `md5sum $filename`, `stty size` ) );
@@ -169,7 +169,7 @@ sub movedown {
         $topline = $nrlines - $rows;
         $topline = 0 if $topline < 0;
         $tempy = $nrlines - $topline - 1;
-        $x = length( $lines[ $topline + $tempy ] );
+        $x = $cols;
     }
     elsif ( $tempy >= $rows ) {
         $topline += $tempy - $rows + 1;
@@ -188,6 +188,9 @@ sub delteol {
 sub newlineat {
     splice( @lines, curlinenr() + 1, 0, substr( line(), $x ) );
     line() = substr( line(), 0, $x );
+    $x = 0;
+    if ( $y == $rows - 1 ) { $topline++ }
+    else { $y++ }
 }
 
 sub delat {
@@ -203,15 +206,16 @@ sub delat {
 sub backspaceat {
     if ( $x == 0 ) {
         if ( curlinenr() > 0 ) {
-            $x = length( line(-1) ) + 1;
+            $x = length( line(-1) );
             line(-1) = line(-1) . line();
             splice( @lines, curlinenr(), 1 );
-            if ( $y > 0 ) { $y-- }
-            else { $topline-- }
+            if ( $y == 0 ) { $topline-- }
+            else { $y-- }
         }
     }
     else {
         line() = substr( line(), 0, $x - 1 ) . substr( line(), $x );
+        $x--;
     }
 }
 
@@ -230,8 +234,8 @@ sub curlinenr {
 sub drawline {
     my $line = $lines[ $_[0] ];
     my $ln = substr( $line, 0, $cols - 1 );
-    $ln =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
     $ln .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length($line) > $cols - 1;
+    $ln =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
     print( $ln, "\r\n" );
 }
 
