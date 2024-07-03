@@ -95,8 +95,8 @@ sub dokey {
     elsif ( $key eq 'Down' ) { movedown(1) }
     elsif ( $key eq 'Home' ) { $x = 0 }
     elsif ( $key eq 'End' ) { $x = length( line() ) }
-    elsif ( $key eq 'Left' )  { moveleft(1) }
-    elsif ( $key eq 'Right' )  { moveright(1) }
+    elsif ( $key eq 'Left' )  { moveleft() }
+    elsif ( $key eq 'Right' )  { moveright() }
     elsif ( $key eq 'Insert' ) { delteol() }
     elsif ( $key eq 'Delete' ) { delat() }
     elsif ( $key eq "\cH" ) { backspaceat() }
@@ -106,7 +106,7 @@ sub dokey {
     else {
         grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31, 127 ) ) and
             $key = '^' . ( ord($key) < 64 ? chr( ord($key) + 64 ) : '?' );
-        setat(), moveright( length($key) ) if $x < $cols - 1 || length( line() ) < $cols;
+        setat(), $x += length($key) if $x < $cols - 1 || length( line() ) < $cols;
     }
     $x = $cols - 1 if $x >= $cols;
     return 1;
@@ -127,25 +127,23 @@ sub savecursor {
 }
 
 sub moveright {
-    $x += $_[0];
-    if ( $x > length( line() ) ) {
+    if ( $x == length( line() ) ) {
         if ( curlinenr() < scalar(@lines) - 1 ) {
             $x = 0;
-            movedown(1);
+            movedown(1); # TODO: do without
         }
-        else { $x = length( line() ) }
     }
+    else { $x++ }
 }
 
 sub moveleft {
-    $x -= $_[0];
-    if ( $x < 0 ) {
+    if ( $x == 0 ) {
         if ( curlinenr() > 0 ) {
             $x = length( line(-1) );
-            moveup(1);
+            moveup(1); # TODO: do without
         }
-        else { $x = 0 }
     }
+    else { $x-- }
 }
 
 sub moveup {
