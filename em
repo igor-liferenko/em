@@ -63,6 +63,7 @@ while (1) {
         print( "\e[J" );
         my $n = $topline;
         drawline($n++) while $n < $topline + $rows && $n < scalar(@lines);
+        print( "\e[42m \e[m" ) if $n != $topline + $rows;
         print( "\e[", $rows + 1, ';1f' );
         print( "\e[34m" ) if $ENV{edit};
         print( "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m" );
@@ -186,12 +187,14 @@ sub delteol {
 }
 
 sub delat {
-    if ( $x < length( line() ) ) {
-        line() = substr( line(), 0, $x ) . substr( line(), $x + 1 );
+    if ( $x == length( line() ) ) {
+        if ( curlinenr() < scalar(@lines) - 1 ) {
+            line() = line() . line(+1);
+            splice( @lines, curlinenr() + 1, 1 );
+        }
     }
     else {
-        line() = line() . line(+1);
-        splice( @lines, curlinenr() + 1, 1 );
+        line() = substr( line(), 0, $x ) . substr( line(), $x + 1 );
     }
 }
 
@@ -206,11 +209,11 @@ sub newlineat {
 sub backspaceat {
     if ( $x == 0 ) {
         if ( curlinenr() > 0 ) {
+            $x = length( line(-1) );
             line(-1) = line(-1) . line();
             splice( @lines, curlinenr(), 1 );
             if ( $y == 0 ) { $topline-- }
             else { $y-- }
-            $x = length( line() );
         }
     }
     else {
