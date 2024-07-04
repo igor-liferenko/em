@@ -129,8 +129,9 @@ sub savecursor {
 sub moveright {
     if ( $x == length( line() ) ) {
         if ( curlinenr() < scalar(@lines) - 1 ) {
+            if ( $y == $rows - 1 ) { $topline++ }
+            else { $y++ }
             $x = 0;
-            movedown(1); # TODO: do without
         }
     }
     else { $x++ }
@@ -139,8 +140,9 @@ sub moveright {
 sub moveleft {
     if ( $x == 0 ) {
         if ( curlinenr() > 0 ) {
-            $x = length( line(-1) );
-            moveup(1); # TODO: do without
+            if ( $y == 0 ) { $topline-- }
+            else { $y-- }
+            $x = length( line() );
         }
     }
     else { $x-- }
@@ -204,11 +206,11 @@ sub newlineat {
 sub backspaceat {
     if ( $x == 0 ) {
         if ( curlinenr() > 0 ) {
-            $x = length( line(-1) );
             line(-1) = line(-1) . line();
             splice( @lines, curlinenr(), 1 );
             if ( $y == 0 ) { $topline-- }
             else { $y-- }
+            $x = length( line() );
         }
     }
     else {
@@ -230,9 +232,8 @@ sub curlinenr {
 }
 
 sub drawline {
-    my $line = $lines[ $_[0] ];
-    my $ln = substr( $line, 0, $cols - 1 );
-    $ln .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length($line) > $cols - 1;
+    my $ln = substr( $lines[ $_[0] ], 0, $cols - 1 );
+    $ln .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length( $lines[ $_[0] ] ) > $cols - 1;
     $ln =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
     print( $ln, "\r\n" );
 }
