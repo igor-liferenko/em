@@ -1,9 +1,11 @@
 Add this `em' script to PATH:
 
     #!/bin/bash
-    # Use as `em file line' or `em file:line' (for copy-paste from `grep -n')
+    # Use as `em', `em file line' or `em file:line' (for copy-paste from `grep -n')
+    export db=/tmp/em.db
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
+      export abs=$tmp
       printf '\e[?1049h'
       save=`stty -g`
       stty raw -echo
@@ -11,6 +13,7 @@ Add this `em' script to PATH:
       stty $save
       printf '\e[?1049l'
       echo $tmp
+      sed -i "\|^$abs |d" $db
     else
       if [ $# = 1 ]; then
         if [ "${1#*:}" != "$1" ]; then
@@ -33,7 +36,6 @@ Add this `em' script to PATH:
       grep -q $'\r' $1 && { printf 'RUN:\nsed -i \x27s/\\r$//\x27 %s\n' "$file"; exit 1; }
       export abs=`realpath "$file"`
       [ "$abs" = `realpath $0` ] && { printf 'Edit ~/em/README and then do:\nsed -n \x27/#!/,$s/^    //p\x27 ~/em/README >`which em`\n'; exit 1; }
-      export db=/tmp/em.db
       grep -sq "^$abs lock$" $db && { echo File is already opened; exit 1; }
       [ "$line" ] && [ `wc -l <"$file"` -lt $line ] && { echo Line number greater than number of lines; exit 1; }
       [ "$line" ] || eval `sed -n "s|^$abs \(.*\) |line=\1 hash=|p" $db 2>/dev/null`

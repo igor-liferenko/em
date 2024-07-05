@@ -66,7 +66,7 @@ while (1) {
         drawline($n++) while $n < $topline + $rows && $n < scalar(@lines);
         print( "\e[42m \e[m" ) if $n != $topline + $rows;
         print( "\e[", $rows + 1, ';1f' );
-        print( "\e[34m" ) if $ENV{edit};
+        print( "\e[34m" ) if $ENV{edit}; # tex mf
         print( "\e[7m", $filename, ' ' x ( $cols - 1 - length($filename) ), "\e[m" );
     }
     else {
@@ -122,8 +122,6 @@ sub savefile {
 }
 
 sub savecursor {
-    return unless $ENV{db};
-    return if $topline == 0 && $x == 0 && $y == 0;
     open( DB, ">>$ENV{db}" );
     print( DB "$ENV{abs} $topline-$x-$y" );
     printf( DB " %s%.0s-%s-%s", map( split(/ +/), `md5sum $filename`, `stty size` ) );
