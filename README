@@ -1,7 +1,7 @@
 Add this `em' script to PATH:
 
     #!/bin/bash
-    # Use as `em', `em file line' or `em file:line' (for copy-paste from `grep -n')
+    # Use as `em', `em file', `em file line' or `em file:line' (for copy-paste from `grep -n')
     export db=/tmp/em.db
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
@@ -13,7 +13,7 @@ Add this `em' script to PATH:
       stty $save
       printf '\e[?1049l'
       echo $tmp
-      sed -i "\|^$abs |d" $db
+      sed -i "\|^$abs |d" $db 2>/dev/null
     else
       if [ $# = 1 ]; then
         if [ "${1#*:}" != "$1" ]; then
