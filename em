@@ -35,6 +35,7 @@ my $filename = $ARGV[0];
 open( FILE, $filename );
 chomp( my @lines = <FILE> );
 close(FILE);
+@lines = ('') if scalar(@lines) == 0;
 
 my ( $rows, $cols ) = split( /[ \n]/, `stty size` );
 $rows -= 1;
@@ -114,6 +115,7 @@ sub dokey {
 }
 
 sub savefile {
+    return if scalar(@lines) == 1 && length( $lines[0] ) == 0;
     open( FILE, ">$filename" );
     print( FILE "$_\n" ) for @lines;
     close(FILE);
@@ -167,8 +169,7 @@ sub movedown {
 
     my $nrlines = scalar(@lines);
     if ( $topline + $tempy >= $nrlines ) {
-        $topline = $nrlines - $rows;
-        $topline = 0 if $topline < 0;
+        $topline = $nrlines - $rows if $topline + $rows <= $nrlines;
         $tempy = $nrlines - $topline - 1;
         $x = $cols;
     }
@@ -182,16 +183,17 @@ sub movedown {
 }
 
 sub delteol {
-    line() = substr( line(), 0, $x );
-    delat() if $x == 0;
+    if ( $x == 0 ) {
+        line() = splice( @lines, curlinenr() + 1, 1 );
+    }
+    else {
+        line() = substr( line(), 0, $x );
+    }
 }
 
 sub delat {
     if ( $x == length( line() ) ) {
-        if ( curlinenr() < scalar(@lines) - 1 ) {
-            line() = line() . line(+1);
-            splice( @lines, curlinenr() + 1, 1 );
-        }
+        line() = line() . splice( @lines, curlinenr() + 1, 1 );
     }
     else {
         line() = substr( line(), 0, $x ) . substr( line(), $x + 1 );
@@ -210,8 +212,7 @@ sub backspaceat {
     if ( $x == 0 ) {
         if ( curlinenr() > 0 ) {
             $x = length( line(-1) );
-            line(-1) = line(-1) . line();
-            splice( @lines, curlinenr(), 1 );
+            line(-1) = line(-1) . splice( @lines, curlinenr(), 1 );
             if ( $y == 0 ) { $topline-- }
             else { $y-- }
         }
