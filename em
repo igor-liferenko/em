@@ -115,7 +115,7 @@ sub dokey {
 }
 
 sub savefile {
-    return if scalar(@lines) == 1 && length( $lines[0] ) == 0;
+    @lines = () if $#lines == 0 && length( $lines[0] ) == 0;
     open( FILE, ">$filename" );
     print( FILE "$_\n" ) for @lines;
     close(FILE);
@@ -123,6 +123,7 @@ sub savefile {
 
 sub savecursor {
     return unless $ENV{db};
+    return if $topline == 0 && $x == 0 && $y == 0;
     open( DB, ">>$ENV{db}" );
     print( DB "$ENV{abs} $topline-$x-$y" );
     printf( DB " %s%.0s-%s-%s", map( split(/ +/), `md5sum $filename`, `stty size` ) );
