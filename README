@@ -13,7 +13,6 @@ Add this `em' script to PATH:
       stty $save
       printf '\e[?1049l'
       echo $tmp
-      sed -i "\|^$abs |d" $db 2>/dev/null
     else
       if [ $# = 1 ]; then
         if [ "${1#*:}" != "$1" ]; then
