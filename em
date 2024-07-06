@@ -168,7 +168,7 @@ sub movedown {
 
     my $nrlines = scalar(@lines);
     if ( $topline + $tempy >= $nrlines ) {
-        $topline = $nrlines - $rows if $topline + $rows <= $nrlines;
+        $topline = $nrlines - $rows if $topline + $rows < $nrlines;
         $tempy = $nrlines - $topline - 1;
         $x = $cols;
     }
