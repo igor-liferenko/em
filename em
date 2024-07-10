@@ -47,6 +47,7 @@ if ( $ARGV[1] =~ /(.*)-(.*)-(.*)/ ) {
 elsif ( $ARGV[1] ) {
     $topline = $ARGV[1] - int( $rows / 2 ) - 1;
     $y = $topline < 0 ? $ARGV[1] - 1 : $ARGV[1] - $topline - 1;
+    $topline = 0 if $topline < 0;
 }
 
 my $fullupdate = 1;
