@@ -2,7 +2,7 @@ Add this `em' script to PATH:
 
     #!/bin/bash
     # Use as `em', `em file', `em file line' or `em file:line' (for copy-paste from `grep -n')
-    [ $EUID = 0 ] && { echo Use nano; exit 1; }
+    [ $EUID = 0 ] && { echo In config files lines often exceed width of terminal; exit 1; }
     export db=/tmp/em.db
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
