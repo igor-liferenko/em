@@ -13,6 +13,7 @@ my @keys = (
     [ "\e[19~", 'F8'       ],
     [ "\e[20~", 'F9'       ],
     [ "\e[21~", 'F10'      ],
+    [ "\e[E",   'Enter'    ],
     [ "\e[23~", 'F11'      ],
     [ "\e[24~", 'F12'      ],
     [ "\e[5~",  'PageUp'   ],
@@ -90,6 +91,8 @@ sub dokey {
     if ( $key eq 'F8' ) { $key = '\pdfhorigin' }
     if ( $key eq 'F9' ) { $key = '\pdfvorigin' }
     if ( $key eq 'F10' ) { $key = '\advance' }
+    if ( $key eq 'Enter' ) { $key = '\showboxdepth=\maxdimen \showboxbreadth=\maxdimen' }
+
     if ( $key eq 'F11' ) { moveup( curlinenr() + 1 ) }
     elsif ( $key eq 'F12' ) { movedown( scalar(@lines) - curlinenr() ) }
     elsif ( $key eq 'PageUp' ) { moveup($rows) }
