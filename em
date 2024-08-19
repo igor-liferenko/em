@@ -20,8 +20,8 @@ my @keys = (
     [ "\e[6~",  'PageDown' ],
     [ "\e[A",   'Up'       ],
     [ "\e[B",   'Down'     ],
-    [ "\e[H",   'Home'     ],
-    [ "\e[F",   'End'      ],
+    [ "\eOH",   'Home'     ],
+    [ "\eOF",   'End'      ],
     [ "\e[D",   'Left'     ],
     [ "\e[C",   'Right'    ],
     [ "\e[2~",  'Insert'   ],
@@ -83,9 +83,9 @@ while (1) {
 sub dokey {
     if ( $key eq 'F1' ) { $key = chr(0x00ab) }
     if ( $key eq 'F2' ) { $key = chr(0x00bb) }
-    if ( $key eq 'F3' ) { $key = '\nopagenumbers' }
-    if ( $key eq 'F4' ) { $key = '\nointerlineskip' }
-    if ( $key eq 'F5' ) { $key = '\offinterlineskip' }
+    if ( $key eq 'F3' ) { $key = 'interlineskip' }
+    if ( $key eq 'F4' ) { $key = '\tracing' }
+    if ( $key eq 'F5' ) { $key = '\nopagenumbers' }
     if ( $key eq 'F6' ) { $key = '\pdfpagewidth' }
     if ( $key eq 'F7' ) { $key = '\pdfpageheight' }
     if ( $key eq 'F8' ) { $key = '\pdfhorigin' }
