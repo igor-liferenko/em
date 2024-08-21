@@ -10,7 +10,7 @@ Add this `em' script to PATH:
       printf '\e[?1049h'
       save=`stty -g`
       stty raw -echo
-      perl -CSDA ~/em/em $tmp
+      perl -mEncode=decode_utf8 -CSDA ~/em/em $tmp
       stty $save
       printf '\e[?1049l'
       echo $tmp
@@ -45,7 +45,7 @@ Add this `em' script to PATH:
       printf '\e[?1049h'
       save=`stty -g`
       stty raw -echo
-      perl -CSDA ~/em/em "$file" $line
+      perl -mEncode=decode_utf8 -CSDA ~/em/em "$file" $line
       stty $save
       printf '\e[?1049l'
       sed -i "\|^$abs lock$|d" $db

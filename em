@@ -125,11 +125,9 @@ sub savefile {
     close(FILE);
 }
 
-use Encode ();
 sub savecursor {
-    my $abs = Encode::decode_utf8 $ENV{abs};
     open( DB, ">>$ENV{db}" );
-    print( DB "$abs $topline-$x-$y" );
+    print( DB decode_utf8( $ENV{abs} ), " $topline-$x-$y" );
     printf( DB " %s%.0s-%s-%s", map( split(/ +/), `md5sum $filename`, `stty size` ) );
     close(DB);
 }
