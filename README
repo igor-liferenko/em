@@ -33,7 +33,7 @@ Add this `em' script to PATH:
       [ -r "$file" ] || { echo Permission denied; exit 1; }
       [ -w "$file" ] || { echo Permission denied; exit 1; }
       iconv -f UTF-8 -t UCS-2 "$file" >/dev/null 2>&1 || { echo Bad input; exit 1; }
-      grep -q $'\r' $1 && { printf 'RUN:\nsed -i \x27s/\\r$//\x27 %s\n' "$file"; exit 1; }
+      grep -q $'\r' "$file" && { printf 'RUN:\nsed -i \x27s/\\r$//\x27 %s\n' "$file"; exit 1; }
       export abs=`realpath "$file"`
       [ "$abs" = `realpath $0` ] && { printf 'Edit ~/em/README and then do:\nsed -n \x27/#!/,$s/^    //p\x27 ~/em/README >`which em`\n'; exit 1; }
       grep -sq "^$abs lock$" $db && { echo File is already opened; exit 1; }
