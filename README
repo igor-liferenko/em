@@ -1,18 +1,18 @@
 Add this `em' script to PATH:
 
-    #!/bin/bash
+    #!/bin/sh
     # Use as `em', `em file', `em file line' or `em file:line' (for copy-paste from `grep -n')
     [ $EUID = 0 ] && { echo In config files lines often exceed width of terminal; exit 1; }
     export db=/tmp/em.db
     if [ $# = 0 ]; then
       tmp=`mktemp -p /tmp em-XXXXXX`
       export abs=$tmp
-      printf '\e[?1049h'
+      printf '\33[?1049h'
       save=`stty -g`
       stty raw -echo
       perl -mEncode=decode_utf8 -CSDA ~/em/em $tmp
       stty $save
-      printf '\e[?1049l'
+      printf '\33[?1049l'
       echo $tmp
     else
       if [ $# = 1 ]; then
@@ -35,18 +35,18 @@ Add this `em' script to PATH:
       iconv -f UTF-8 -t UCS-2 "$file" >/dev/null 2>&1 || { echo Bad input; exit 1; }
       grep -q [[:cntrl:]] "$file" && { echo CNTRL not supported; exit 1; }
       export abs=`realpath "$file"`
-      [ "$abs" = `realpath $0` ] && { printf 'Edit ~/em/README and then do:\nsed -n \x27/#!/,$s/^    //p\x27 ~/em/README >`which em`\n'; exit 1; }
+      [ "$abs" = `realpath $0` ] && { printf 'Edit ~/em/README and then do:\nsed -n \47/#!/,$s/^    //p\47 ~/em/README >`which em`\n'; exit 1; }
       grep -sq "^$abs lock$" $db && { echo File is already opened; exit 1; }
       [ "$line" ] && [ `wc -l <"$file"` -lt $line ] && { echo Line number greater than number of lines; exit 1; }
       [ "$line" ] || eval `sed -n "s|^$abs \(.*\) |line=\1 hash=|p" $db 2>/dev/null`
       [ "$hash" ] && [ $hash != `md5sum "$file" 2>/dev/null | head -c32`-`stty size | tr ' ' -` ] && line=
       sed -i "\|^$abs |d" $db 2>/dev/null
       echo $abs lock >>$db
-      printf '\e[?1049h'
+      printf '\33[?1049h'
       save=`stty -g`
       stty raw -echo
       perl -mEncode=decode_utf8 -CSDA ~/em/em "$file" $line
       stty $save
-      printf '\e[?1049l'
+      printf '\33[?1049l'
       sed -i "\|^$abs lock$|d" $db
     fi
