@@ -83,7 +83,7 @@ sub dokey {
     elsif ( $key eq "\e" ) { savefile(), savecursor(), return 0 }
     elsif ( $key eq 'Resize' )  { savefile(), return 0 }
     else {
-        grep( $key eq $_, map( chr, 0 .. 8, 10 .. 31, 127 ) ) and
+        grep( $key eq $_, map( chr, 0 .. 31, 127 ) ) and
             $key = '^' . ( ord($key) < 64 ? chr( ord($key) + 64 ) : '?' );
         setat(), $x += length($key) if $x < $cols - 1 || length( line() ) < $cols;
     }
@@ -214,7 +214,6 @@ sub curlinenr {
 sub drawline {
     my $ln = substr( $lines[ $_[0] ], 0, $cols - 1 );
     $ln .= "\e[41m\e[1m\e[31m\x{2588}\e[m" if length( $lines[ $_[0] ] ) > $cols - 1;
-    $ln =~ s/\t/\e[43m\e[1m\e[33m\x{2588}\e[m/g;
     print( $ln, "\r\n" );
 }
 
